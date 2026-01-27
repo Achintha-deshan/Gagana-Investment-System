@@ -14,6 +14,10 @@ import { registerPromissoryLoanHandlers} from './controllers/PromissoryLoanContr
 import { registerCheckLoanHandlers } from './controllers/CheckLoanController.js';
 import { registerReportHandlers } from './controllers/ReportController.js';
 import { registerLoanLookupHandlers } from './controllers/LoanLookupController.js';
+import { setupSMSHandlers } from './controllers/smsController.js';
+import { registerDashbordHandlers } from './controllers/DashbordController.js'; //
+
+// SMS Handlers register කිරීම
 
 
 async function startApp() {
@@ -24,6 +28,7 @@ async function startApp() {
 
         // 2. ඊට පස්සේ විතරක් Handlers (IPC) Register කරන්න
         console.log("Registering Handlers..."); 
+         
         registerUserHandlers();
         registerCustomerHandlers();
         registerEmployeeHandlers();
@@ -34,6 +39,8 @@ async function startApp() {
         registerCheckLoanHandlers();
         registerReportHandlers();
         registerLoanLookupHandlers();
+        setupSMSHandlers();
+        registerDashbordHandlers();
 
         // 3. අවසානයට Window එක create කරන්න
         createMainWindow();

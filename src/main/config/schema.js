@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS customers (
     NIC VARCHAR(20) UNIQUE,
     CustomerPhone VARCHAR(20),
     CustomerAddress TEXT,
-    IsBlacklisted TINYINT(1) DEFAULT 0
+    IsBlacklisted TINYINT(1) DEFAULT 0,
+    BlacklistReason TEXT  -- අලුතින් එක් කළ කොටස
 );
 
 CREATE TABLE IF NOT EXISTS employee (

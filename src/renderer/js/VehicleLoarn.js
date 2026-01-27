@@ -71,24 +71,35 @@ async function loadVehicleLoans() {
 // ------------------------
 function setupEventListeners() {
 
-  // 1. පාරිභෝගිකයා සෙවීම (Customer Search)
-    $('#txtSearchCustomer').on('input', async function () {
-        const query = $(this).val().trim();
-        if (query.length >= 2) {
+ // 1. පාරිභෝගිකයා සෙවීම (Customer Search)
+// 1. පාරිභෝගිකයා සෙවීම (Customer Search)
+$('#txtSearchCustomer').on('input', async function () {
+    const query = $(this).val().trim();
+    if (query.length >= 2) {
+        try {
             const results = await window.api.customer.search(query);
+            
             if (results && results.length > 0) {
                 const customer = results[0];
+                
+                // Debugging: Console එකේ බලන්න දත්ත එන හැටි
+                console.log("Customer Found:", customer);
 
-                // 🛑 පාරිභෝගිකයා Blacklisted දැයි පරීක්ෂා කිරීම
-                if (customer.IsBlacklisted === 1) {
+                // 🛑 පාරිභෝගිකයා Blacklisted දැයි පරීක්ෂා කිරීම (1 හෝ true)
+                if (customer.IsBlacklisted == 1 || customer.IsBlacklisted == true) {
                     
-                    // පාරිභෝගිකයා සම්පූර්ණයෙන්ම අවහිර කිරීම (Only OK Button)
+                    // Database එකෙන් ලැබෙන Column name එක Capital ද Small ද කියා පරීක්ෂා කර අගය ගනී
+                    const reason = customer.BlacklistReason || customer.blacklistreason || "හේතුවක් සඳහන් කර නොමැත.";
+
+                    // පාරිභෝගිකයා සම්පූර්ණයෙන්ම අවහිර කිරීම (හේතුව සමඟ)
                     await notify.confirm(
-                        `මෙම පාරිභෝගිකයා (${customer.CustomerName}) Blacklisted කර ඇත. මොහුට නව ණය ලබා දීම පද්ධතිය මගින් අවහිර කර ඇත.`,
+                        `මෙම පාරිභෝගිකයා (${customer.CustomerName}) කළු ලැයිස්තුවට (Blacklist) ඇතුළත් කර ඇත.\n\n` +
+                        `🚫 හේතුව: ${reason}\n\n` +
+                        `මොහුට නව ණය ලබා දීම පද්ධතිය මගින් අවහිර කර ඇත.`,
                         'පාරිභෝගිකයා අවහිර කර ඇත (Blocked)',
                         {
                             confirmText: 'හරි (OK)',
-                            showCancelButton: false, // Cancel බොත්තම පෙන්වන්නේ නැත
+                            showCancelButton: false, 
                             confirmColor: '#ef4444'   // රතු පැහැය
                         }
                     );
@@ -109,11 +120,14 @@ function setupEventListeners() {
             } else {
                 clearCustomerDisplay();
             }
-        } else {
-            clearCustomerDisplay();
+        } catch (error) {
+            console.error("සෙවීමේදී දෝෂයක්:", error);
         }
-        checkAddButtonState();
-    });
+    } else {
+        clearCustomerDisplay();
+    }
+    checkAddButtonState();
+});
 
     // 2. ඇපකරුවන් එකතු කිරීම (Add Beneficiary)
     $('#btnAddVehicleBeneficiary').click(async function (e) {

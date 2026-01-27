@@ -90,6 +90,13 @@ contextBridge.exposeInMainWorld('api', {
     loanLookup: {
         getDetails: (loanId) => ipcRenderer.invoke('lookup:get-details', loanId),
         getCustomerLoans: (customerId) => ipcRenderer.invoke('lookup:get-customer-loans', customerId)
-    }
+    },
+  sms: {
+       runAutoCheck: () => ipcRenderer.invoke('sms:runAutoCheck'), 
+       sendManual: (data) => ipcRenderer.invoke('sms:sendManual', data),
+       getTodayLogs: () => ipcRenderer.invoke('sms:getTodayLogs') 
+    },
+   dashboard: {
+getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),   } 
 
 });
