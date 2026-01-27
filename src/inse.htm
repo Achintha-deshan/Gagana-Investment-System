@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="tab-pane fade" id="reports" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card bg-danger text-white border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title text-uppercase small">
+                මුළු හිඟ වාරික ප්‍රමාණය
+              </h6>
+              <h2 id="summaryTotalArrears" class="fw-bold">රු. 0.00</h2>
+              <i
+                class="bi bi-exclamation-octagon position-absolute top-0 end-0 m-3 fs-1 opacity-25"
+              ></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-success text-white border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title text-uppercase small">
+                අද දින ලැබුණු එකතුව
+              </h6>
+              <h2 id="summaryTodayCollection" class="fw-bold">රු. 0.00</h2>
+              <i
+                class="bi bi-cash-stack position-absolute top-0 end-0 m-3 fs-1 opacity-25"
+              ></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-primary text-white border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title text-uppercase small">සක්‍රීය ණය ගිණුම්</h6>
+              <h2 id="summaryActiveLoans" class="fw-bold">0</h2>
+              <i
+                class="bi bi-file-earmark-text position-absolute top-0 end-0 m-3 fs-1 opacity-25"
+              ></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="row align-items-end g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-bold small">වාර්තා වර්ගය</label>
+              <select id="selReportType" class="form-select">
+                <option value="arrears">හිඟ වාරික වාර්තාව (Arrears)</option>
+                <option value="collection">
+                  මුදල් එකතු කිරීමේ වාර්තාව (Collection)
+                </option>
+                <option value="settled">
+                  පියවා අවසන් කළ ණය (Settled Loans)
+                </option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold small">සිට</label>
+              <input type="date" id="reportStartDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold small">දක්වා</label>
+              <input type="date" id="reportEndDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <button id="btnGenerateReport" class="btn btn-dark w-100">
+                <i class="bi bi-search"></i> වාර්තාව බලන්න
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4 border-0 shadow-sm">
+        <div
+          class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0 fw-bold text-secondary" id="reportTitle">
+            වාර්තාවේ නම
+          </h5>
+          <button id="btnPrintReport" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-printer"></i> Print Report
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tblReport">
+              <thead class="bg-light">
+                <tr id="reportTableHeader"></tr>
+              </thead>
+              <tbody id="reportTableBody">
+                <tr>
+                  <td colspan="6" class="text-center py-5 text-muted">
+                    පෙරහන් (Filters) භාවිතා කර වාර්තාව ජනනය කරන්න.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
