@@ -147,45 +147,45 @@ function setupPromissoryLoanEventListeners() {
     });
 
     // 💾 3.3 ණය ඇතුළත් කිරීම (Save)
-    $('#btnAddPromissory').click(async function () {
-        const customerId = $('#displayCustomerId').data('id');
-        if (!customerId) return notify.toast("පාරිභෝගිකයෙකු තෝරා සිටින්න.", "warning");
-
-        const beneficiaries = [];
-        $('#promissoryBeneficiaryList .beneficiary-item').each(function () {
-            beneficiaries.push({
-                Name: $(this).find('.ben-name').val(),
-                Phone: $(this).find('.ben-phone').val(),
-                Address: $(this).find('.ben-address').val()
-            });
+  // Renderer එකේ Save කරන කොටස (පොඩි වෙනසක් කළා)
+$('#btnAddPromissory').click(async function () {
+    const customerId = $('#displayCustomerId').data('id');
+    const beneficiaries = [];
+    
+    $('#promissoryBeneficiaryList .beneficiary-item').each(function () {
+        beneficiaries.push({
+            Name: $(this).find('.ben-name').val(),
+            Phone: $(this).find('.ben-phone').val(),
+            Address: $(this).find('.ben-address').val()
         });
-
-        const data = {
-            CustomerID: customerId,
-            PromissoryNumber: $('#txtPromissoryNumber').val().trim(),
-            LoanAmount: parseFloat($('#txtPromissoryLoanAmount').val()) || 0,
-            GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()) || 0,
-            LoanDate: $('#txtPromissoryLoanDate').val(),
-            InterestRate: parseFloat($('#txtPromissoryInterestRate').val()) || 5,
-            SmsDate: $('#txtPromissorySmsDate').val(),
-            SmsMessage: $('#txtPromissorySmsMessage').val(),
-            Beneficiaries: beneficiaries
-        };
-
-        if (!data.PromissoryNumber || data.LoanAmount <= 0 || beneficiaries.length === 0) {
-            return notify.toast("පොරොන්දු නෝට්ටු අංකය, ණය මුදල සහ ඇපකරුවෙකු අනිවාර්ය වේ.", "warning");
-        }
-
-        const result = await window.api.promissoryLoan.add(data);
-        if (result.success) {
-            notify.toast("Promissory ණය සාර්ථකව ඇතුළත් කරන ලදි.", "success");
-            clearPromissoryForm();
-            await loadPromissoryLoans();
-        } else {
-            notify.toast("දෝෂයකි: " + result.error, "error");
-        }
     });
 
+    const data = {
+        CustomerID: customerId,
+        PromissoryNumber: $('#txtPromissoryNumber').val().trim(),
+        LoanAmount: parseFloat($('#txtPromissoryLoanAmount').val()) || 0,
+        GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()) || 0,
+        LoanDate: $('#txtPromissoryLoanDate').val(),
+        // මෙන්න මේ අගය අනිවාර්යයෙන් Backend එකට යන්න ඕනේ
+        InterestRate: parseFloat($('#txtPromissoryInterestRate').val()) || 5.0, 
+        SmsDate: $('#txtPromissorySmsDate').val(),
+        SmsMessage: $('#txtPromissorySmsMessage').val(),
+        Beneficiaries: beneficiaries
+    };
+
+    if (!data.PromissoryNumber || data.LoanAmount <= 0 || beneficiaries.length === 0) {
+        return notify.toast("අත්‍යවශ්‍ය දත්ත ඇතුළත් කරන්න.", "warning");
+    }
+
+    const result = await window.api.promissoryLoan.add(data);
+    if (result.success) {
+        notify.toast("සාර්ථකයි!", "success");
+        clearPromissoryForm();
+        await loadPromissoryLoans();
+    } else {
+        notify.toast("Error: " + result.error, "error");
+    }
+});
     // 📋 3.4 Table Row Click
     $('#tblPromissoryLoans').on('click', 'tr', async function () {
         const loanId = $(this).data('id');

@@ -23,7 +23,7 @@ class VehicleLoanService {
         return rows.length > 0;
     }
 
-    // 🔹 Get Single Vehicle Loan by ID (For Update/Select)
+    // 🔹 Get Single Vehicle Loan by ID
     async getVehicleLoanById(loanId) {
         try {
             const [rows] = await db.execute(`
@@ -35,7 +35,6 @@ class VehicleLoanService {
             `, [loanId]);
 
             if (rows.length > 0) {
-                // ඇපකරුවන් ලැයිස්තුව වෙනම ලබා ගැනීම
                 const [beneficiaries] = await db.execute(
                     "SELECT * FROM loan_beneficiaries WHERE LoanID = ?", 
                     [loanId]
@@ -58,22 +57,24 @@ class VehicleLoanService {
         try {
             await connection.beginTransaction();
 
-            // 1️⃣ Insert into loans table
+            // 1️⃣ loans table එකට Insert කිරීම
+            // PenaltyRateOnInterest එකටත් data.InterestRate ම යවා ඇත.
             await connection.execute(`
                 INSERT INTO loans
-                (LoanID, CustomerID, LoanType, LoanAmount, GivenAmount, LoanDate, InterestRate, NextDueDate, Status)
-                VALUES (?, ?, 'VEHICLE', ?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 MONTH), 'ACTIVE')
+                (LoanID, CustomerID, LoanType, LoanAmount, GivenAmount, LoanDate, InterestRate, PenaltyRateOnInterest, NextDueDate, Status)
+                VALUES (?, ?, 'VEHICLE', ?, ?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 MONTH), 'ACTIVE')
             `, [
                 loanId,
                 data.CustomerID,
                 data.LoanAmount,
                 data.GivenAmount,
                 data.LoanDate,
-                data.InterestRate,
+                data.InterestRate,      // Interest Rate
+                data.InterestRate,      // Penalty Rate (දඩයත් පොලී අනුපාතයම වේ)
                 data.LoanDate
             ]);
 
-            // 2️⃣ Insert into vehicle_details
+            // 2️⃣ vehicle_details table එකට Insert කිරීම
             await connection.execute(`
                 INSERT INTO vehicle_details
                 (LoanID, OwnerName, VehicleNumber, VehicleType, CurrentValue, LoanLimit, RegistrationDate)
@@ -88,13 +89,12 @@ class VehicleLoanService {
                 data.RegistrationDate
             ]);
 
-            // 3️⃣ Insert beneficiaries
+            // 3️⃣ Beneficiaries Insert කිරීම
             if (!data.Beneficiaries || data.Beneficiaries.length === 0) {
                 throw new Error("අවම වශයෙන් එක් ඇපකරුවෙකු අනිවාර්ය වේ.");
             }
 
             for (const b of data.Beneficiaries) {
-                // Check if already ACTIVE
                 const isActive = await this.checkBeneficiaryActive(b.Name, b.Phone);
                 if (isActive) throw new Error(`ඇපකරු ${b.Name} දැනටමත් සක්‍රීය වාහන ණයක සිටී!`);
 
@@ -115,7 +115,7 @@ class VehicleLoanService {
         }
     }
 
-    // 🔹 Get all Vehicle Loans with beneficiaries
+    // 🔹 Get all Vehicle Loans
     async getAllVehicleLoans() {
         const [rows] = await db.execute(`
             SELECT l.*, v.*, 
@@ -130,17 +130,18 @@ class VehicleLoanService {
         return rows;
     }
 
-    // 🔹 Update Vehicle Loan
-async updateVehicleLoan(data) {
+    // 🔹 Update Vehicle Loan (Transaction-safe)
+    async updateVehicleLoan(data) {
         const connection = await db.getConnection();
         try {
             await connection.beginTransaction();
 
-            // 1. Loans Table එක Update කිරීම
+            // 1. Loans Table එක Update කිරීම (PenaltyRate එකත් සමඟ)
             await connection.execute(`
-                UPDATE loans SET LoanAmount = ?, GivenAmount = ?, InterestRate = ?
+                UPDATE loans SET 
+                    LoanAmount = ?, GivenAmount = ?, InterestRate = ?, PenaltyRateOnInterest = ?
                 WHERE LoanID = ?
-            `, [data.LoanAmount, data.GivenAmount, data.InterestRate, data.LoanID]);
+            `, [data.LoanAmount, data.GivenAmount, data.InterestRate, data.InterestRate, data.LoanID]);
 
             // 2. Vehicle Details Table එක Update කිරීම
             await connection.execute(`
@@ -150,8 +151,7 @@ async updateVehicleLoan(data) {
                 WHERE LoanID = ?
             `, [data.OwnerName, data.VehicleNumber, data.VehicleType, data.CurrentValue, data.LoanLimit, data.LoanID]);
 
-            // 3. පැරණි ඇපකරුවන් ඉවත් කර අලුත් ඇපකරුවන් ඇතුළත් කිරීම (Optional Logic)
-            // ඔබට අවශ්‍ය නම් පමණක් ඇපකරුවන් Update කිරීමට මෙය යොදාගන්න
+            // 3. ඇපකරුවන් Update කිරීම (Delete and Re-insert)
             if (data.Beneficiaries) {
                 await connection.execute("DELETE FROM loan_beneficiaries WHERE LoanID = ?", [data.LoanID]);
                 for (const b of data.Beneficiaries) {
@@ -166,6 +166,7 @@ async updateVehicleLoan(data) {
             return { success: true };
         } catch (error) {
             await connection.rollback();
+            console.error("Update Vehicle Loan Error:", error);
             return { success: false, error: error.message };
         } finally {
             connection.release();
@@ -178,13 +179,11 @@ async updateVehicleLoan(data) {
         return { success: true };
     }
 
-    // 🔹 Delete Beneficiary
     async deleteBeneficiary(beneficiaryId) {
         await db.execute(`DELETE FROM loan_beneficiaries WHERE BeneficiaryID = ?`, [beneficiaryId]);
         return { success: true };
     }
 
-    // 🔹 Get Beneficiaries by LoanID
     async getBeneficiaries(loanId) {
         const [rows] = await db.execute(`SELECT * FROM loan_beneficiaries WHERE LoanID = ?`, [loanId]);
         return rows;

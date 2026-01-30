@@ -31,12 +31,22 @@ class CheckLoanService {
         try {
             await connection.beginTransaction();
 
-            // 1️⃣ loans table
+            // 1️⃣ loans table එකට දත්ත දැමීම
+            // මෙහිදී PenaltyRateOnInterest එකටත් data.InterestRate ම ලබා දී ඇත.
             await connection.execute(`
                 INSERT INTO loans
-                (LoanID, CustomerID, LoanType, LoanAmount, GivenAmount, LoanDate, InterestRate, NextDueDate, Status)
-                VALUES (?, ?, 'CHECK', ?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 MONTH), 'ACTIVE')
-            `, [loanId, data.CustomerID, data.LoanAmount, data.GivenAmount, data.LoanDate, data.InterestRate, data.LoanDate]);
+                (LoanID, CustomerID, LoanType, LoanAmount, GivenAmount, LoanDate, InterestRate, PenaltyRateOnInterest, NextDueDate, Status)
+                VALUES (?, ?, 'CHECK', ?, ?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 MONTH), 'ACTIVE')
+            `, [
+                loanId, 
+                data.CustomerID, 
+                data.LoanAmount, 
+                data.GivenAmount, 
+                data.LoanDate, 
+                data.InterestRate,      // Interest Rate
+                data.InterestRate,      // Penalty Rate (Interest Rate එකම වේ)
+                data.LoanDate
+            ]);
 
             // 2️⃣ check_details table
             await connection.execute(`
@@ -86,47 +96,68 @@ class CheckLoanService {
     }
 
     // 🔹 නිශ්චිත Check Loan එකක සියලු විස්තර ලබා ගැනීම
-async getCheckLoanById(loanId) {
-    const [loan] = await db.execute(`
-        SELECT 
-            l.*, cd.*, 
-            c.CustomerName, c.NIC, c.CustomerPhone
-        FROM loans l
-        JOIN check_details cd ON l.LoanID = cd.LoanID
-        JOIN customers c ON l.CustomerID = c.CustomerID
-        WHERE l.LoanID = ? AND l.LoanType = 'CHECK'
-    `, [loanId]);
+    async getCheckLoanById(loanId) {
+        const [loan] = await db.execute(`
+            SELECT 
+                l.*, cd.*, 
+                c.CustomerName, c.NIC, c.CustomerPhone
+            FROM loans l
+            JOIN check_details cd ON l.LoanID = cd.LoanID
+            JOIN customers c ON l.CustomerID = c.CustomerID
+            WHERE l.LoanID = ? AND l.LoanType = 'CHECK'
+        `, [loanId]);
 
-    if (loan.length === 0) return null;
+        if (loan.length === 0) return null;
 
-    // ඇපකරුවන් ලබා ගැනීම
-    const [beneficiaries] = await db.execute(
-        "SELECT * FROM loan_beneficiaries WHERE LoanID = ?",
-        [loanId]
-    );
+        const [beneficiaries] = await db.execute(
+            "SELECT * FROM loan_beneficiaries WHERE LoanID = ?",
+            [loanId]
+        );
 
-    return {
-        ...loan[0],
-        Beneficiaries: beneficiaries
-    };
-}
-    // 🔹 චෙක්පත් ණය Update කිරීම
+        return {
+            ...loan[0],
+            Beneficiaries: beneficiaries
+        };
+    }
+
+    // 🔹 චෙක්පත් ණය Update කිරීම (Transaction-safe)
     async updateCheckLoan(data) {
-        // Update loans table
-        await db.execute(`
-            UPDATE loans SET
-                LoanAmount = ?, GivenAmount = ?, InterestRate = ?
-            WHERE LoanID = ?
-        `, [data.LoanAmount, data.GivenAmount, data.InterestRate, data.LoanID]);
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
 
-        // Update check_details table
-        await db.execute(`
-            UPDATE check_details SET
-                CheckNumber = ?, OwnerName = ?, CheckDateNumber = ?, BankAccountDetails = ?
-            WHERE LoanID = ?
-        `, [data.CheckNumber, data.OwnerName, data.CheckDateNumber, data.BankAccountDetails, data.LoanID]);
+            // 1. Update loans table (PenaltyRateOnInterest එකත් update වේ)
+            await connection.execute(`
+                UPDATE loans SET
+                    LoanAmount = ?, GivenAmount = ?, InterestRate = ?, PenaltyRateOnInterest = ?
+                WHERE LoanID = ?
+            `, [data.LoanAmount, data.GivenAmount, data.InterestRate, data.InterestRate, data.LoanID]);
 
-        return { success: true };
+            // 2. Update check_details table
+            await connection.execute(`
+                UPDATE check_details SET
+                    CheckNumber = ?, OwnerName = ?, CheckDateNumber = ?, BankAccountDetails = ?
+                WHERE LoanID = ?
+            `, [data.CheckNumber, data.OwnerName, data.CheckDateNumber, data.BankAccountDetails, data.LoanID]);
+
+            // 3. ඇපකරුවන් update කිරීම (පැරණි අය ඉවත් කර අලුතින් දැමීම වඩාත් සුදුසුයි)
+            await connection.execute("DELETE FROM loan_beneficiaries WHERE LoanID = ?", [data.LoanID]);
+            for (const b of data.Beneficiaries) {
+                await connection.execute(`
+                    INSERT INTO loan_beneficiaries (LoanID, Name, Phone, Address)
+                    VALUES (?, ?, ?, ?)
+                `, [data.LoanID, b.Name, b.Phone, b.Address]);
+            }
+
+            await connection.commit();
+            return { success: true };
+        } catch (error) {
+            await connection.rollback();
+            console.error("Update Check Loan Error:", error);
+            return { success: false, error: error.message };
+        } finally {
+            connection.release();
+        }
     }
 
     // 🔹 ණය මකා දැමීම
@@ -135,13 +166,11 @@ async getCheckLoanById(loanId) {
         return { success: true };
     }
 
-    // 🔹 ඇපකරු මකා දැමීම (ඔබ විමසූ කොටස)
     async deleteBeneficiary(beneficiaryId) {
         await db.execute(`DELETE FROM loan_beneficiaries WHERE BeneficiaryID = ?`, [beneficiaryId]);
         return { success: true };
     }
 
-    // 🔹 ඇපකරුවන් ලබා ගැනීම (ඔබ විමසූ කොටස)
     async getBeneficiaries(loanId) {
         const [rows] = await db.execute(`SELECT * FROM loan_beneficiaries WHERE LoanID = ?`, [loanId]);
         return rows;

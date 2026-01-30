@@ -1,6 +1,5 @@
 class NotificationSystem {
     constructor() {
-        // අනුපිළිවෙල සහ scope එක තහවුරු කිරීමට
         this.init();
     }
 
@@ -36,17 +35,20 @@ class NotificationSystem {
         }
     }
 
-    // Modal එක close කිරීම
     closeModal = () => {
         const overlay = document.getElementById('modal-overlay');
-        if (overlay) overlay.style.display = 'none';
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.backdropFilter = 'none'; // blur එක අයින් කරන්න
+        }
     }
 
-    // Alert Dialog
+    // Alert Dialog (දැන් පිටත ක්ලික් කළාට වැහෙන්නේ නැත)
     alert = async (message, title = 'Alert', type = 'info', options = {}) => {
         return new Promise((resolve) => {
             const overlay = document.getElementById('modal-overlay');
-            const allowOutsideClick = options.allowOutsideClick !== false;
+            // Default එක false කළා. වහන්න ඕනේ නම් විතරක් options වලින් true එවන්න.
+            const allowOutsideClick = options.allowOutsideClick === true; 
             const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
 
             const modal = document.createElement('div');
@@ -75,6 +77,7 @@ class NotificationSystem {
                 resolve(true);
             };
 
+            // Backdrop click logic
             overlay.onclick = (e) => {
                 if (e.target === overlay && allowOutsideClick) {
                     this.closeModal();
@@ -84,11 +87,12 @@ class NotificationSystem {
         });
     }
 
-    // Confirm Dialog
+    // Confirm Dialog (දැන් පිටත ක්ලික් කළාට වැහෙන්නේ නැත)
     confirm = async (message, title = 'Confirm', options = {}) => {
         return new Promise((resolve) => {
             const overlay = document.getElementById('modal-overlay');
-            const allowOutsideClick = options.allowOutsideClick !== false;
+            // Default එක false කළා.
+            const allowOutsideClick = options.allowOutsideClick === true;
 
             const modal = document.createElement('div');
             modal.style.cssText = `
@@ -163,7 +167,34 @@ class NotificationSystem {
             document.head.appendChild(style);
         }
     }
+
+    showBlockingAlert = (message, title = 'සම්බන්ධතාවය බිඳී ඇත') => {
+        const overlay = document.getElementById('modal-overlay');
+        const modal = document.createElement('div');
+        overlay.style.backdropFilter = 'blur(8px)'; 
+        
+        modal.style.cssText = `
+            background: white; border-radius: 12px; padding: 32px; 
+            max-width: 450px; width: 90%; box-shadow: 0 20px 25px rgba(0,0,0,0.2); 
+            animation: modalFadeIn 0.3s ease; font-family: sans-serif; text-align: center;
+        `;
+
+        modal.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <span style="font-size: 50px; color: #ef4444;">⚠</span>
+            </div>
+            <h2 style="margin: 0 0 10px 0; color: #1f2937;">${title}</h2>
+            <p style="margin: 0; color: #4b5563; line-height: 1.6; font-size: 16px;">${message}</p>
+            <div style="margin-top: 25px;">
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">නැවත සම්බන්ධ වන තෙක් රැඳී සිටින්න...</p>
+            </div>
+        `;
+
+        overlay.innerHTML = '';
+        overlay.appendChild(modal);
+        overlay.style.display = 'flex';
+        overlay.onclick = null; // සම්පූර්ණයෙන්ම බ්ලොක් කළා
+    }
 }
 
-// Global instance
 const notify = new NotificationSystem();

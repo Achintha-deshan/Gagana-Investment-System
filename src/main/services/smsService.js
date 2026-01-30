@@ -2,15 +2,18 @@ import db from '../config/db.js';
 
 const API_URL = "https://app.fitsms.lk/api/v4/sms/send";
 const API_TOKEN = "371|9km1jftaCr7HPp6WAu7TLoByzvik2LAYFZcWIe8B3591e7bd";
+const SENDER_ID = "The Change"; 
 
 class SMSService {
     
-    // 1. තනි SMS එකක් යැවීමේ ශ්‍රිතය
+    // 1. තනි SMS එකක් යැවීම
     async sendSMS(recipient, message) {
         try {
             let formattedRecipient = recipient.replace(/\D/g, '');
             if (formattedRecipient.startsWith('0')) {
                 formattedRecipient = '94' + formattedRecipient.substring(1);
+            } else if (!formattedRecipient.startsWith('94')) {
+                formattedRecipient = '94' + formattedRecipient;
             }
 
             const response = await fetch(API_URL, {
@@ -22,33 +25,26 @@ class SMSService {
                 },
                 body: JSON.stringify({
                     recipient: formattedRecipient,
-                    sender_id: "The Change",
+                    sender_id: SENDER_ID,
                     type: 'unicode',
                     message: message
                 })
             });
 
             const result = await response.json();
-            console.log("FitSMS API Response:", result);
-
-            // FitSMS v4 එකේ සාර්ථක නම් result.status === true හෝ response.ok වේ
             return { 
                 success: response.ok && (result.status === "success" || result.status === true), 
-                data: result 
+                data: result,
+                statusCode: response.status
             };
         } catch (error) {
-            console.error("SMS Sending Error:", error);
             return { success: false, message: error.message };
         }
     }
 
-  // 2. දිනපතා ස්වයංක්‍රීයව SMS යැවීමේ ක්‍රියාවලිය
- // ... පෙර කොටස් එලෙසම පවතී
-
+// 2. දිනපතා SMS පරීක්ෂාව සහ යැවීම
 async checkAndSendDailyReminders() {
     try {
-        console.log("Database query starting for daily reminders...");
-
         const sql = `
             SELECT l.LoanID, c.CustomerPhone, c.CustomerName, l.NextDueDate 
             FROM loans l 
@@ -59,72 +55,74 @@ async checkAndSendDailyReminders() {
 
         const [rows] = await db.execute(sql);
         
+        // පාරිභෝගිකයින් නැතිනම් මෙතනින්ම ඉවර කරන්න
         if (rows.length === 0) {
-            console.log("No customers found for tomorrow's due date.");
-            return { success: true, sentCount: 0 }; 
+            return { success: true, sentCount: 0 };
         }
 
         let sentCount = 0;
-        let lastError = null;
 
         for (let row of rows) {
             const dateObj = new Date(row.NextDueDate);
             const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+            const firstName = row.CustomerName ? row.CustomerName.split(' ')[0] : 'පාරිභෝගිකයා';
+            const message = `සිහි කැඳවීමයි! ${firstName}, ඔබගේ වාරිකය ${formattedDate} දිනට ගෙවිය යුතුයි. Gagana Investment`;
 
-            const message = `සිහි කැඳවීමයි! ${row.CustomerName}, ඔබේ ණය වාරිකය හෙට (${formattedDate}) දිනට යෙදී ඇත. කරුණාකර එදිනට ගෙවීම් සිදු කරන්න.\nස්තූතියි!\nGagana Investment`;
-            
+            // SMS එක යැවීම
             const res = await this.sendSMS(row.CustomerPhone, message);
 
-            if (res.success) {
-                await db.execute("UPDATE loans SET SmsDate = NOW() WHERE LoanID = ?", [row.LoanID]);
-                sentCount++;
-            } else {
-                // FitSMS API එකෙන් එන දෝෂය හඳුනා ගැනීම
-                // සමහර විට message එක එන්නේ res.data.errors.message ලෙස විය හැකියි
-                lastError = res.data?.message || res.data?.errors?.[0] || "SMS යැවීමේ දෝෂයකි";
-                
-                console.error(`Failed to send SMS to ${row.CustomerName}:`, lastError);
-
-                // ලිමිට් එක ඉවර නම් දිගටම යැවීමට උත්සාහ කිරීමෙන් පලක් නැත
-                const errLower = lastError.toLowerCase();
-                if (errLower.includes("limit") || errLower.includes("balance") || errLower.includes("credit") || errLower.includes("insufficient")) {
-                    break; 
-                }
+            // වැදගත්: SMS එක යැවීම අසාර්ථක වුණොත් (උදා: Balance අවසන් නම්)
+            if (!res.success) {
+                // Loop එක නවත්වලා දෝෂය සහ statusCode එක return කරනවා
+                return { 
+                    success: false, 
+                    message: res.data?.message || "SMS ශේෂය අවසන් වී ඇති බව පෙනේ.", 
+                    statusCode: res.statusCode 
+                };
             }
+
+            // සාර්ථක නම් පමණක් Database update කරනවා
+            await db.execute(
+                "UPDATE loans SET SmsDate = NOW(), SmsMessage = ? WHERE LoanID = ?", 
+                [message, row.LoanID]
+            );
+            sentCount++;
         }
 
-        // කිසිවක් යවා නැතිනම් සහ error එකක් තිබේ නම් පමණක් success: false එවන්න
-        if (sentCount === 0 && lastError) {
-            return { success: false, message: lastError };
-        }
-
+        // සියල්ල සාර්ථකව අවසන් වුණොත්
         return { success: true, sentCount: sentCount };
 
     } catch (error) {
-        console.error("Detailed SMSService Error:", error);
+        console.error("Critical Backend Error:", error);
         return { success: false, message: error.message };
     }
 }
-
-    // 3. UI එකේ පෙන්වීමට අද දින යැවූ SMS වාර්තා ලබා ගැනීම (අලුතින් එක් කළ කොටස)
-    async getTodayLogs() {
+    // 3. යැවූ සහ යැවිය යුතු සියලු දෙනාගේ වාර්තාව
+    async getLogsByDate(targetDate) {
         try {
+            const dateToQuery = targetDate || new Date().toISOString().split('T')[0];
+
             const sql = `
                 SELECT 
                     l.LoanID as customerId, 
                     c.CustomerName as customerName, 
                     c.CustomerPhone as phone, 
                     l.NextDueDate as dueDate, 
-                    DATE_FORMAT(l.SmsDate, '%h:%i %p') as sentTime 
+                    DATE_FORMAT(l.SmsDate, '%h:%i %p') as sentTime,
+                    CASE 
+                        WHEN DATE(l.SmsDate) = ? THEN 1 
+                        ELSE 0 
+                    END as isSent
                 FROM loans l
                 JOIN customers c ON l.CustomerID = c.CustomerID
-                WHERE DATE(l.SmsDate) = CURDATE()
-                ORDER BY l.SmsDate DESC`;
+                WHERE l.NextDueDate = DATE_ADD(?, INTERVAL 1 DAY)
+                AND l.Status = 'ACTIVE'
+                ORDER BY isSent DESC, l.SmsDate DESC`;
 
-            const [rows] = await db.execute(sql);
+            const [rows] = await db.execute(sql, [dateToQuery, dateToQuery]);
             return rows;
         } catch (error) {
-            console.error("Error fetching SMS logs:", error);
+            console.error("SQL Error:", error);
             throw error;
         }
     }

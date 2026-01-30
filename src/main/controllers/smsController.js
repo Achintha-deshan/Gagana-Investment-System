@@ -14,11 +14,12 @@ export function setupSMSHandlers() {
     });
 
     // අද දින යැවූ SMS වාර්තා (Logs) ලබා ගැනීම - අලුතින් එක් කළ කොටස
-    ipcMain.handle('sms:getTodayLogs', async () => {
+   ipcMain.handle('sms:getLogsByDate', async (event, targetDate) => {
         try {
-            return await SMSService.getTodayLogs();
+            // SMSService එකේ අපි අලුතින් හදපු getLogsByDate එක call කරන්න
+            return await SMSService.getLogsByDate(targetDate);
         } catch (error) {
-            console.error("IPC Handle Error (sms:getTodayLogs):", error);
+            console.error("IPC Handle Error (sms:getLogsByDate):", error);
             throw error;
         }
     });

@@ -239,7 +239,7 @@ function calculateAndDisplayPayment(loan) {
 
     const loanAmount = parseFloat(loan.LoanAmount) || 0;
     const interestRate = parseFloat(loan.InterestRate) || 0;
-    const penaltyRate = parseFloat(loan.PenaltyRateOnInterest) || 5.00;
+    const penaltyRate = parseFloat(loan.PenaltyRateOnInterest) || 0;
     
     const monthlyInterest = loanAmount * (interestRate / 100);
     const dailyPenaltyRate = (monthlyInterest * (penaltyRate / 100)) / 30;

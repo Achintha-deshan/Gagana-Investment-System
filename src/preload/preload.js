@@ -94,9 +94,11 @@ contextBridge.exposeInMainWorld('api', {
   sms: {
        runAutoCheck: () => ipcRenderer.invoke('sms:runAutoCheck'), 
        sendManual: (data) => ipcRenderer.invoke('sms:sendManual', data),
-       getTodayLogs: () => ipcRenderer.invoke('sms:getTodayLogs') 
-    },
+getLogsByDate: (date) => ipcRenderer.invoke('sms:getLogsByDate', date)    },
    dashboard: {
-getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),   } 
+getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),   } ,
+system: {
+        checkStatus: () => ipcRenderer.invoke('db:check-status')
+    }
 
 });

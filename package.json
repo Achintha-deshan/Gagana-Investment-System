@@ -3,20 +3,47 @@
   "version": "1.0.0",
   "type": "module",
   "main": "src/main/index.js",
-  "scripts": {
-    "start": "electron ."
+  "author": "Achintha Deshan",
+  "description": "Gagana Investment Management System",
+   "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
-  "description": "",
+ 
   "devDependencies": {
-    "electron": "^39.2.7"
+    "electron": "^39.2.7",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
+    "electron-updater": "^6.7.3",
     "mysql2": "^3.16.0"
+  },
+  "build": {
+    "appId": "com.gaganainvestment.app",
+    "productName": "Gagana Investment",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "publish": [
+        {
+          "provider": "github",
+          "owner": "Achintha-deshan",
+          "repo": "Gagana-Investment-System"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

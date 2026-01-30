@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gagana Investment - Dashboard</title>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:;">
     <link
         rel="stylesheet"
         href="../css/bootstrap.min.css"
@@ -16,7 +18,7 @@
         rel="stylesheet"
         href="../css/bootstrap-icons.css"
     />
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
       * {
         margin: 0;
@@ -821,6 +823,35 @@
     transform: translateY(0);
   }
 }
+.status-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    border-left: 4px solid #6c757d;
+}
+.status-card.online { border-left-color: #2ecc71; }
+.status-card.offline { border-left-color: #e74c3c; }
+.status-card.repair { border-left-color: #f1c40f; }
+
+.status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background: #6c757d;
+}
+.online .status-dot { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
+.offline .status-dot { background: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
+.repair .status-dot { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+#modal-overlay {
+    transition: backdrop-filter 0.5s ease, background-color 0.5s ease;
+}
     </style>
   </head>
   <body>
@@ -880,6 +911,18 @@
             </div>
           </div>
         </div>
+
+        <div class="sidebar-footer p-3 mt-auto">
+    <div id="dbStatusIndicator" class="status-card offline">
+        <div class="d-flex align-items-center">
+            <div class="status-dot"></div>
+            <div class="status-info">
+                <span id="statusText">Checking...</span>
+                <small id="statusDetail" class="d-block text-muted">Initializing...</small>
+            </div>
+        </div>
+    </div>
+</div>
 
        <nav class="sidebar-menu">
           <a class="menu-item active" data-section="dashboardSection">
@@ -1175,59 +1218,76 @@
           </div>
         </section>
 
-        <section id="smsLogSection" class="dashboard-content d-none">
+<section id="smsLogSection" class="dashboard-content d-none">
   <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);">
-      <div class="d-flex justify-content-between align-items-center">
+    
+    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-bottom: 4px solid #f39c12;">
+      <h2 class="mb-0 d-flex align-items-center gap-3">
+        <i class="fas fa-history fs-1 text-warning"></i>
         <div>
-          <h2 class="mb-0 d-flex align-items-center gap-3">
-            <i class="fas fa-sms fs-1"></i>
-            SMS පණිවිඩ වාර්තාව (Daily SMS Log)
-          </h2>
-          <p class="mb-0 mt-2 opacity-90">අද දින පාරිභෝගිකයින් වෙත යැවූ කෙටි පණිවිඩ විස්තර</p>
+          <span class="d-block fw-bold">SMS පණිවිඩ වාර්තාව</span>
+          <small class="fs-6 fw-light opacity-75">යවන ලද පණිවිඩ ඉතිහාසය පරීක්ෂා කිරීම</small>
         </div>
-        <button id="btnRefreshSmsLog" class="btn btn-light rounded-pill px-4">
-          <i class="fas fa-sync-alt me-2"></i> Refresh
-        </button>
-      </div>
+      </h2>
     </div>
 
-    <div class="card-body p-4">
-      <div class="row g-3 mb-4">
-        <div class="col-md-4">
-          <div class="p-3 border rounded-4 bg-light shadow-sm text-center">
-            <h6 class="text-muted small fw-bold">මුළු පණිවිඩ ගණන</h6>
-            <h4 id="smsTotalCount" class="mb-0 text-primary">0</h4>
+    <div class="card-body p-4 bg-light">
+      
+      <div class="row g-3 mb-4 align-items-end">
+        
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+            <label class="form-label small fw-bold text-muted mb-2">පරණ වාර්තා සෙවීමට දිනය තෝරන්න</label>
+            <div class="input-group">
+                <span class="input-group-text bg-primary text-white border-0 rounded-start-pill px-3">
+                    <i class="fas fa-calendar-day"></i>
+                </span>
+                <input type="date" id="smsLogDate" class="form-control border-0 bg-light shadow-none">
+                <button id="btnFilterSms" class="btn btn-primary rounded-end-pill px-4">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
           </div>
         </div>
-        <div class="col-md-8">
-           <div class="alert alert-info rounded-4 border-0 shadow-sm mb-0">
-             <i class="fas fa-info-circle me-2"></i> මෙහි පෙන්වනු ලබන්නේ අද දිනට අදාළව පද්ධතියෙන් සාර්ථකව පිටවූ (Sent) පණිවිඩ පමණි.
-           </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 d-flex flex-row gap-2 justify-content-center">
+                <button id="btnRunManualSms" class="btn btn-warning rounded-pill flex-grow-1 fw-bold shadow-sm border-2">
+                    <i class="fas fa-paper-plane me-2"></i> SMS යවන්න
+                </button>
+                <button id="btnRefreshSmsLog" class="btn btn-dark rounded-pill px-3 shadow-sm" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white text-center border-bottom border-4 border-primary">
+            <h6 class="text-muted small fw-bold mb-1">යැවූ ගණන</h6>
+            <h3 id="smsTotalCount" class="mb-0 text-primary fw-bold">0</h3>
+          </div>
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle border">
-          <thead class="table-dark">
-            <tr>
-              <th>Customer ID</th>
-              <th>පාරිභෝගික නම</th>
-              <th>දුරකථන අංකය</th>
-              <th>වාරික දිනය</th>
-              <th class="text-center">Status</th>
-              <th class="text-end">යැවූ වේලාව</th>
-            </tr>
-          </thead>
-          <tbody id="tblSmsLog">
-            <tr>
-              <td colspan="6" class="text-center py-5">
-                <p class="text-muted">අද දිනට අදාළ SMS දත්ත පූරණය වෙමින් පවතී...</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive" style="max-height: 450px;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-dark text-white">
+              <tr>
+                <th class="ps-4 py-3 border-0">ID</th>
+                <th class="border-0">පාරිභෝගිකයා</th>
+                <th class="border-0">දුරකථන අංකය</th>
+                <th class="border-0">නියමිත දිනය</th>
+                <th class="text-center border-0">තත්වය</th>
+                <th class="text-end pe-4 border-0">යැවූ වේලාව</th>
+              </tr>
+            </thead>
+            <tbody id="tblSmsLog">
+               </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -1641,13 +1701,12 @@
     <div class="card-body p-4">
       <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border mb-4">
         <input type="text" id="txtLookupSearch" class="form-control border-0" placeholder="නම, NIC හෝ ණය ID ඇතුළත් කරන්න...">
-<button class="btn btn-dark px-4" id="btnLookupSearch">සොයන්න</button>
+        <button class="btn btn-dark px-4" id="btnLookupSearch">සොයන්න</button>
       </div>
 
       <div class="row g-4">
         <div class="col-lg-3">
-          <div id="lookupLoanList" class="list-group shadow-sm rounded-4">
-             </div>
+          <div id="lookupLoanList" class="list-group shadow-sm rounded-4"></div>
         </div>
 
         <div class="col-lg-9 d-none" id="lookupDetailsPane">
@@ -1681,9 +1740,9 @@
 
           <div class="row g-3 mb-4">
             <div class="col-md-6">
-                <div class="card bg-info-subtle border-0 rounded-4">
+                <div class="card bg-info-subtle border-0 rounded-4 h-100">
                     <div class="card-body">
-                        <h6 class="fw-bold border-bottom pb-2">පාරිභෝගික සටහන (Customer Info)</h6>
+                        <h6 class="fw-bold border-bottom pb-2">පාරිභෝගික විස්තර</h6>
                         <p class="mb-1"><strong>නම:</strong> <span id="vCustName">-</span></p>
                         <p class="mb-1"><strong>NIC:</strong> <span id="vCustNic">-</span></p>
                         <p class="mb-1"><strong>දුරකථන:</strong> <span id="vCustPhone">-</span></p>
@@ -1692,9 +1751,9 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card bg-warning-subtle border-0 rounded-4">
+                <div class="card bg-warning-subtle border-0 rounded-4 h-100">
                     <div class="card-body">
-                        <h6 class="fw-bold border-bottom pb-2">ණය සාරාංශය (Status)</h6>
+                        <h6 class="fw-bold border-bottom pb-2">ණය තත්ත්වය</h6>
                         <p class="mb-1"><strong>Due Date:</strong> <span id="vDueDate" class="text-danger fw-bold">-</span></p>
                         <p class="mb-1"><strong>අවසන් ගෙවීම් දිනය:</strong> <span id="vLastPaidDate">-</span></p>
                         <p class="mb-1"><strong>ලබාදුන් දිනය:</strong> <span id="vGivenDate">-</span></p>
@@ -1704,9 +1763,14 @@
             </div>
           </div>
 
+          <div id="vLoanNotes" class="mb-4"></div>
+
           <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white py-3 fw-bold">ගෙවීම් ඉතිහාසය</div>
-            <div class="table-responsive" style="max-height: 250px;">
+            <div class="card-header bg-white py-3 fw-bold d-flex justify-content-between">
+                <span>ගෙවීම් ඉතිහාසය</span>
+                <small class="text-muted">අවසන් ගනුදෙනු 10</small>
+            </div>
+            <div class="table-responsive" style="max-height: 350px;">
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                   <tr>
@@ -2656,6 +2720,8 @@
     <script src="../js/Report.js"></script>
     <script src="../js/loanlookup.js"></script>
     <script src="../js/dashboard.js"></script>
+    <script src="../js/onlineoffline.js"></script>
+    <script src="../js/SmsService.js"></script>
   </body>
 </html>
                 

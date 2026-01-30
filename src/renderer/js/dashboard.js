@@ -1,115 +1,140 @@
 /**
- * Dashboard Controller - English & Sinhala Mixed UI
+ * Dashboard Controller - ප්‍රධාන දත්ත සහ ප්‍රස්ථාර පාලනය
  */
 
-let incomeChart = null;
+let revenueChart = null;
 let portfolioChart = null;
 
-async function initDashboard() {
-    console.log("✅ Dashboard Initialized...");
-    await loadSuperDashboard();
-    setInterval(loadSuperDashboard, 300000); // Auto-refresh every 5 mins
-}
+$(document).ready(() => {
+    // Dashboard එක මුලින්ම load වන විට දත්ත ගෙන එන්න
+    loadDashboardStats();
 
-async function loadSuperDashboard() {
+    // Refresh බොත්තම සඳහා event එක
+    $("#btnRefreshDashboard").on("click", function() {
+        $(this).find('i').addClass('fa-spin'); // කරකැවෙන animation එකක්
+        loadDashboardStats();
+    });
+});
+
+/**
+ * Backend එකෙන් දත්ත ගෙනවිත් UI එක Update කිරීම
+ */
+async function loadDashboardStats() {
     try {
-        const data = await window.api.dashboard.getDashboardStats();
-
-        // Stats Update (English Titles in HTML)
-        $('#statTotalCapital').text(formatLKR(data.capitalOut));
-        $('#statReceivedInterest').text(formatLKR(data.interestReceived));
-        $('#statTargetInterest').text(formatLKR(data.interestTarget));
-        $('#statBlacklisted').text(data.blacklistedCount);
-        $('#statTotalCustCount').text(`Total Customers: ${data.totalCustomers}`);
-
-        // Collection Rate Update
-        const rate = data.interestTarget > 0 ? (data.interestReceived / data.interestTarget) * 100 : 0;
-        $('#statCollectionRate').text(`${rate.toFixed(1)}% Collected`);
-
-        // Recent Loans Table (English Types)
-        const tableHtml = data.recentLoans.map(loan => `
-            <tr>
-                <td><span class="badge bg-light text-dark border">${loan.LoanID}</span></td>
-                <td><i class="fas fa-user-circle me-2 text-primary"></i>${loan.CustomerName}</td>
-                <td class="text-uppercase small fw-bold text-muted">${loan.LoanType}</td>
-                <td class="fw-bold text-dark">${formatLKR(loan.LoanAmount)}</td>
-                <td><span class="badge bg-soft-danger text-danger">${loan.InterestRate}%</span></td>
-                <td><small class="text-muted">${new Date(loan.LoanDate).toLocaleDateString('en-GB')}</small></td>
-            </tr>
-        `).join('');
+        // 1. IPC හරහා දත්ත ලබා ගැනීම
+        const stats = await window.api.dashboard.getDashboardStats();
         
-        $('#recentLoansTableBody').html(tableHtml || '<tr><td colspan="6" class="text-center">No Data Available</td></tr>');
+        if (!stats) return;
 
-        // Update Charts with English Labels
-        updateIncomeChart(data.interestTarget, data.interestReceived);
-        updatePortfolioChart(data.portfolio);
+        // 2. ප්‍රධාන සංඛ්‍යාලේඛන (Stats Cards) Update කිරීම
+        $("#statTotalCapital").text(`රු. ${formatNumber(stats.capitalOut)}`);
+        $("#statReceivedInterest").text(`රු. ${formatNumber(stats.interestReceived)}`);
+        $("#statTargetInterest").text(`රු. ${formatNumber(stats.interestTarget)}`);
+        $("#statBlacklisted").text(stats.blacklistedCount);
+        $("#statTotalCustCount").text(`Total Customers: ${stats.totalCustomers}`);
+
+        // Collection Rate එක ගණනය කිරීම (Received / Target * 100)
+        const rate = stats.interestTarget > 0 
+            ? ((stats.interestReceived / stats.interestTarget) * 100).toFixed(1) 
+            : 0;
+        $("#statCollectionRate").text(`${rate}% Collected`);
+
+        // 3. මෑතකාලීන ණය වගුව (Table) පිරවීම
+        const tableBody = $("#recentLoansTableBody");
+        tableBody.empty();
+
+        if (stats.recentLoans && stats.recentLoans.length > 0) {
+            stats.recentLoans.forEach(loan => {
+                tableBody.append(`
+                    <tr>
+                        <td class="fw-bold text-primary">#${loan.LoanID}</td>
+                        <td>${loan.CustomerName}</td>
+                        <td><span class="badge bg-light text-dark border">${loan.LoanType}</span></td>
+                        <td class="fw-bold">රු. ${formatNumber(loan.LoanAmount)}</td>
+                        <td>${loan.InterestRate}%</td>
+                        <td class="text-muted small">${new Date(loan.LoanDate).toLocaleDateString()}</td>
+                    </tr>
+                `);
+            });
+        } else {
+            tableBody.append('<tr><td colspan="6" class="text-center py-4">දත්ත කිසිවක් හමු නොවීය.</td></tr>');
+        }
+
+        // 4. ප්‍රස්ථාර (Charts) ඇඳීම
+        updateRevenueChart(stats.interestTarget, stats.interestReceived);
+        updatePortfolioChart(stats.portfolio);
+
+        // Refresh icon එක නැවත සාමාන්‍ය තත්වයට පත් කිරීම
+        $("#btnRefreshDashboard i").removeClass('fa-spin');
 
     } catch (error) {
-        console.error("Dashboard Loading Error:", error);
+        console.error("Dashboard Load Error:", error);
+        notify.toast("Dashboard එක යාවත්කාලීන කිරීමේ දෝෂයකි", "error");
     }
 }
 
-// 💹 Revenue Chart
-function updateIncomeChart(target, received) {
+/**
+ * ලැබුණු සහ අපේක්ෂිත පොලිය සසඳන Bar Chart එක
+ */
+function updateRevenueChart(target, received) {
     const ctx = document.getElementById('superRevenueChart').getContext('2d');
-    if (incomeChart) incomeChart.destroy();
+    
+    if (revenueChart) revenueChart.destroy(); // පරණ Chart එක අයින් කරන්න
 
-    incomeChart = new Chart(ctx, {
+    revenueChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Target Interest', 'Received Interest'],
             datasets: [{
-                label: 'Amount (LKR)',
+                label: 'Amount (රු.)',
                 data: [target, received],
-                backgroundColor: ['#ffc107', '#198754'],
+                backgroundColor: ['#f6c23e', '#1cc88a'], // Warning (Yellow) and Success (Green)
                 borderRadius: 8,
-                barThickness: 40
+                barThickness: 50
             }]
         },
         options: {
             responsive: true,
-            plugins: { 
-                legend: { display: false },
-                title: { display: true, text: 'Revenue Analysis (Monthly)' }
-            }
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
 
-// 🍩 Portfolio Chart
-function updatePortfolioChart(portfolioData) {
+/**
+ * ණය වර්ගීකරණය පෙන්වන Donut Chart එක
+ */
+function updatePortfolioChart(portfolio) {
     const ctx = document.getElementById('portfolioDonutChart').getContext('2d');
+    
     if (portfolioChart) portfolioChart.destroy();
+
+    const labels = portfolio.map(item => item.LoanType);
+    const data = portfolio.map(item => item.totalAmount);
 
     portfolioChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: portfolioData.map(d => d.LoanType), // English labels from DB
+            labels: labels,
             datasets: [{
-                data: portfolioData.map(d => d.count),
-                backgroundColor: ['#0d6efd', '#fd7e14', '#6f42c1', '#20c997'],
-                hoverOffset: 15
+                data: data,
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverOffset: 4
             }]
         },
         options: {
-            cutout: '70%',
+            responsive: true,
             plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'Loan Portfolio Mix' }
+                legend: { position: 'bottom', labels: { boxWidth: 12 } }
             }
         }
     });
 }
 
-function formatLKR(val) {
-    return new Intl.NumberFormat('en-LK', {
-        style: 'currency',
-        currency: 'LKR',
-        minimumFractionDigits: 2
-    }).format(val || 0).replace('LKR', 'Rs.');
+/**
+ * මුදල් අගයන් ලස්සනට පෙන්වීමට (උදා: 1,500.00)
+ */
+function formatNumber(num) {
+    return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-
-$(document).ready(() => {
-    initDashboard();
-    $('#btnRefreshDashboard').click(loadSuperDashboard);
-});

@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS loans (
     LoanAmount DECIMAL(15, 2) NOT NULL,
     GivenAmount DECIMAL(15, 2),
     LoanDate DATE NOT NULL,
-    InterestRate DECIMAL(5, 2) DEFAULT 5.00,
-    PenaltyRateOnInterest DECIMAL(5, 2) DEFAULT 5.00, -- පොලියෙන් 5%
+    InterestRate DECIMAL(5, 2) NOT NULL,
+    PenaltyRateOnInterest DECIMAL(5, 2), 
     NextDueDate DATE NOT NULL, -- Alert එක පෙන්වීමට මීළඟ වාරික දිනය
     LastInterestDate DATE, 
     Status ENUM('ACTIVE', 'CLOSED') DEFAULT 'ACTIVE',
