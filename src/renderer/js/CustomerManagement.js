@@ -162,18 +162,32 @@ $(document).ready(function () {
         }
     });
 
-    // 8. Customer ඉවත් කිරීම
-    $('#btnCustomerDelete').on('click', async function () {
+  // 8. Customer ඉවත් කිරීම
+   $('#btnCustomerDelete').on('click', async function () {
         const id = $('#txtCustomerId').val();
-        if(!id) return notify.toast('Select a customer first!', 'warning');
+        if(!id) return notify.toast('කරුණාකර පාරිභෝගිකයෙකු තෝරාගන්න!', 'warning');
         
-        const confirmed = await notify.confirm(`Are you sure you want to delete ${id}?`);
+        const confirmed = await notify.confirm(`පාරිභෝගිකයා (${id}) ඉවත් කිරීමට ඔබට විශ්වාසද? මෙහිදී ඔහුට අදාළ සියලුම ණය වාරික සහ ගෙවීම් දත්ත මැකී යනු ඇත.`);
+        
         if (confirmed) {
-            await window.api.customer.delete(id);
-            notify.toast('Customer deleted!', 'info');
-            clearCustomerForm();
+            try {
+                // API එකේ නම නිවැරදිද බලන්න (customer ද customers ද කියා)
+                const result = await window.api.customer.delete(id); 
+                
+                if (result.success) {
+                    notify.toast('පාරිභෝගිකයා සාර්ථකව ඉවත් කළා!', 'success');
+                    clearCustomerForm();
+                    // List එක refresh කරන function එකක් තියෙනවා නම් මෙතනට දාන්න
+                    if (typeof loadCustomers === 'function') loadCustomers();
+                } else {
+                    notify.toast('වැරැද්දක් වුණා: ' + result.message, 'error');
+                }
+            } catch (err) {
+                notify.toast('System error එකක් ආවා!', 'error');
+                console.error(err);
+            }
         }
-    });
+   });
 
     $('#btnCustomerClear').on('click', clearCustomerForm);
 
