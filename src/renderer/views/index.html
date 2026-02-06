@@ -1043,6 +1043,10 @@
             <i class="fas fa-sms"></i>
             <span>SMS Delivery Log</span>
           </a>
+          <a class="menu-item" data-section="systemBackupSection">
+            <i class="fas fa-database"></i>
+            <span>System Backup</span>
+          </a>
         </nav>
 
         <div class="p-4 mt-auto">
@@ -2068,6 +2072,109 @@
               >
                 <i class="bi bi-inbox fs-1 opacity-25"></i>
                 <h5>ක්‍රියාත්මක ණය නොමැත</h5>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="systemBackupSection" class="dashboard-content d-none">
+          <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-header text-white py-4"
+              style="
+                background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+              "
+            >
+              <h2 class="mb-0 d-flex align-items-center gap-3">
+                <i class="bi bi-cloud-arrow-down-fill fs-1"></i>
+                දත්ත ගබඩා කළමනාකරණය (System Backup)
+              </h2>
+              <p class="mb-0 mt-2 opacity-90">
+                මාසිකව දත්ත ගොනු (Backup Files) සුරක්ෂිත කරගන්න
+              </p>
+            </div>
+
+            <div class="card-body p-5">
+              <div class="row justify-content-center">
+                <div class="col-md-8">
+                  <div
+                    class="backup-box p-4"
+                    style="
+                      background: #f8f9fa;
+                      border-radius: 20px;
+                      border: 2px dashed #dee2e6;
+                    "
+                  >
+                    <div class="row g-4">
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold"
+                          ><i class="bi bi-calendar-event"></i> වසර
+                          තෝරන්න</label
+                        >
+                        <select
+                          id="selBackupYear"
+                          class="form-select form-select-lg border-2"
+                        >
+                          <option value="2024">2024</option>
+                          <option value="2025" selected>2025</option>
+                          <option value="2026">2026</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold"
+                          ><i class="bi bi-calendar-month"></i> මාසය
+                          තෝරන්න</label
+                        >
+                        <select
+                          id="selBackupMonth"
+                          class="form-select form-select-lg border-2"
+                        >
+                          <option value="01">ජනවාරි (January)</option>
+                          <option value="02">පෙබරවාරි (February)</option>
+                          <option value="03">මාර්තු (March)</option>
+                          <option value="04">අප්‍රේල් (April)</option>
+                          <option value="05">මැයි (May)</option>
+                          <option value="06">ජූනි (June)</option>
+                          <option value="07">ජූලි (July)</option>
+                          <option value="08">අගෝස්තු (August)</option>
+                          <option value="09">සැප්තැම්බර් (September)</option>
+                          <option value="10">ඔක්තෝබර් (October)</option>
+                          <option value="11">නොවැම්බර් (November)</option>
+                          <option value="12">දෙසැම්බර් (December)</option>
+                        </select>
+                      </div>
+
+                      <div class="col-12 mt-4 text-center">
+                        <div
+                          class="alert alert-info border-0 rounded-4 small py-2 mb-4"
+                        >
+                          <i class="bi bi-info-circle-fill me-2"></i>
+                          මෙහිදී සම්පූර්ණ දත්ත පද්ධතියම තෝරාගත් මාසයට අදාළ
+                          නමකින් <b>D:/Gagana_Backups</b> හි සුරැකෙනු ඇත.
+                        </div>
+
+                        <button
+                          class="btn btn-primary btn-lg px-5 py-3 fw-bold rounded-pill shadow-lg"
+                          id="btnRunBackup"
+                          style="transition: all 0.3s ease"
+                        >
+                          <i class="bi bi-shield-lock-fill me-2"></i> බැකප් එක
+                          ලබාගන්න (Start Backup)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="backupStatusArea" class="mt-4 text-center d-none">
+                    <div
+                      class="spinner-border text-primary mb-2"
+                      role="status"
+                    ></div>
+                    <p class="text-muted">
+                      බැකප් එක සකස් කරමින් පවතියි. කරුණාකර රැඳී සිටින්න...
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -3544,5 +3651,6 @@
     <script src="../js/dashboard.js"></script>
     <script src="../js/onlineoffline.js"></script>
     <script src="../js/SmsService.js"></script>
+    <script src="../js/bacup.js"></script>
   </body>
 </html>

@@ -15,6 +15,7 @@ import { registerLoanLookupHandlers } from './controllers/LoanLookupController.j
 import { setupSMSHandlers } from './controllers/smsController.js';
 import { registerDashbordHandlers } from './controllers/DashbordController.js'; //
 import { registerStatusHandlers } from './controllers/SystemStatusController.js';
+import { registerBackupHandlers } from './controllers/BackupController.js';
 
 // SMS Handlers register කිරීම
 
@@ -39,6 +40,7 @@ async function startApp() {
         setupSMSHandlers();
         registerDashbordHandlers();
         registerStatusHandlers();
+        registerBackupHandlers();
 
         // 3. අවසානයට Window එක create කරන්න
         createMainWindow();

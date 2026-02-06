@@ -86,7 +86,8 @@ getLogsByDate: (date) => ipcRenderer.invoke('sms:getLogsByDate', date)    },
    dashboard: {
 getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),   } ,
 system: {
-        checkStatus: () => ipcRenderer.invoke('db:check-status')
+        checkStatus: () => ipcRenderer.invoke('db:check-status'),
+        runBackup: (year, month) => ipcRenderer.invoke('system:run-backup', { year, month })
     }
 
 });
