@@ -4,14 +4,21 @@ $(document).ready(function () {
 
     // --- පාලක ශ්‍රිත (Helper Functions) ---
 
-    // 1. ඊළඟ Customer ID එක පෙන්වීම
+    // 1. දුරකථන අංකය +94 රටාවට තිබේදැයි පරීක්ෂා කිරීම (Regex Validation)
+    function isValidSriLankanPhone(phone) {
+        // රටාව: +94 පසුව ඉලක්කම් 9ක් තිබිය යුතුය.
+        const phoneRegex = /^\+94\d{9}$/;
+        return phoneRegex.test(phone);
+    }
+
+    // 2. ඊළඟ Customer ID එක පෙන්වීම
     async function setNextCustomerId() {
         const nextId = await window.api.customer.getNextId();
         $('#txtDisplayCustomerId').val(nextId);
         $('#txtCustomerId').val(nextId);
     }
 
-    // 2. Blacklist Switch එක Toggle වන විට Input Field එක පාලනය
+    // 3. Blacklist Switch එක Toggle වන විට
     $('#chkBlacklist').on('change', function() {
         if ($(this).is(':checked')) {
             $('#divBlacklistReason').removeClass('d-none').hide().fadeIn(300);
@@ -24,7 +31,7 @@ $(document).ready(function () {
         }
     });
 
-    // 3. Table එක Load කිරීම
+    // 4. Table එක Load කිරීම
     async function loadCustomerTable() {
         const tbody = $('#tblCustomers');
         tbody.html('<tr><td colspan="7" class="text-center py-3"><div class="spinner-border spinner-border-sm text-info"></div></td></tr>');
@@ -53,7 +60,7 @@ $(document).ready(function () {
                         <td><span class="badge bg-info text-dark">${cus.CustomerID}</span></td>
                         <td class="${isBlocked ? 'fw-bold text-danger' : ''}">${cus.CustomerName}</td>
                         <td>${cus.NIC}</td>
-                        <td>${cus.CustomerPhone || 'N/A'}</td>
+                        <td class="fw-bold text-primary">${cus.CustomerPhone || 'N/A'}</td>
                         <td>${cus.CustomerAddress || 'N/A'}</td>
                         <td class="text-center">${statusBadge}</td>
                         <td class="text-danger small">${cus.BlacklistReason || '-'}</td>
@@ -65,10 +72,10 @@ $(document).ready(function () {
         }
     }
 
-    // 4. Row එකක් Click කළ විට Form එක පිරවීම
+    // 5. Row එකක් Click කළ විට Form එක පිරවීම
     $('#tblCustomers').on('click', '.customer-row', function () {
-        $('.customer-row').removeClass('table-info');
-        $(this).addClass('table-info');
+        $('.customer-row').removeClass('table-info shadow-sm');
+        $(this).addClass('table-info shadow-sm');
 
         const isBlacklisted = $(this).data('blacklisted') == 1;
 
@@ -79,7 +86,6 @@ $(document).ready(function () {
         $('#txtCustomerPhone').val($(this).data('phone'));
         $('#txtCustomerAddress').val($(this).data('address'));
         
-        // Blacklist Status සහ Reason සැකසීම
         $('#chkBlacklist').prop('checked', isBlacklisted);
         $('#txtBlacklistReason').val($(this).data('reason'));
 
@@ -92,21 +98,29 @@ $(document).ready(function () {
         $('#btnCustomerAdd').prop('disabled', true);
     });
 
-    // 5. Customer එකතු කිරීම
+    // 6. Customer එකතු කිරීම
     $('#btnCustomerAdd').on('click', async function () {
+        const phone = $('#txtCustomerPhone').val().trim();
         const isBlacklisted = $('#chkBlacklist').is(':checked');
         const reason = $('#txtBlacklistReason').val().trim();
 
         const data = {
             CustomerName: $('#txtCustomerName').val().trim(),
             NIC: $('#txtCustomerNIC').val().trim(),
-            CustomerPhone: $('#txtCustomerPhone').val().trim(),
+            CustomerPhone: phone,
             CustomerAddress: $('#txtCustomerAddress').val().trim(),
             IsBlacklisted: isBlacklisted,
             BlacklistReason: isBlacklisted ? reason : null
         };
 
+        // --- Validations ---
         if (!data.CustomerName || !data.NIC) return notify.toast('Name and NIC required!', 'warning');
+        
+        // 🛑 Phone Number Validation (+94700000000)
+        if (!isValidSriLankanPhone(data.CustomerPhone)) {
+            return notify.toast('Invalid phone! Must be in +94700000000 format.', 'error');
+        }
+
         if (isBlacklisted && !reason) return notify.toast('Blacklist reason is required!', 'warning');
 
         const res = await window.api.customer.add(data);
@@ -116,8 +130,9 @@ $(document).ready(function () {
         }
     });
 
-    // 6. Customer යාවත්කාලීන කිරීම
+    // 7. Customer යාවත්කාලීන කිරීම
     $('#btnCustomerUpdate').on('click', async function () {
+        const phone = $('#txtCustomerPhone').val().trim();
         const isBlacklisted = $('#chkBlacklist').is(':checked');
         const reason = $('#txtBlacklistReason').val().trim();
 
@@ -125,14 +140,20 @@ $(document).ready(function () {
             CustomerID: $('#txtCustomerId').val(),
             CustomerName: $('#txtCustomerName').val().trim(),
             NIC: $('#txtCustomerNIC').val().trim(),
-            CustomerPhone: $('#txtCustomerPhone').val().trim(),
+            CustomerPhone: phone,
             CustomerAddress: $('#txtCustomerAddress').val().trim(),
             IsBlacklisted: isBlacklisted,
             BlacklistReason: isBlacklisted ? reason : null
         };
 
         if (!data.CustomerID) return notify.toast('Select a customer to update!', 'warning');
-        if (isBlacklisted && !reason) return notify.toast('Please enter the blacklist reason!', 'warning');
+        
+        // 🛑 Phone Number Validation (+94700000000)
+        if (!isValidSriLankanPhone(data.CustomerPhone)) {
+            return notify.toast('Invalid phone! Use +947XXXXXXXX format.', 'error');
+        }
+
+        if (isBlacklisted && !reason) return notify.toast('Blacklist reason is required!', 'warning');
 
         const res = await window.api.customer.update(data);
         if (res.success) {
@@ -141,7 +162,7 @@ $(document).ready(function () {
         }
     });
 
-    // 7. Customer ඉවත් කිරීම
+    // 8. Customer ඉවත් කිරීම
     $('#btnCustomerDelete').on('click', async function () {
         const id = $('#txtCustomerId').val();
         if(!id) return notify.toast('Select a customer first!', 'warning');
@@ -161,7 +182,7 @@ $(document).ready(function () {
         $('#chkBlacklist').prop('checked', false);
         $('#divBlacklistReason').addClass('d-none').hide();
         $('#btnCustomerAdd').prop('disabled', false);
-        $('.customer-row').removeClass('table-info');
+        $('.customer-row').removeClass('table-info shadow-sm');
         loadCustomerTable();
         setNextCustomerId();
     }

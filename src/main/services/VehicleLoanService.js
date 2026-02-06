@@ -2,15 +2,26 @@ import db from '../config/db.js';
 
 class VehicleLoanService {
 
-    // 🔹 Generate Next Vehicle Loan ID (VLI001)
-    async generateNextLoanId() {
+   // 🔹 Generate Next Vehicle Loan ID (VLI00001)
+async generateNextLoanId() {
+    try {
         const [rows] = await db.execute(
             "SELECT LoanID FROM loans WHERE LoanType='VEHICLE' ORDER BY LoanID DESC LIMIT 1"
         );
-        if (rows.length === 0) return 'VLI001';
+
+        // පළමු වාර්තාව නම් VLI00001 ලබා දෙන්න
+        if (rows.length === 0) return 'VLI00001';
+
+        // 'VLI' කොටස ඉවත් කර අංකය ලබාගෙන 1ක් එකතු කරන්න
         const num = parseInt(rows[0].LoanID.replace('VLI', ''));
-        return 'VLI' + (num + 1).toString().padStart(3, '0');
+        
+        // padStart(5, '0') මගින් VLI පසුව ඉලක්කම් 5ක දිගක් පවත්වා ගනී (උදා: VLI00001)
+        return 'VLI' + (num + 1).toString().padStart(5, '0');
+    } catch (error) {
+        console.error("Vehicle Loan ID Generation Error:", error);
+        throw error;
     }
+}
 
     // 🔹 Check if beneficiary is already ACTIVE
     async checkBeneficiaryActive(name, phone) {

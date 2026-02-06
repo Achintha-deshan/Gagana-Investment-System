@@ -2,20 +2,26 @@ import db from '../config/db.js';
 
 class CustomerService {
     
-    // 1. ඊළඟ Customer ID එක සාදා ගැනීම (C001, C002...)
-    async generateNextCustomerId() {
-        try {
-            const [rows] = await db.execute('SELECT CustomerID FROM customers ORDER BY CustomerID DESC LIMIT 1');
-            if (rows.length === 0) return 'C001';
+    // 1. ඊළඟ Customer ID එක සාදා ගැනීම (C0001, C0002...)
+async generateNextCustomerId() {
+    try {
+        const [rows] = await db.execute('SELECT CustomerID FROM customers ORDER BY CustomerID DESC LIMIT 1');
+        
+        // පද්ධතියේ පළමු පාරිභෝගිකයා නම් C0001 ලබා දෙන්න
+        if (rows.length === 0) return 'C0001';
 
-            const lastId = rows[0].CustomerID;
-            const lastNumber = parseInt(lastId.substring(1));
-            return 'C' + (lastNumber + 1).toString().padStart(3, '0');
-        } catch (error) {
-            console.error("ID Generation Error:", error);
-            throw error;
-        }
+        const lastId = rows[0].CustomerID;
+        
+        // 'C' අකුර ඉවත් කර ඉතිරි අංකය ගෙන 1ක් එකතු කරන්න
+        const lastNumber = parseInt(lastId.substring(1));
+        
+        // padStart(4, '0') මගින් C පසුව ඉලක්කම් 4ක දිගක් පවත්වා ගනී (උදා: C0001)
+        return 'C' + (lastNumber + 1).toString().padStart(4, '0');
+    } catch (error) {
+        console.error("Customer ID Generation Error:", error);
+        throw error;
     }
+}
 
     // 2. සියලුම පාරිභෝගිකයින් ලබා ගැනීම (අලුත්ම අය මුලට)
     async getAll() {

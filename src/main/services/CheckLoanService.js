@@ -2,15 +2,26 @@ import db from '../config/db.js';
 
 class CheckLoanService {
 
-    // 🔹 Generate Next Check Loan ID (CHQ001)
-    async generateNextCheckLoanId() {
+  // 🔹 Generate Next Check Loan ID (CHQ00001)
+async generateNextCheckLoanId() {
+    try {
         const [rows] = await db.execute(
             "SELECT LoanID FROM loans WHERE LoanType='CHECK' ORDER BY LoanID DESC LIMIT 1"
         );
-        if (rows.length === 0) return 'CHQ001';
+
+        // පළමු වාර්තාව නම් CHQ00001 ලබා දෙන්න
+        if (rows.length === 0) return 'CHQ00001';
+
+        // 'CHQ' කොටස ඉවත් කර ඉතිරි අංකය ලබාගෙන 1ක් එකතු කරන්න
         const num = parseInt(rows[0].LoanID.replace('CHQ', ''));
-        return 'CHQ' + (num + 1).toString().padStart(3, '0');
+        
+        // padStart(5, '0') මගින් CHQ පසුව ඉලක්කම් 5ක දිගක් පවත්වා ගනී (උදා: CHQ00001)
+        return 'CHQ' + (num + 1).toString().padStart(5, '0');
+    } catch (error) {
+        console.error("Check Loan ID Generation Error:", error);
+        throw error;
     }
+}
 
     // 🔹 ඇපකරු සක්‍රීයදැයි බැලීම
     async checkBeneficiaryActive(name, phone) {

@@ -2,15 +2,26 @@ import db from '../config/db.js';
 
 class PromissoryLoanService {
 
-    // 🔹 Generate Next ID
-    async generateNextPromissoryId() {
+    // 🔹 Generate Next Promissory Loan ID (PRM00001)
+async generateNextPromissoryId() {
+    try {
         const [rows] = await db.execute(
             "SELECT LoanID FROM loans WHERE LoanType='PROMISSORY' ORDER BY LoanID DESC LIMIT 1"
         );
-        if (rows.length === 0) return 'PRM001';
+
+        // පළමු වාර්තාව නම් PRM00001 ලබා දෙන්න
+        if (rows.length === 0) return 'PRM00001';
+
+        // 'PRM' කොටස ඉවත් කර අංකය ලබාගෙන 1ක් එකතු කරන්න
         const num = parseInt(rows[0].LoanID.replace('PRM', ''));
-        return 'PRM' + (num + 1).toString().padStart(3, '0');
+        
+        // padStart(5, '0') මගින් PRM පසුව ඉලක්කම් 5ක දිගක් පවත්වා ගනී
+        return 'PRM' + (num + 1).toString().padStart(5, '0');
+    } catch (error) {
+        console.error("Promissory ID Generation Error:", error);
+        throw error;
     }
+}
 
     async checkBeneficiaryActive(name, phone) {
         const [rows] = await db.execute(`

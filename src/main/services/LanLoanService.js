@@ -3,15 +3,26 @@ import db from '../config/db.js';
 
 class LanLoanService {
 
-    // 🔹 Generate Next Lan Loan ID (LLI001)
-    async generateNextLanLoanId() {
+    // 🔹 Generate Next Land Loan ID (LLI00001)
+async generateNextLanLoanId() {
+    try {
         const [rows] = await db.execute(
             "SELECT LoanID FROM loans WHERE LoanType='LAND' ORDER BY LoanID DESC LIMIT 1"
         );
-        if (rows.length === 0) return 'LLI001';
+
+        // පළමු වාර්තාව නම් LLI00001 ලබා දෙන්න
+        if (rows.length === 0) return 'LLI00001';
+
+        // 'LLI' කොටස ඉවත් කර අංකය ලබාගෙන 1ක් එකතු කරන්න
         const num = parseInt(rows[0].LoanID.replace('LLI', ''));
-        return 'LLI' + (num + 1).toString().padStart(3, '0');
+        
+        // padStart(5, '0') මගින් LLI පසුව බිංදු 4ක් සහ අංකය ලැබෙන සේ සකසයි
+        return 'LLI' + (num + 1).toString().padStart(5, '0');
+    } catch (error) {
+        console.error("Land Loan ID Generation Error:", error);
+        throw error;
     }
+}
 
     // 🔹 Check if beneficiary is already ACTIVE
     async checkBeneficiaryActive(name, phone) {

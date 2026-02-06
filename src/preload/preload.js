@@ -22,13 +22,7 @@ contextBridge.exposeInMainWorld('api', {
         delete: (id) => ipcRenderer.invoke('customers:delete', id),
         search: (query) => ipcRenderer.invoke('customers:search', query)
     },
-    employee: {
-        getAll: () => ipcRenderer.invoke('employee:get-all'),
-        getNextId: () => ipcRenderer.invoke('employee:get-next-id'),
-        add: (data) => ipcRenderer.invoke('employee:add', data),
-        update: (data) => ipcRenderer.invoke('employee:update', data),
-        delete: (id) => ipcRenderer.invoke('employee:delete', id)
-    },
+
    vehicleLoan: {
         getAll: () => ipcRenderer.invoke('vehicle-loans:get-all'),
         getById: (loanId) => ipcRenderer.invoke('vehicle-loans:get-by-id', loanId),
@@ -80,13 +74,7 @@ contextBridge.exposeInMainWorld('api', {
         getHistory: (loanId) => ipcRenderer.invoke('payment:getHistory', loanId),
         voidPayment: (paymentId) => ipcRenderer.invoke('payment:void', paymentId) // මෙය අලුතින් එක් කරන්න
     },
-    reports: {
-    getSummary: () => ipcRenderer.invoke('reports:get-summary'),
-    getArrears: () => ipcRenderer.invoke('reports:get-arrears'),
-    getCollection: (dates) => ipcRenderer.invoke('reports:get-collection', dates),
-    getSettled: (dates) => ipcRenderer.invoke('reports:get-settled', dates),    
-    getAging: (testDate) => ipcRenderer.invoke('reports:get-aging', testDate),
-   },
+
     loanLookup: {
         getDetails: (loanId) => ipcRenderer.invoke('lookup:get-details', loanId),
         getCustomerLoans: (customerId) => ipcRenderer.invoke('lookup:get-customer-loans', customerId)

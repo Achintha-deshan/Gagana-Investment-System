@@ -6,16 +6,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const txtLookupSearch = document.getElementById('txtLookupSearch');
     const btnLookupSearch = document.getElementById('btnLookupSearch');
-    const lookupLoanList = document.getElementById('lookupLoanList');
-    const lookupDetailsPane = document.getElementById('lookupDetailsPane');
 
-    // 1. සෙවුම් බොත්තම ක්‍රියාත්මක කිරීම
     if (btnLookupSearch) {
         btnLookupSearch.addEventListener('click', async () => {
             const query = txtLookupSearch.value.trim();
             if (!query) return;
 
-            // සෙවීමේදී පාලකය සක්‍රීය කිරීම
             btnLookupSearch.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             btnLookupSearch.disabled = true;
 
@@ -25,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (customers && customers.length > 0) {
                     const customer = customers[0];
 
-                    // පාරිභෝගිකයා Blacklist ද කියා බැලීම
                     if (customer.IsBlacklisted === 1) {
                         await notify.confirm(
                             `මෙම පාරිභෝගිකයා (${customer.CustomerName}) අසාදු ලේඛනගත කර ඇත. විස්තර බැලීම තහනම්ය.`,
@@ -63,8 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 2. වම්පස ඇති ණය ලැයිස්තුව (Loan List) පෙන්වීම
+ * දිනය සහ වෙලාව සකසන ශ්‍රිතය (Format: 2025.01.12 10.30 a.m)
  */
+function formatCustomDateTime(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+
+    // දිනය: YYYY.MM.DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    // වෙලාව: HH.MM a.m/p.m
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'p.m' : 'a.m';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12; // පැය 0 නම් 12 ලෙස පෙන්වන්න
+
+    return `${year}.${month}.${day} ${hours}.${minutes} ${ampm}`;
+}
+
 function renderLoanList(loans) {
     const lookupLoanList = document.getElementById('lookupLoanList');
     if (!loans || loans.length === 0) {
@@ -100,46 +115,81 @@ async function loadLoanFullAnalysis(loanId) {
         if (res.success) {
             const d = res.data;
 
-            // ප්‍රධාන සංඛ්‍යාලේඛන
+            // --- 1. මූල්‍ය දත්ත (Financial Stats) ---
             document.getElementById('vLoanAmt').innerText = `Rs. ${d.financials.originalAmount.toLocaleString()}`;
             
-            // Arrears (හිඟ) මාස ගණන පෙන්වීම සහ වර්ණය වෙනස් කිරීම
             const arrearsLbl = document.getElementById('vArrearsMonths');
             arrearsLbl.innerText = `${d.overdue.months} Months`;
             arrearsLbl.className = d.overdue.months > 0 ? 'fw-bold mb-0 text-danger' : 'fw-bold mb-0 text-success';
 
-            // පරක්කු දින ගණන
             document.getElementById('vOverdueDays').innerText = `${d.overdue.days} Days`;
-            
-            // මුළු හිඟ මුදල
             document.getElementById('vTotalPayable').innerText = `Rs. ${d.financials.totalPayableNow.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
-            // දින වකවානු සහ පොලිය
-            document.getElementById('vDueDate').innerText = d.dates.nextDueDate ? formatDateOnly(d.dates.nextDueDate) : 'N/A';
-            document.getElementById('vGivenDate').innerText = formatDateOnly(d.dates.issuedDate);
+            // දින වකවානු යාවත්කාලීන කිරීම (New Format)
+            document.getElementById('vDueDate').innerText = d.dates.nextDueDate ? formatCustomDateTime(d.dates.nextDueDate) : 'N/A';
+            document.getElementById('vGivenDate').innerText = formatCustomDateTime(d.dates.issuedDate);
             document.getElementById('vIntRate').innerText = `Rs. ${d.financials.monthlyInterest.toLocaleString()}`;
             
             const lastPaidLabel = document.getElementById('vLastPaidDate');
-            lastPaidLabel.innerText = d.dates.lastPaymentDate ? formatDateOnly(d.dates.lastPaymentDate) : 'No Payments Yet';
+            lastPaidLabel.innerText = d.dates.lastPaymentDate ? formatCustomDateTime(d.dates.lastPaymentDate) : 'No Payments Yet';
 
-            // Alert Notes කොටස
+            // --- 2. ඇප වත්කම් විස්තර (Asset Specifics) ---
+            const assetArea = document.getElementById('vAssetDetailsArea');
+            const assetContent = document.getElementById('vAssetDetailsContent');
+            
+            if (d.specifics) {
+                assetArea.classList.remove('d-none');
+                let html = '<div class="row">';
+                for (const [key, value] of Object.entries(d.specifics)) {
+                    if (key !== 'LoanID' && key !== 'ID' && value) {
+                        html += `
+                            <div class="col-md-4 mb-2">
+                                <small class="text-muted d-block text-capitalize">${key.replace(/([A-Z])/g, ' $1')}</small>
+                                <span class="fw-bold">${value}</span>
+                            </div>`;
+                    }
+                }
+                html += '</div>';
+                assetContent.innerHTML = html;
+            } else {
+                assetArea.classList.add('d-none');
+            }
+
+            // --- 3. ඇපකරුවන්ගේ විස්තර (Beneficiaries) ---
+            const benArea = document.getElementById('vBeneficiaryArea');
+            const benTable = document.getElementById('vBeneficiaryTable');
+            
+            if (d.beneficiaries && d.beneficiaries.length > 0) {
+                benArea.classList.remove('d-none');
+                benTable.innerHTML = d.beneficiaries.map(b => `
+                    <tr>
+                        <td class="ps-3 fw-bold">${b.Name}</td>
+                        <td>${b.Phone || '-'}</td>
+                        <td><small>${b.Address || '-'}</small></td>
+                    </tr>
+                `).join('');
+            } else {
+                benArea.classList.add('d-none');
+            }
+
+            // --- 4. Alert Notes ---
             const notesArea = document.getElementById('vLoanNotes');
             if (d.overdue.days > 0 || d.overdue.months > 0) {
                 notesArea.innerHTML = `
                     <div class="alert alert-danger border-0 shadow-sm rounded-4">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>අවධානයට:</strong> මෙම ණය මුදල මාස ${d.overdue.months} ක් සහ දින ${d.overdue.days} ක් ප්‍රමාද වී ඇත.
+                        <strong>ප්‍රමාද දැනුම්දීම:</strong> මෙම ණය මුදල සඳහා ${d.overdue.statusNote} ඇත. (ප්‍රමාද දින: ${d.overdue.days})
                     </div>`;
             } else {
                 notesArea.innerHTML = `<div class="alert alert-success border-0 shadow-sm rounded-4"><i class="bi bi-check-circle-fill me-2"></i> මෙම ණය මුදල නිවැරදිව පවත්වාගෙන යයි.</div>`;
             }
 
-            // ගෙවීම් ඉතිහාසය Table එක (දිනය විතරක් පෙන්වයි)
+            // --- 5. ගෙවීම් ඉතිහාසය (History Table - New Format) ---
             const historyTableBody = document.getElementById('vHistoryTable');
             if (d.history && d.history.length > 0) {
                 historyTableBody.innerHTML = d.history.map(row => `
                     <tr>
-                        <td><span class="badge bg-light text-dark border">${formatDateOnly(row.PaymentDate)}</span></td>
+                        <td><span class="badge bg-light text-dark border">${formatCustomDateTime(row.PaymentDate)}</span></td>
                         <td class="fw-bold text-success">Rs. ${parseFloat(row.PaidAmount).toLocaleString()}</td>
                         <td class="text-danger">Rs. ${parseFloat(row.PenaltyPaid).toLocaleString()}</td>
                         <td>Rs. ${parseFloat(row.InterestPaid).toLocaleString()}</td>
@@ -159,19 +209,11 @@ async function loadLoanFullAnalysis(loanId) {
     }
 }
 
-/**
- * දිනය සහ වෙලාවෙන් දිනය පමනක් (YYYY-MM-DD) වෙන් කර ගැනීම
- */
+// පැරණි function එක නව format එකට map කිරීම
 function formatDateOnly(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    // en-CA format එකෙන් YYYY-MM-DD ලෙස දිනය ලැබේ
-    return date.toLocaleDateString('en-CA');
+    return formatCustomDateTime(dateString);
 }
 
-/**
- * UI එක මුල් තත්වයට පත් කිරීම
- */
 function resetLookupUI() {
     document.getElementById('lookupLoanList').innerHTML = '';
     document.getElementById('lookupDetailsPane').classList.add('d-none');

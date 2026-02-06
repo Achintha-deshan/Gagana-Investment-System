@@ -1,24 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gagana Investment - Dashboard</title>
 
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:;">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:;"
+    />
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/all.min.css" />
+    <link rel="stylesheet" href="../css/bootstrap-icons.css" />
     <link
-        rel="stylesheet"
-        href="../css/bootstrap.min.css"
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
-      <link
-        rel="stylesheet"
-        href="../css/all.min.css"
-    />
-      <link
-        rel="stylesheet"
-        href="../css/bootstrap-icons.css"
-    />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
       * {
         margin: 0;
@@ -79,8 +76,13 @@
       }
 
       @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
       }
 
       .login-card {
@@ -97,8 +99,14 @@
       }
 
       @keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .login-logo {
@@ -347,10 +355,18 @@
         background: var(--primary-gradient);
       }
 
-      .stat-card.blue::before { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
-      .stat-card.green::before { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
-      .stat-card.orange::before { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
-      .stat-card.purple::before { background: var(--primary-gradient); }
+      .stat-card.blue::before {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      }
+      .stat-card.green::before {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      }
+      .stat-card.orange::before {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      }
+      .stat-card.purple::before {
+        background: var(--primary-gradient);
+      }
 
       .stat-card:hover {
         transform: translateY(-5px);
@@ -368,10 +384,22 @@
         margin-bottom: 15px;
       }
 
-      .stat-card.blue .stat-icon { background: rgba(52, 152, 219, 0.1); color: #3498db; }
-      .stat-card.green .stat-icon { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
-      .stat-card.orange .stat-icon { background: rgba(243, 156, 18, 0.1); color: #f39c12; }
-      .stat-card.purple .stat-icon { background: rgba(102, 126, 234, 0.1); color: var(--primary-color); }
+      .stat-card.blue .stat-icon {
+        background: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+      }
+      .stat-card.green .stat-icon {
+        background: rgba(46, 204, 113, 0.1);
+        color: #2ecc71;
+      }
+      .stat-card.orange .stat-icon {
+        background: rgba(243, 156, 18, 0.1);
+        color: #f39c12;
+      }
+      .stat-card.purple .stat-icon {
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--primary-color);
+      }
 
       .stat-card h3 {
         color: #2c3e50;
@@ -432,14 +460,16 @@
         margin-bottom: 8px;
       }
 
-      .form-control, .form-select {
+      .form-control,
+      .form-select {
         border: 2px solid #e0e0e0;
         border-radius: 10px;
         padding: 10px 15px;
         transition: all 0.3s;
       }
 
-      .form-control:focus, .form-select:focus {
+      .form-control:focus,
+      .form-select:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
       }
@@ -497,36 +527,56 @@
       }
 
       body {
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        .section-container {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .form-box {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        .data-table th, .data-table td {
-            text-align: left;
-        }
+        background-color: #f8f9fa;
+        padding: 20px;
+      }
+      .section-container {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .form-box {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .data-table th,
+      .data-table td {
+        text-align: left;
+      }
 
-      .text-purple { color: #6f42c1; }
-      .bg-gradient-primary { background: linear-gradient(45deg, #0d6efd, #003d99); }
-.bg-gradient-success { background: linear-gradient(45deg, #198754, #0f5132); }
-.bg-gradient-warning { background: linear-gradient(45deg, #ffc107, #cc9a06); }
-.bg-gradient-danger { background: linear-gradient(45deg, #dc3545, #842029); }
-.card-body h3 { font-size: 1.6rem; letter-spacing: -0.5px; }
-.icon-box { background: rgba(255, 255, 255, 0.2); }
-.bg-purple-light { background-color: #f3e8ff; }
+      .text-purple {
+        color: #6f42c1;
+      }
+      .bg-gradient-primary {
+        background: linear-gradient(45deg, #0d6efd, #003d99);
+      }
+      .bg-gradient-success {
+        background: linear-gradient(45deg, #198754, #0f5132);
+      }
+      .bg-gradient-warning {
+        background: linear-gradient(45deg, #ffc107, #cc9a06);
+      }
+      .bg-gradient-danger {
+        background: linear-gradient(45deg, #dc3545, #842029);
+      }
+      .card-body h3 {
+        font-size: 1.6rem;
+        letter-spacing: -0.5px;
+      }
+      .icon-box {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .bg-purple-light {
+        background-color: #f3e8ff;
+      }
 
       /* ========== UTILITIES ========== */
-      .d-none { display: none !important; }
+      .d-none {
+        display: none !important;
+      }
 
       @media (max-width: 768px) {
         .sidebar {
@@ -538,320 +588,354 @@
       }
 
       /* Vehicle loarn */
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .text-purple {
-            color: #6f42c1;
-        }
-        
-        .card {
-            border: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .table-responsive {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-        }
-        
-        .table thead {
-            background: linear-gradient(135deg, #e0d5ff 0%, #f3e8ff 100%);
-        }
-        
-        .table tbody tr:hover {
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .table tbody tr.table-active {
-            background: #cfe2ff !important;
-            border-left: 4px solid #0d6efd;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .bg-light {
-            background: #f8f9fa !important;
-        }
-        
-        .btn {
-            border-radius: 8px;
-            padding: 10px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .search-box {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .info-display {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #2196f3;
-            margin-bottom: 20px;
-        }
-        
-        .info-item {
-            margin-bottom: 10px;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #1976d2;
-            font-size: 14px;
-        }
-        
-        .info-value {
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 5px;
-            min-width: 150px;
-        }
-        
-        .section-divider {
-            border-top: 3px solid #dee2e6;
-            margin: 30px 0;
-            padding-top: 20px;
-        }
-        
-        .subsection {
-            background: #fff9e6;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border-left: 4px solid #ffc107;
-        }
-        
-        .beneficiary-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #dee2e6;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .beneficiary-item:hover {
-            background: #f8f9fa;
-            border-color: #0d6efd;
-        }
-        
-        .beneficiary-item.active {
-            background: #cfe2ff;
-            border-color: #0d6efd;
-            border-left: 4px solid #0d6efd;
-        }
-        
-        .beneficiary-item .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-        
-        .mini-table {
-            font-size: 14px;
-        }
-        
-        .mini-table th {
-            background: #f8f9fa;
-            padding: 8px;
-        }
-        
-        .mini-table td {
-            padding: 8px;
-        }
-        .loan-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
 
-        .loan-header {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 1.5rem 2rem;
+      .text-purple {
+        color: #6f42c1;
+      }
+
+      .card {
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .table-responsive {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+      }
+
+      .table thead {
+        background: linear-gradient(135deg, #e0d5ff 0%, #f3e8ff 100%);
+      }
+
+      .table tbody tr:hover {
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .table tbody tr.table-active {
+        background: #cfe2ff !important;
+        border-left: 4px solid #0d6efd;
+      }
+
+      .form-label {
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .form-control:focus,
+      .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+      }
+
+      .bg-light {
+        background: #f8f9fa !important;
+      }
+
+      .btn {
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .search-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .info-display {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #2196f3;
+        margin-bottom: 20px;
+      }
+
+      .info-item {
+        margin-bottom: 10px;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #1976d2;
+        font-size: 14px;
+      }
+
+      .info-value {
+        background: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: inline-block;
+        margin-top: 5px;
+        min-width: 150px;
+      }
+
+      .section-divider {
+        border-top: 3px solid #dee2e6;
+        margin: 30px 0;
+        padding-top: 20px;
+      }
+
+      .subsection {
+        background: #fff9e6;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+        border-left: 4px solid #ffc107;
+      }
+
+      .beneficiary-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #dee2e6;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .beneficiary-item:hover {
+        background: #f8f9fa;
+        border-color: #0d6efd;
+      }
+
+      .beneficiary-item.active {
+        background: #cfe2ff;
+        border-color: #0d6efd;
+        border-left: 4px solid #0d6efd;
+      }
+
+      .beneficiary-item .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+
+      .mini-table {
+        font-size: 14px;
+      }
+
+      .mini-table th {
+        background: #f8f9fa;
+        padding: 8px;
+      }
+
+      .mini-table td {
+        padding: 8px;
+      }
+      .loan-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .loan-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem 2rem;
+      }
+
+      .search-box,
+      .info-display,
+      .subsection {
+        border-radius: 10px;
+        padding: 1.25rem;
+      }
+
+      .info-display {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+      }
+
+      .subsection {
+        background: #fff9e6;
+        border-left: 4px solid #ffc107;
+      }
+
+      .beneficiary-item {
+        transition: all 0.25s;
+      }
+
+      .beneficiary-item:hover,
+      .beneficiary-item.active {
+        transform: translateX(4px);
+      }
+
+      .table thead {
+        background: linear-gradient(135deg, #e0d5ff 0%, #f3e8ff 100%);
+        color: #6f42c1;
+      }
+
+      .text-purple {
+        color: #6f42c1;
+      }
+
+      #tblSmsLog .badge-sent {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+      }
+
+      .text-purple {
+        color: #6f42c1;
+      }
+
+      /* Dashboard Modern Styles */
+      .welcome-banner {
+        animation: slideInDown 0.5s ease-out;
+      }
+
+      .user-avatar-large {
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .stat-card small {
+        display: block;
+        margin-top: 10px;
+        font-size: 12px;
+      }
+
+      .activity-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.3s;
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+
+      .activity-item:hover {
+        background: #f8f9fa;
+      }
+
+      .activity-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .activity-content {
+        flex: 1;
+      }
+
+      .activity-content p {
+        font-size: 14px;
+        color: #2c3e50;
+      }
+
+      @keyframes slideInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
         }
-
-        .search-box, .info-display, .subsection {
-            border-radius: 10px;
-            padding: 1.25rem;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
+      }
+      .status-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        border-left: 4px solid #6c757d;
+      }
+      .status-card.online {
+        border-left-color: #2ecc71;
+      }
+      .status-card.offline {
+        border-left-color: #e74c3c;
+      }
+      .status-card.repair {
+        border-left-color: #f1c40f;
+      }
 
-        .info-display {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 10px;
+        background: #6c757d;
+      }
+      .online .status-dot {
+        background: #2ecc71;
+        box-shadow: 0 0 8px #2ecc71;
+      }
+      .offline .status-dot {
+        background: #e74c3c;
+        box-shadow: 0 0 8px #e74c3c;
+      }
+      .repair .status-dot {
+        background: #f1c40f;
+        box-shadow: 0 0 8px #f1c40f;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
         }
-
-        .subsection {
-            background: #fff9e6;
-            border-left: 4px solid #ffc107;
+        50% {
+          transform: scale(1.1);
+          opacity: 0.7;
         }
-
-        .beneficiary-item {
-            transition: all 0.25s;
+        100% {
+          transform: scale(1);
+          opacity: 1;
         }
+      }
 
-        .beneficiary-item:hover,
-        .beneficiary-item.active {
-            transform: translateX(4px);
-        }
-
-        .table thead {
-            background: linear-gradient(135deg, #e0d5ff 0%, #f3e8ff 100%);
-            color: #6f42c1;
-        }
-
-        .text-purple { color: #6f42c1; }
-
-        #tblSmsLog .badge-sent {
-  background-color: #d1e7dd;
-  color: #0f5132;
-  border: 1px solid #badbcc;
-  padding: 5px 12px;
-  border-radius: 50px;
-  font-size: 0.85rem;
-}
-
-.text-purple { color: #6f42c1; }
-
-/* Dashboard Modern Styles */
-.welcome-banner {
-  animation: slideInDown 0.5s ease-out;
-}
-
-.user-avatar-large {
-  width: 70px;
-  height: 70px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.stat-card small {
-  display: block;
-  margin-top: 10px;
-  font-size: 12px;
-}
-
-.activity-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.3s;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-item:hover {
-  background: #f8f9fa;
-}
-
-.activity-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-content p {
-  font-size: 14px;
-  color: #2c3e50;
-}
-
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.status-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 10px;
-    border-left: 4px solid #6c757d;
-}
-.status-card.online { border-left-color: #2ecc71; }
-.status-card.offline { border-left-color: #e74c3c; }
-.status-card.repair { border-left-color: #f1c40f; }
-
-.status-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
-    background: #6c757d;
-}
-.online .status-dot { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
-.offline .status-dot { background: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
-.repair .status-dot { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-#modal-overlay {
-    transition: backdrop-filter 0.5s ease, background-color 0.5s ease;
-}
+      #modal-overlay {
+        transition:
+          backdrop-filter 0.5s ease,
+          background-color 0.5s ease;
+      }
     </style>
   </head>
   <body>
@@ -870,7 +954,7 @@
           <div class="mb-3">
             <label class="form-label">User Name</label>
             <input
-            id="txtloginUsername"
+              id="txtloginUsername"
               type="text"
               class="form-control"
               placeholder="Enter your username"
@@ -880,7 +964,7 @@
           <div class="mb-4">
             <label class="form-label">Password</label>
             <input
-            id="txtinputPassworde"
+              id="txtinputPassworde"
               type="password"
               class="form-control"
               placeholder="••••••••"
@@ -891,7 +975,9 @@
         </form>
 
         <div class="text-center mt-3">
-          <a href="#" style="color: #667eea; text-decoration: none">Forgot password?</a>
+          <a href="#" style="color: #667eea; text-decoration: none"
+            >Forgot password?</a
+          >
         </div>
       </div>
     </section>
@@ -913,18 +999,20 @@
         </div>
 
         <div class="sidebar-footer p-3 mt-auto">
-    <div id="dbStatusIndicator" class="status-card offline">
-        <div class="d-flex align-items-center">
-            <div class="status-dot"></div>
-            <div class="status-info">
+          <div id="dbStatusIndicator" class="status-card offline">
+            <div class="d-flex align-items-center">
+              <div class="status-dot"></div>
+              <div class="status-info">
                 <span id="statusText">Checking...</span>
-                <small id="statusDetail" class="d-block text-muted">Initializing...</small>
+                <small id="statusDetail" class="d-block text-muted"
+                  >Initializing...</small
+                >
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-</div>
 
-       <nav class="sidebar-menu">
+        <nav class="sidebar-menu">
           <a class="menu-item active" data-section="dashboardSection">
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
@@ -933,10 +1021,7 @@
             <i class="fas fa-users"></i>
             <span>Customer Management</span>
           </a>
-          <a class="menu-item" data-section="employeeManagementSection">
-            <i class="fas fa-user-tie"></i>
-            <span>Employee Management</span>
-          </a>
+
           <a class="menu-item" data-section="userManagementSection">
             <i class="fas fa-user-cog"></i>
             <span>User Management</span>
@@ -949,14 +1034,7 @@
             <i class="fas fa-money-check-alt"></i>
             <span>Loan Payment</span>
           </a>
-          <a class="menu-item" data-section="reportsSection">
-            <i class="fas fa-chart-bar"></i>
-            <span>Reports</span>
-          </a>
-          <a class="menu-item" data-section="loanAgingSection">
-            <i class="fas fa-hourglass-half"></i>
-            <span>Loan Aging Report</span>
-          </a>
+
           <a class="menu-item" data-section="loanLookupSection">
             <i class="fas fa-search"></i>
             <span>Loan Lookup</span>
@@ -993,134 +1071,190 @@
         </div>
 
         <!-- Dashboard Content -->
-      <section id="dashboardSection" class="dashboard-content p-4">
-    
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-gradient-primary text-white shadow-lg border-0 h-100">
+        <section id="dashboardSection" class="dashboard-content p-4">
+          <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+              <div
+                class="card bg-gradient-primary text-white shadow-lg border-0 h-100"
+              >
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="icon-box bg-white-20 rounded p-3">
-                            <i class="fas fa-money-bill-wave fa-2x"></i>
-                        </div>
-                        <span class="badge bg-white-20 text-white">Active Loans</span>
+                  <div class="d-flex justify-content-between mb-3">
+                    <div class="icon-box bg-white-20 rounded p-3">
+                      <i class="fas fa-money-bill-wave fa-2x"></i>
                     </div>
-                    <h6 class="text-white-50 uppercase small">Total Capital Out (මුළු ආයෝජනය)</h6>
-                    <h3 id="statTotalCapital" class="fw-bold mb-0">රු. 0.00</h3>
+                    <span class="badge bg-white-20 text-white"
+                      >Active Loans</span
+                    >
+                  </div>
+                  <h6 class="text-white-50 uppercase small">
+                    Total Capital Out (මුළු ආයෝජනය)
+                  </h6>
+                  <h3 id="statTotalCapital" class="fw-bold mb-0">රු. 0.00</h3>
                 </div>
+              </div>
             </div>
-        </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-gradient-success text-white shadow-lg border-0 h-100">
+            <div class="col-xl-3 col-md-6">
+              <div
+                class="card bg-gradient-success text-white shadow-lg border-0 h-100"
+              >
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="icon-box bg-white-20 rounded p-3">
-                            <i class="fas fa-chart-line fa-2x"></i>
-                        </div>
-                        <span id="statCollectionRate" class="badge bg-white-20 text-white">0% Collected</span>
+                  <div class="d-flex justify-content-between mb-3">
+                    <div class="icon-box bg-white-20 rounded p-3">
+                      <i class="fas fa-chart-line fa-2x"></i>
                     </div>
-                    <h6 class="text-white-50 uppercase small">Interest Received (ලැබුණු පොලිය)</h6>
-                    <h3 id="statReceivedInterest" class="fw-bold mb-0">රු. 0.00</h3>
-                    <small class="text-white-50">දැනට එකතු වී ඇති මුළු ආදායම</small>
+                    <span
+                      id="statCollectionRate"
+                      class="badge bg-white-20 text-white"
+                      >0% Collected</span
+                    >
+                  </div>
+                  <h6 class="text-white-50 uppercase small">
+                    Interest Received (ලැබුණු පොලිය)
+                  </h6>
+                  <h3 id="statReceivedInterest" class="fw-bold mb-0">
+                    රු. 0.00
+                  </h3>
+                  <small class="text-white-50"
+                    >දැනට එකතු වී ඇති මුළු ආදායම</small
+                  >
                 </div>
+              </div>
             </div>
-        </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-gradient-warning text-dark shadow-lg border-0 h-100">
+            <div class="col-xl-3 col-md-6">
+              <div
+                class="card bg-gradient-warning text-dark shadow-lg border-0 h-100"
+              >
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="icon-box bg-dark-10 rounded p-3">
-                            <i class="fas fa-hand-holding-usd fa-2x"></i>
-                        </div>
-                        <span class="badge bg-dark-10 text-dark">Monthly Target</span>
+                  <div class="d-flex justify-content-between mb-3">
+                    <div class="icon-box bg-dark-10 rounded p-3">
+                      <i class="fas fa-hand-holding-usd fa-2x"></i>
                     </div>
-                    <h6 class="text-dark-50 uppercase small">Target Interest (අපේක්ෂිත පොලිය)</h6>
-                    <h3 id="statTargetInterest" class="fw-bold mb-0">රු. 0.00</h3>
-                    <small class="text-dark-50">මේ මාසයේ අපේක්ෂිත මුළු ආදායම</small>
+                    <span class="badge bg-dark-10 text-dark"
+                      >Monthly Target</span
+                    >
+                  </div>
+                  <h6 class="text-dark-50 uppercase small">
+                    Target Interest (අපේක්ෂිත පොලිය)
+                  </h6>
+                  <h3 id="statTargetInterest" class="fw-bold mb-0">රු. 0.00</h3>
+                  <small class="text-dark-50"
+                    >මේ මාසයේ අපේක්ෂිත මුළු ආදායම</small
+                  >
                 </div>
+              </div>
             </div>
-        </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-gradient-danger text-white shadow-lg border-0 h-100">
+            <div class="col-xl-3 col-md-6">
+              <div
+                class="card bg-gradient-danger text-white shadow-lg border-0 h-100"
+              >
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="icon-box bg-white-20 rounded p-3">
-                            <i class="fas fa-user-slash fa-2x"></i>
-                        </div>
-                        <span class="badge bg-white-20 text-white">Risk Alert</span>
+                  <div class="d-flex justify-content-between mb-3">
+                    <div class="icon-box bg-white-20 rounded p-3">
+                      <i class="fas fa-user-slash fa-2x"></i>
                     </div>
-                    <h6 class="text-white-50 uppercase small">Blacklisted (අවදානම් ලැයිස්තුව)</h6>
-                    <h3 id="statBlacklisted" class="fw-bold mb-0">0</h3>
-                    <small class="text-white-50">ගනුදෙනුකරුවන් සංඛ්‍යාව</small>
+                    <span class="badge bg-white-20 text-white">Risk Alert</span>
+                  </div>
+                  <h6 class="text-white-50 uppercase small">
+                    Blacklisted (අවදානම් ලැයිස්තුව)
+                  </h6>
+                  <h3 id="statBlacklisted" class="fw-bold mb-0">0</h3>
+                  <small class="text-white-50">ගනුදෙනුකරුවන් සංඛ්‍යාව</small>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
+          </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h6 class="m-0 fw-bold text-primary"><i class="fas fa-chart-bar me-2"></i>Interest Analysis (ආදායම් විශ්ලේෂණය)</h6>
-                    <button id="btnRefreshDashboard" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-sync-alt me-1"></i> Refresh
-                    </button>
+          <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+              <div class="card shadow-sm border-0 h-100">
+                <div
+                  class="card-header bg-white d-flex justify-content-between align-items-center py-3"
+                >
+                  <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-chart-bar me-2"></i>Interest Analysis
+                    (ආදායම් විශ්ලේෂණය)
+                  </h6>
+                  <button
+                    id="btnRefreshDashboard"
+                    class="btn btn-sm btn-outline-primary"
+                  >
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                  </button>
                 </div>
                 <div class="card-body">
-                    <canvas id="superRevenueChart" height="300"></canvas>
+                  <canvas id="superRevenueChart" height="300"></canvas>
                 </div>
+              </div>
             </div>
-        </div>
-        
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
+
+            <div class="col-lg-4">
+              <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3 text-center">
-                    <h6 class="m-0 fw-bold text-primary"><i class="fas fa-pie-chart me-2"></i>Portfolio Mix (ණය වර්ගීකරණය)</h6>
+                  <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-pie-chart me-2"></i>Portfolio Mix (ණය
+                    වර්ගීකරණය)
+                  </h6>
                 </div>
-                <div class="card-body d-flex align-items-center justify-content-center">
-                    <canvas id="portfolioDonutChart"></canvas>
+                <div
+                  class="card-body d-flex align-items-center justify-content-center"
+                >
+                  <canvas id="portfolioDonutChart"></canvas>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
+          </div>
 
-    <div class="row g-4">
-        <div class="col-lg-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold"><i class="fas fa-list me-2"></i>Recent Loan Disbursals (මෑතකාලීන ණය නිකුත් කිරීම්)</h6>
-                    <span class="badge bg-primary px-3 py-2" id="statTotalCustCount">Total Customers: 0</span>
+          <div class="row g-4">
+            <div class="col-lg-12">
+              <div class="card shadow-sm border-0">
+                <div
+                  class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center"
+                >
+                  <h6 class="m-0 fw-bold">
+                    <i class="fas fa-list me-2"></i>Recent Loan Disbursals
+                    (මෑතකාලීන ණය නිකුත් කිරීම්)
+                  </h6>
+                  <span
+                    class="badge bg-primary px-3 py-2"
+                    id="statTotalCustCount"
+                    >Total Customers: 0</span
+                  >
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light text-muted">
-                            <tr>
-                                <th>Loan ID</th>
-                                <th>Customer Name</th>
-                                <th>Loan Type</th>
-                                <th>Amount (ණය මුදල)</th>
-                                <th>Rate (%)</th>
-                                <th>Date (දිනය)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentLoansTableBody">
-                            <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Loading data...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted">
+                      <tr>
+                        <th>Loan ID</th>
+                        <th>Customer Name</th>
+                        <th>Loan Type</th>
+                        <th>Amount (ණය මුදල)</th>
+                        <th>Rate (%)</th>
+                        <th>Date (දිනය)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentLoansTableBody">
+                      <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                          Loading data...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
-</section>
+          </div>
+        </section>
         <!-- User Management Section -->
         <section id="userManagementSection" class="dashboard-content d-none">
           <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="card-header text-white py-4" style="background: var(--primary-gradient);">
+            <div
+              class="card-header text-white py-4"
+              style="background: var(--primary-gradient)"
+            >
               <h2 class="mb-0 d-flex align-items-center gap-3">
                 <i class="fas fa-user-cog fs-1"></i>
                 User Management
@@ -1140,22 +1274,41 @@
                       <label class="form-label">
                         <i class="fas fa-user me-2 text-primary"></i>Username *
                       </label>
-                      <input id="txtUsername" type="text" class="form-control" placeholder="Enter username" required />
+                      <input
+                        id="txtUsername"
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter username"
+                        required
+                      />
                     </div>
 
                     <div class="mb-3">
                       <label class="form-label">
                         <i class="fas fa-key me-2 text-warning"></i>Password *
                       </label>
-                      <input id="txtPassword" type="password" class="form-control" placeholder="Enter password" />
-                      <small class="text-muted">Leave blank when updating to keep current password</small>
+                      <input
+                        id="txtPassword"
+                        type="password"
+                        class="form-control"
+                        placeholder="Enter password"
+                      />
+                      <small class="text-muted"
+                        >Leave blank when updating to keep current
+                        password</small
+                      >
                     </div>
 
                     <div class="mb-3">
                       <label class="form-label">
                         <i class="fas fa-phone me-2 text-success"></i>Phone
                       </label>
-                      <input id="txtPhone" type="text" class="form-control" placeholder="+94 XX XXX XXXX" />
+                      <input
+                        id="txtPhone"
+                        type="text"
+                        class="form-control"
+                        placeholder="+94 XX XXX XXXX"
+                      />
                     </div>
 
                     <div class="mb-4">
@@ -1197,13 +1350,18 @@
                           <th><i class="fas fa-user me-1"></i>Username</th>
                           <th><i class="fas fa-phone me-1"></i>Phone</th>
                           <th><i class="fas fa-shield-alt me-1"></i>Role</th>
-                          <th class="text-center"><i class="fas fa-cog me-1"></i>Actions</th>
+                          <th class="text-center">
+                            <i class="fas fa-cog me-1"></i>Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody id="tblUsers">
                         <tr>
                           <td colspan="5" class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
+                            <div
+                              class="spinner-border text-primary"
+                              role="status"
+                            >
                               <span class="visually-hidden">Loading...</span>
                             </div>
                             <p class="mt-3 text-muted">Loading users...</p>
@@ -1218,81 +1376,111 @@
           </div>
         </section>
 
-<section id="smsLogSection" class="dashboard-content d-none">
-  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    
-    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-bottom: 4px solid #f39c12;">
-      <h2 class="mb-0 d-flex align-items-center gap-3">
-        <i class="fas fa-history fs-1 text-warning"></i>
-        <div>
-          <span class="d-block fw-bold">SMS පණිවිඩ වාර්තාව</span>
-          <small class="fs-6 fw-light opacity-75">යවන ලද පණිවිඩ ඉතිහාසය පරීක්ෂා කිරීම</small>
-        </div>
-      </h2>
-    </div>
+        <section id="smsLogSection" class="dashboard-content d-none">
+          <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-header text-white py-4"
+              style="
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                border-bottom: 4px solid #f39c12;
+              "
+            >
+              <h2 class="mb-0 d-flex align-items-center gap-3">
+                <i class="fas fa-history fs-1 text-warning"></i>
+                <div>
+                  <span class="d-block fw-bold">SMS පණිවිඩ වාර්තාව</span>
+                  <small class="fs-6 fw-light opacity-75"
+                    >යවන ලද පණිවිඩ ඉතිහාසය පරීක්ෂා කිරීම</small
+                  >
+                </div>
+              </h2>
+            </div>
 
-    <div class="card-body p-4 bg-light">
-      
-      <div class="row g-3 mb-4 align-items-end">
-        
-        <div class="col-lg-5">
-          <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
-            <label class="form-label small fw-bold text-muted mb-2">පරණ වාර්තා සෙවීමට දිනය තෝරන්න</label>
-            <div class="input-group">
-                <span class="input-group-text bg-primary text-white border-0 rounded-start-pill px-3">
-                    <i class="fas fa-calendar-day"></i>
-                </span>
-                <input type="date" id="smsLogDate" class="form-control border-0 bg-light shadow-none">
-                <button id="btnFilterSms" class="btn btn-primary rounded-end-pill px-4">
-                    <i class="fas fa-search"></i>
-                </button>
+            <div class="card-body p-4 bg-light">
+              <div class="row g-3 mb-4 align-items-end">
+                <div class="col-lg-5">
+                  <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                    <label class="form-label small fw-bold text-muted mb-2"
+                      >පරණ වාර්තා සෙවීමට දිනය තෝරන්න</label
+                    >
+                    <div class="input-group">
+                      <span
+                        class="input-group-text bg-primary text-white border-0 rounded-start-pill px-3"
+                      >
+                        <i class="fas fa-calendar-day"></i>
+                      </span>
+                      <input
+                        type="date"
+                        id="smsLogDate"
+                        class="form-control border-0 bg-light shadow-none"
+                      />
+                      <button
+                        id="btnFilterSms"
+                        class="btn btn-primary rounded-end-pill px-4"
+                      >
+                        <i class="fas fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div
+                    class="card border-0 shadow-sm rounded-4 p-3 h-100 d-flex flex-row gap-2 justify-content-center"
+                  >
+                    <button
+                      id="btnRunManualSms"
+                      class="btn btn-warning rounded-pill flex-grow-1 fw-bold shadow-sm border-2"
+                    >
+                      <i class="fas fa-paper-plane me-2"></i> SMS යවන්න
+                    </button>
+                    <button
+                      id="btnRefreshSmsLog"
+                      class="btn btn-dark rounded-pill px-3 shadow-sm"
+                      title="Refresh"
+                    >
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-lg-3">
+                  <div
+                    class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white text-center border-bottom border-4 border-primary"
+                  >
+                    <h6 class="text-muted small fw-bold mb-1">යැවූ ගණන</h6>
+                    <h3 id="smsTotalCount" class="mb-0 text-primary fw-bold">
+                      0
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive" style="max-height: 450px">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-dark text-white">
+                      <tr>
+                        <th class="ps-4 py-3 border-0">ID</th>
+                        <th class="border-0">පාරිභෝගිකයා</th>
+                        <th class="border-0">දුරකථන අංකය</th>
+                        <th class="border-0">නියමිත දිනය</th>
+                        <th class="text-center border-0">තත්වය</th>
+                        <th class="text-end pe-4 border-0">යැවූ වේලාව</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tblSmsLog"></tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 d-flex flex-row gap-2 justify-content-center">
-                <button id="btnRunManualSms" class="btn btn-warning rounded-pill flex-grow-1 fw-bold shadow-sm border-2">
-                    <i class="fas fa-paper-plane me-2"></i> SMS යවන්න
-                </button>
-                <button id="btnRefreshSmsLog" class="btn btn-dark rounded-pill px-3 shadow-sm" title="Refresh">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="col-lg-3">
-          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white text-center border-bottom border-4 border-primary">
-            <h6 class="text-muted small fw-bold mb-1">යැවූ ගණන</h6>
-            <h3 id="smsTotalCount" class="mb-0 text-primary fw-bold">0</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="table-responsive" style="max-height: 450px;">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-dark text-white">
-              <tr>
-                <th class="ps-4 py-3 border-0">ID</th>
-                <th class="border-0">පාරිභෝගිකයා</th>
-                <th class="border-0">දුරකථන අංකය</th>
-                <th class="border-0">නියමිත දිනය</th>
-                <th class="text-center border-0">තත්වය</th>
-                <th class="text-end pe-4 border-0">යැවූ වේලාව</th>
-              </tr>
-            </thead>
-            <tbody id="tblSmsLog">
-               </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-            <!-- ==================== CUSTOMER MANAGEMENT SECTION ==================== -->
-        <section id="customerManagementSection" class="dashboard-content d-none">
+        </section>
+        <!-- ==================== CUSTOMER MANAGEMENT SECTION ==================== -->
+        <section
+          id="customerManagementSection"
+          class="dashboard-content d-none"
+        >
           <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
             <!-- Header -->
             <div
@@ -1335,11 +1523,9 @@
                         placeholder="Enter name"
                       />
                     </div>
-                  
+
                     <div class="mb-3">
-                      <label class="form-label fw-semibold"
-                        >NIC  *</label
-                      >
+                      <label class="form-label fw-semibold">NIC *</label>
                       <input
                         id="txtCustomerNIC"
                         type="text"
@@ -1367,26 +1553,42 @@
                       />
                     </div>
                     <div class="mb-3">
-  <div class="form-check form-switch p-3 border rounded-3 bg-white shadow-sm">
-    <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="chkBlacklist">
-    <label class="form-check-label fw-bold text-danger" for="chkBlacklist">
-       <i class="bi bi-exclamation-triangle-fill"></i> Add to Blacklist
-    </label>
-    <div class="form-text mt-1 text-muted">මෙම පාරිභෝගිකයාට නැවත ණය ලබා දීම සීමා කෙරේ.</div>
-  </div>
-</div>
+                      <div
+                        class="form-check form-switch p-3 border rounded-3 bg-white shadow-sm"
+                      >
+                        <input
+                          class="form-check-input ms-0 me-3"
+                          type="checkbox"
+                          role="switch"
+                          id="chkBlacklist"
+                        />
+                        <label
+                          class="form-check-label fw-bold text-danger"
+                          for="chkBlacklist"
+                        >
+                          <i class="bi bi-exclamation-triangle-fill"></i> Add to
+                          Blacklist
+                        </label>
+                        <div class="form-text mt-1 text-muted">
+                          මෙම පාරිභෝගිකයාට නැවත ණය ලබා දීම සීමා කෙරේ.
+                        </div>
+                      </div>
+                    </div>
 
-
-<div id="divBlacklistReason" class="mb-3 d-none animate__animated animate__fadeIn">
-  <label class="form-label fw-semibold text-danger">Blacklist කිරීමට හේතුව *</label>
-  <input
-    id="txtBlacklistReason"
-    type="text"
-    class="form-control border-danger"
-    placeholder="උදා: වාරික පැහැර හැරීම"
-  />
-</div>
-
+                    <div
+                      id="divBlacklistReason"
+                      class="mb-3 d-none animate__animated animate__fadeIn"
+                    >
+                      <label class="form-label fw-semibold text-danger"
+                        >Blacklist කිරීමට හේතුව *</label
+                      >
+                      <input
+                        id="txtBlacklistReason"
+                        type="text"
+                        class="form-control border-danger"
+                        placeholder="උදා: වාරික පැහැර හැරීම"
+                      />
+                    </div>
 
                     <div class="row g-2">
                       <div class="col-6 col-lg-3">
@@ -1444,9 +1646,8 @@
                           <th class="fw-bold">NIC</th>
                           <th class="fw-bold">Phone</th>
                           <th class="fw-bold text-center">Address</th>
-                          <th class="fw-bold text-center">Status</th> </tr>
-                           <th class="fw-bold">Reason</th> </tr>
-
+                          <th class="fw-bold text-center">Status</th>
+                          <th class="fw-bold">Reason</th>
                         </tr>
                       </thead>
                       <tbody id="tblCustomers">
@@ -1464,1211 +1665,1820 @@
             </div>
           </div>
         </section>
-         <!-- ==================== EMPLOYEE MANAGEMENT SECTION ==================== -->
-        <section id="employeeManagementSection" class="dashboard-content d-none">
+        <!-- ==================== LOAN LOOKUP SECTION ==================== -->
+        <section id="loanLookupSection" class="dashboard-content d-none">
           <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
             <div
               class="card-header text-white py-4"
               style="
-                background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+                background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
               "
             >
               <h2 class="mb-0 d-flex align-items-center gap-3">
-                <i class="bi bi-people-fill fs-1"></i>
-                Employee Management
+                <i class="bi bi-person-badge fs-1"></i> පාරිභෝගික ණය විශ්ලේෂණය
               </h2>
             </div>
 
             <div class="card-body p-4">
+              <div
+                class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border mb-4"
+              >
+                <input
+                  type="text"
+                  id="txtLookupSearch"
+                  class="form-control border-0"
+                  placeholder="නම, NIC හෝ ණය ID ඇතුළත් කරන්න..."
+                />
+                <button class="btn btn-dark px-4" id="btnLookupSearch">
+                  සොයන්න
+                </button>
+              </div>
+
               <div class="row g-4">
-                <div class="col-lg-4">
-                  <div class="bg-light rounded-3 p-4">
-                    <input type="hidden" id="txtEmployeeId" />
+                <div class="col-lg-3">
+                  <div
+                    id="lookupLoanList"
+                    class="list-group shadow-sm rounded-4"
+                  ></div>
+                </div>
 
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold">Employee ID</label>
-                      <input
-                        id="txtDisplayEmployeeId"
-                        type="text"
-                        class="form-control bg-white"
-                        readonly
-                      />
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold"
-                        >Employee Name *</label
+                <div class="col-lg-9 d-none" id="lookupDetailsPane">
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                      <div
+                        class="p-3 bg-light border-start border-4 border-primary rounded-3 text-center h-100"
                       >
-                      <input
-                        id="txtEmployeeName"
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter name"
-                        autocomplete="off"
-                      />
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold">Phone</label>
-                      <input
-                        id="txtEmployeePhone"
-                        type="text"
-                        class="form-control"
-                        placeholder="0XXXXXXXXX"
-                      />
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold">Position *</label>
-                      <input
-                        id="txtEmployeePosition"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g., Manager, Worker"
-                      />
-                    </div>
-
-                    <div class="row g-2">
-                      <div class="col-6 col-lg-3">
-                        <button
-                          id="btnAddEmployee"
-                          class="btn btn-success w-100"
+                        <small class="text-muted d-block mb-1"
+                          >මුල් ණය මුදල</small
                         >
-                          <i class="bi bi-plus-circle"></i> Add
-                        </button>
+                        <h5 class="fw-bold mb-0" id="vLoanAmt">Rs. 0</h5>
                       </div>
-                      <div class="col-6 col-lg-3">
-                        <button
-                          id="btnUpdateEmployee"
-                          class="btn btn-primary w-100"
+                    </div>
+                    <div class="col-md-3">
+                      <div
+                        class="p-3 bg-light border-start border-4 border-warning rounded-3 text-center h-100"
+                      >
+                        <small class="text-muted d-block mb-1"
+                          >අරියස් (හිඟ) මාස</small
                         >
-                          <i class="bi bi-pencil-square"></i> Update
-                        </button>
+                        <h5 class="fw-bold mb-0" id="vArrearsMonths">
+                          0 Months
+                        </h5>
                       </div>
-                      <div class="col-6 col-lg-3">
-                        <button
-                          id="btnDeleteEmployee"
-                          class="btn btn-danger w-100"
+                    </div>
+                    <div class="col-md-3">
+                      <div
+                        class="p-3 bg-light border-start border-4 border-danger rounded-3 text-center h-100"
+                      >
+                        <small class="text-muted d-block mb-1"
+                          >පරක්කු වූ දින</small
                         >
-                          <i class="bi bi-trash"></i> Delete
-                        </button>
+                        <h5 class="fw-bold mb-0 text-danger" id="vOverdueDays">
+                          0 Days
+                        </h5>
                       </div>
-                      <div class="col-6 col-lg-3">
-                        <button
-                          id="btnClearEmployee"
-                          class="btn btn-secondary w-100"
+                    </div>
+                    <div class="col-md-3">
+                      <div
+                        class="p-3 bg-dark text-warning rounded-3 text-center h-100 shadow"
+                      >
+                        <small class="text-white-50 d-block mb-1"
+                          >අදට මුළු එකතුව</small
                         >
-                          <i class="bi bi-x-circle"></i> Clear
-                        </button>
+                        <h5 class="fw-bold mb-0" id="vTotalPayable">Rs. 0</h5>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="col-lg-8">
-                  <div class="table-responsive">
-                    <table class="table table-hover">
-                      <thead
-                        style="
-                          background: linear-gradient(
-                            135deg,
-                            #e9d5ff 0%,
-                            #f3e8ff 100%
-                          );
-                        "
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <div class="card bg-info-subtle border-0 rounded-4 h-100">
+                        <div class="card-body">
+                          <h6 class="fw-bold border-bottom pb-2">
+                            <i class="bi bi-person-fill"></i> පාරිභෝගික විස්තර
+                          </h6>
+                          <p class="mb-1">
+                            <strong>නම:</strong> <span id="vCustName">-</span>
+                          </p>
+                          <p class="mb-1">
+                            <strong>NIC:</strong> <span id="vCustNic">-</span>
+                          </p>
+                          <p class="mb-1">
+                            <strong>දුරකථන:</strong>
+                            <span id="vCustPhone">-</span>
+                          </p>
+                          <p class="mb-0">
+                            <strong>ලිපිනය:</strong>
+                            <span id="vCustAddress">-</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div
+                        class="card bg-warning-subtle border-0 rounded-4 h-100"
                       >
-                        <tr>
-                          <th class="text-purple fw-bold">Employee ID</th>
-                          <th class="text-purple fw-bold">Name</th>
-                          <th class="text-purple fw-bold">Phone</th>
-                          <th class="text-purple fw-bold">Position</th>
-                        </tr>
-                      </thead>
-                      <tbody id="tblEmployees">
-                        <tr>
-                          <td colspan="4" class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            No employees found
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                        <div class="card-body">
+                          <h6 class="fw-bold border-bottom pb-2">
+                            <i class="bi bi-info-circle-fill"></i> ණය තත්ත්වය
+                          </h6>
+                          <p class="mb-1">
+                            <strong>Due Date:</strong>
+                            <span id="vDueDate" class="text-danger fw-bold"
+                              >-</span
+                            >
+                          </p>
+                          <p class="mb-1">
+                            <strong>අවසන් ගෙවීම් දිනය:</strong>
+                            <span id="vLastPaidDate">-</span>
+                          </p>
+                          <p class="mb-1">
+                            <strong>ලබාදුන් දිනය:</strong>
+                            <span id="vGivenDate">-</span>
+                          </p>
+                          <p class="mb-0">
+                            <strong>මසකට පොලිය:</strong>
+                            <span id="vIntRate">-</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    id="vAssetDetailsArea"
+                    class="card border-0 shadow-sm rounded-4 mb-4 d-none"
+                  >
+                    <div class="card-header bg-dark text-white py-2 fw-bold">
+                      <i class="bi bi-shield-lock-fill me-2"></i> වත්කම් / ඇප
+                      විස්තර
+                    </div>
+                    <div class="card-body" id="vAssetDetailsContent"></div>
+                  </div>
+
+                  <div
+                    id="vBeneficiaryArea"
+                    class="card border-0 shadow-sm rounded-4 mb-4 d-none"
+                  >
+                    <div
+                      class="card-header bg-secondary text-white py-2 fw-bold"
+                    >
+                      <i class="bi bi-people-fill me-2"></i> ඇපකරුවන්ගේ විස්තර
+                    </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                          <thead class="table-light text-secondary">
+                            <tr>
+                              <th class="ps-3">නම</th>
+                              <th>දුරකථන</th>
+                              <th>ලිපිනය</th>
+                            </tr>
+                          </thead>
+                          <tbody id="vBeneficiaryTable"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="vLoanNotes" class="mb-4"></div>
+
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div
+                      class="card-header bg-white py-3 fw-bold d-flex justify-content-between align-items-center"
+                    >
+                      <span
+                        ><i class="bi bi-clock-history me-2"></i> ගෙවීම්
+                        ඉතිහාසය</span
+                      >
+                      <small class="text-muted">අවසන් ගනුදෙනු 10</small>
+                    </div>
+                    <div class="table-responsive" style="max-height: 350px">
+                      <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                          <tr>
+                            <th>දිනය</th>
+                            <th>ගෙවූ මුදල</th>
+                            <th>දඩය</th>
+                            <th>පොලිය</th>
+                            <th>මූලධනය</th>
+                          </tr>
+                        </thead>
+                        <tbody id="vHistoryTable"></tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
-        <section id="loanAgingSection" class="dashboard-content d-none">
-  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    <div class="card-header text-white py-4" style="background: linear-gradient(45deg, #2c3e50, #000000);">
-      <h2 class="mb-0 d-flex align-items-center gap-3">
-        <i class="fas fa-history fs-1"></i>
-        Loan Aging Report
-      </h2>
-      <p class="mb-0 mt-2 opacity-90">
-        Track overdue loans and analyze collection risk levels (30, 60, 90+ days)
-      </p>
-    </div>
-    <div class="d-flex gap-2">
-    <label class="align-self-center">Test As Of:</label>
-    <input type="date" id="txtTestDate" class="form-control form-control-sm" style="width: 150px;">
-    </div>
 
-    <div class="card-body p-4">
-      <div class="row g-3 mb-4 text-center">
-        <div class="col-md-3">
-          <div class="p-3 border rounded-4 bg-light shadow-sm">
-            <h6 class="text-muted text-uppercase small fw-bold">Current</h6>
-            <h4 id="summaryCurrent" class="text-success mb-0">Rs. 0.00</h4>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="p-3 border rounded-4 bg-light shadow-sm">
-            <h6 class="text-muted text-uppercase small fw-bold">1 - 30 Days</h6>
-            <h4 id="summary30Days" class="text-warning mb-0">Rs. 0.00</h4>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="p-3 border rounded-4 bg-light shadow-sm">
-            <h6 class="text-muted text-uppercase small fw-bold">31 - 90 Days</h6>
-            <h4 id="summary90Days" class="text-danger mb-0">Rs. 0.00</h4>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="p-3 border rounded-4 bg-dark shadow-sm">
-            <h6 class="text-white-50 text-uppercase small fw-bold">Over 90 Days</h6>
-            <h4 id="summaryOver90" class="text-danger mb-0 fw-bold">Rs. 0.00</h4>
-          </div>
-        </div>
-      </div>
+        <!-- ==================== LOAN PAYMENT SECTION ==================== -->
+        <section id="loanPaymentSection" class="dashboard-content d-none">
+          <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-header text-white py-4"
+              style="
+                background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+              "
+            >
+              <h2 class="mb-0 d-flex align-items-center gap-3">
+                <i class="bi bi-cash-coin fs-1"></i>
+                ණය ගෙවීම් කළමනාකරණය
+              </h2>
+              <p class="mb-0 mt-2 opacity-90">
+                පාරිභෝගික ණය තෝරා ගෙවීම් සිදු කරන්න
+              </p>
+            </div>
 
-      <hr class="my-4 opacity-25">
-
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="d-flex gap-2">
-            <select id="cmbAgingFilter" class="form-select form-select-sm" style="width: 200px;">
-                <option value="all">All Overdue Loans</option>
-                <option value="30">1 - 30 Days Only</option>
-                <option value="90">31 - 90 Days Only</option>
-                <option value="over90">Over 90 Days Only</option>
-            </select>
-            <button id="btnRefreshAging" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-        </div>
-        <button id="btnPrintAging" class="btn btn-sm btn-primary">
-            <i class="fas fa-print me-2"></i>Print Report
-        </button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover align-middle border">
-          <thead class="table-dark">
-            <tr>
-              <th>Loan ID</th>
-              <th>Customer Name</th>
-              <th>Total Balance</th>
-              <th>Next Due Date</th>
-              <th class="text-center">Days Overdue</th>
-              <th class="text-center">Risk Status</th>
-              <th class="text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody id="tblAgingReport">
-            <tr>
-              <td colspan="7" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
+            <div class="card-body p-4">
+              <div class="search-box mb-4">
+                <label class="form-label fw-semibold mb-3"
+                  ><i class="bi bi-search"></i> පාරිභෝගික සෙවුම</label
+                >
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text"
+                    ><i class="bi bi-person-circle"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="txtSearchPaymentCustomer"
+                    placeholder="පාරිභෝගික ID ඇතුළත් කරන්න (C0001)"
+                  />
+                  <button class="btn btn-primary" id="btnSearchPaymentCustomer">
+                    <i class="bi bi-search"></i> සොයන්න
+                  </button>
                 </div>
-                <p class="mt-3 text-muted">Analyzing loan records...</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-<section id="loanLookupSection" class="dashboard-content d-none">
-  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);">
-      <h2 class="mb-0 d-flex align-items-center gap-3">
-        <i class="bi bi-person-badge fs-1"></i> පාරිභෝගික ණය විශ්ලේෂණය
-      </h2>
-    </div>
-
-    <div class="card-body p-4">
-      <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border mb-4">
-        <input type="text" id="txtLookupSearch" class="form-control border-0" placeholder="නම, NIC හෝ ණය ID ඇතුළත් කරන්න...">
-        <button class="btn btn-dark px-4" id="btnLookupSearch">සොයන්න</button>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-3">
-          <div id="lookupLoanList" class="list-group shadow-sm rounded-4"></div>
-        </div>
-
-        <div class="col-lg-9 d-none" id="lookupDetailsPane">
-          
-          <div class="row g-3 mb-4">
-            <div class="col-md-3">
-              <div class="p-3 bg-light border-start border-4 border-primary rounded-3 text-center h-100">
-                <small class="text-muted d-block mb-1">මුල් ණය මුදල</small>
-                <h5 class="fw-bold mb-0" id="vLoanAmt">Rs. 0</h5>
               </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light border-start border-4 border-warning rounded-3 text-center h-100">
-                <small class="text-muted d-block mb-1">අරියස් (හිඟ) මාස</small>
-                <h5 class="fw-bold mb-0" id="vArrearsMonths">0 Months</h5>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light border-start border-4 border-danger rounded-3 text-center h-100">
-                <small class="text-muted d-block mb-1">පරක්කු වූ දින</small>
-                <h5 class="fw-bold mb-0 text-danger" id="vOverdueDays">0 Days</h5>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-dark text-warning rounded-3 text-center h-100 shadow">
-                <small class="text-white-50 d-block mb-1">අදට මුළු එකතුව</small>
-                <h5 class="fw-bold mb-0" id="vTotalPayable">Rs. 0</h5>
-              </div>
-            </div>
-          </div>
 
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card bg-info-subtle border-0 rounded-4 h-100">
-                    <div class="card-body">
-                        <h6 class="fw-bold border-bottom pb-2">පාරිභෝගික විස්තර</h6>
-                        <p class="mb-1"><strong>නම:</strong> <span id="vCustName">-</span></p>
-                        <p class="mb-1"><strong>NIC:</strong> <span id="vCustNic">-</span></p>
-                        <p class="mb-1"><strong>දුරකථන:</strong> <span id="vCustPhone">-</span></p>
-                        <p class="mb-0"><strong>ලිපිනය:</strong> <span id="vCustAddress">-</span></p>
-                    </div>
+              <div
+                class="customer-info d-none"
+                id="customerPaymentInfoSection"
+                style="
+                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                  padding: 20px;
+                  border-radius: 15px;
+                  margin-bottom: 25px;
+                  border-left: 5px solid #2196f3;
+                "
+              >
+                <div
+                  class="customer-name"
+                  style="
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #1565c0;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <i class="bi bi-person-fill"></i>
+                  <span id="paymentCustomerName">---</span>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card bg-warning-subtle border-0 rounded-4 h-100">
-                    <div class="card-body">
-                        <h6 class="fw-bold border-bottom pb-2">ණය තත්ත්වය</h6>
-                        <p class="mb-1"><strong>Due Date:</strong> <span id="vDueDate" class="text-danger fw-bold">-</span></p>
-                        <p class="mb-1"><strong>අවසන් ගෙවීම් දිනය:</strong> <span id="vLastPaidDate">-</span></p>
-                        <p class="mb-1"><strong>ලබාදුන් දිනය:</strong> <span id="vGivenDate">-</span></p>
-                        <p class="mb-0"><strong>මසකට පොලිය:</strong> <span id="vIntRate">-</span></p>
-                    </div>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <strong>Customer ID:</strong>
+                    <span id="paymentCustomerId">---</span>
+                  </div>
+                  <div class="col-md-4">
+                    <strong>NIC:</strong>
+                    <span id="paymentCustomerNic">---</span>
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Phone:</strong>
+                    <span id="paymentCustomerPhone">---</span>
+                  </div>
                 </div>
+              </div>
+
+              <div id="loansListSection" class="d-none">
+                <h4 class="mb-4 mt-4">
+                  <i class="bi bi-list-check"></i> ක්‍රියාත්මක ණය
+                  <small class="text-muted">(ගෙවීම සඳහා තෝරන්න)</small>
+                </h4>
+                <div id="activeLoansList"></div>
+              </div>
+
+              <div id="paymentDetailsSection" class="d-none">
+                <h4 class="mb-4 mt-4">
+                  <i class="bi bi-calculator"></i> ගෙවීම් විස්තර
+                </h4>
+                <div
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #fff9c4 0%,
+                      #fff59d 100%
+                    );
+                    padding: 25px;
+                    border-radius: 15px;
+                    border-left: 5px solid #fbc02d;
+                  "
+                >
+                  <h5 class="mb-3 fw-bold">සාරාංශය</h5>
+                  <div
+                    class="d-flex justify-content-between py-2 border-bottom border-warning border-opacity-25"
+                  >
+                    <span class="fw-semibold">මුල් ණය මුදල:</span>
+                    <span id="summaryLoanAmount" class="fw-bold">රු. 0.00</span>
+                  </div>
+                  <div
+                    class="d-flex justify-content-between py-2 border-bottom border-warning border-opacity-25"
+                  >
+                    <span class="fw-semibold">පොලිය:</span>
+                    <span id="summaryInterest" class="fw-bold text-end"
+                      >රු. 0.00</span
+                    >
+                  </div>
+                  <div
+                    class="d-flex justify-content-between py-2 border-bottom border-warning border-opacity-25"
+                  >
+                    <span class="fw-semibold">දඩ මුදල:</span>
+                    <span id="summaryPenalty" class="fw-bold text-danger"
+                      >රු. 0.00</span
+                    >
+                  </div>
+                  <div class="d-flex justify-content-between py-3">
+                    <span class="fw-bold fs-5">ගෙවිය යුතු මුළු මුදල:</span>
+                    <span id="summaryTotal" class="fw-bold text-dark fs-4"
+                      >රු. 0.00</span
+                    >
+                  </div>
+                </div>
+
+                <div
+                  style="
+                    background: #f5f5f5;
+                    padding: 25px;
+                    border-radius: 15px;
+                    margin-top: 20px;
+                  "
+                >
+                  <div class="mb-4">
+                    <label class="form-label fw-bold fs-5"
+                      >ගෙවන මුදල (රු.)</label
+                    >
+                    <input
+                      type="number"
+                      class="form-control form-control-lg fw-bold text-center border-primary"
+                      id="txtPaymentAmount"
+                      style="
+                        font-size: 28px;
+                        padding: 15px;
+                        border-radius: 12px;
+                      "
+                    />
+                  </div>
+                  <div class="d-grid">
+                    <button
+                      class="btn btn-success btn-lg py-3 fw-bold rounded-3 shadow"
+                      id="btnProcessPayment"
+                    >
+                      <i class="bi bi-check-circle-fill"></i> ගෙවීම සම්පූර්ණ
+                      කරන්න
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="paymentHistorySection" class="d-none mt-5">
+                <h4 class="mb-3">
+                  <i class="bi bi-clock-history"></i> අවසන් ගෙවීම් ඉතිහාසය
+                </h4>
+                <div class="table-responsive shadow-sm rounded-3">
+                  <table class="table table-hover align-middle bg-white">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>ID</th>
+                        <th>දිනය</th>
+                        <th>මුදල</th>
+                        <th>පොලිය/දඩය</th>
+                        <th>මූලධනයට</th>
+                        <th class="text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paymentHistoryTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div
+                id="noLoansMessage"
+                class="d-none text-center py-5 text-muted"
+              >
+                <i class="bi bi-inbox fs-1 opacity-25"></i>
+                <h5>ක්‍රියාත්මක ණය නොමැත</h5>
+              </div>
             </div>
           </div>
-
-          <div id="vLoanNotes" class="mb-4"></div>
-
-          <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white py-3 fw-bold d-flex justify-content-between">
-                <span>ගෙවීම් ඉතිහාසය</span>
-                <small class="text-muted">අවසන් ගනුදෙනු 10</small>
-            </div>
-            <div class="table-responsive" style="max-height: 350px;">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                  <tr>
-                    <th>දිනය</th>
-                    <th>ගෙවූ මුදල</th>
-                    <th>දඩය</th>
-                    <th>පොලිය</th>
-                    <th>මූලධනය</th>
-                  </tr>
-                </thead>
-                <tbody id="vHistoryTable"></tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-        <section id="reportsSection" class="dashboard-content d-none">
-  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h2 class="mb-0 d-flex align-items-center gap-3">
-            <i class="fas fa-chart-line fs-1"></i>
-            Settlement & Arrears Report
-          </h2>
-          <p class="mb-0 mt-2 opacity-90">පද්ධතියේ ණය පියවීම් සහ හිඟ වාරික වාර්තා මෙතැනින් බලන්න</p>
-        </div>
-        <button id="btnPrintReport" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm">
-          <i class="fas fa-print me-2 text-primary"></i>Print Report
-        </button>
-      </div>
-    </div>
-
-    <div class="card-body p-4">
-      <div class="row g-4 mb-5">
-        <div class="col-md-4">
-          <div class="p-4 rounded-4 shadow-sm border-start border-5 border-danger bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <p class="text-muted small fw-bold text-uppercase mb-1">මුළු හිඟ වාරික ප්‍රමාණය</p>
-                <h3 id="lblTotalArrears" class="fw-bold text-danger mb-0">රු. 0.00</h3>
-              </div>
-              <div class="bg-danger bg-opacity-10 p-3 rounded-circle text-danger">
-                <i class="fas fa-exclamation-triangle fs-3"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="p-4 rounded-4 shadow-sm border-start border-5 border-success bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <p class="text-muted small fw-bold text-uppercase mb-1">අද දින ලැබුණු එකතුව</p>
-                <h3 id="lblTodayCollection" class="fw-bold text-success mb-0">රු. 0.00</h3>
-              </div>
-              <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
-                <i class="fas fa-hand-holding-usd fs-3"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="p-4 rounded-4 shadow-sm border-start border-5 border-primary bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <p class="text-muted small fw-bold text-uppercase mb-1">සක්‍රීය ණය ගිණුම්</p>
-                <h3 id="lblActiveLoansCount" class="fw-bold text-primary mb-0">0</h3>
-              </div>
-              <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
-                <i class="fas fa-file-invoice-dollar fs-3"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-light rounded-4 p-4 mb-4 border border-white shadow-sm">
-        <div class="row g-3 align-items-end">
-          <div class="col-lg-3 col-md-6">
-            <label class="form-label fw-bold small text-muted">
-              <i class="fas fa-filter me-2 text-primary"></i>වාර්තා වර්ගය
-            </label>
-            <select id="cmbReportType" class="form-select border-0 shadow-sm p-3">
-              <option value="arrears">🚨 හිඟ වාරික වාර්තාව (Arrears)</option>
-              <option value="collection">💰 මුදල් එකතු කිරීමේ වාර්තාව (Collection)</option>
-              <option value="settled">✅ පියවා අවසන් කළ ණය (Settled)</option>
-            </select>
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <label class="form-label fw-bold small text-muted">සිට (From)</label>
-            <input type="date" id="dtpFromDate" class="form-control border-0 shadow-sm p-3" />
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <label class="form-label fw-bold small text-muted">දක්වා (To)</label>
-            <input type="date" id="dtpToDate" class="form-control border-0 shadow-sm p-3" />
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <button id="btnGenerateReport" class="btn btn-primary w-100 p-3 rounded-3 shadow fw-bold">
-              <i class="fas fa-search me-2"></i>Generate Report
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-responsive rounded-4 overflow-hidden border border-light shadow-sm bg-white">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-secondary bg-opacity-10">
-            <tr id="reportHeader">
-              <th class="py-3 px-4 text-secondary small text-uppercase fw-bold">Loan ID</th>
-              <th class="py-3 px-4 text-secondary small text-uppercase fw-bold">Customer Name</th>
-              <th class="py-3 px-4 text-secondary small text-uppercase fw-bold">Loan Amount</th>
-              <th class="py-3 px-4 text-secondary small text-uppercase fw-bold">Due Date</th>
-              <th class="py-3 px-4 text-secondary small text-uppercase fw-bold">Status</th>
-              <th class="py-3 px-4 text-center text-secondary small text-uppercase fw-bold">Action</th>
-            </tr>
-          </thead>
-          <tbody id="tblReportContent">
-            <tr>
-              <td colspan="6" class="text-center py-5">
-                <i class="fas fa-folder-open text-muted fs-1 mb-3 d-block"></i>
-                <p class="text-muted">තොරතුරු බැලීමට වාර්තා වර්ගය තෝරා Generate කරන්න.</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ==================== LOAN PAYMENT SECTION ==================== -->
-<section id="loanPaymentSection" class="dashboard-content d-none">
-  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-    <div class="card-header text-white py-4" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">
-      <h2 class="mb-0 d-flex align-items-center gap-3">
-        <i class="bi bi-cash-coin fs-1"></i>
-        ණය ගෙවීම් කළමනාකරණය
-      </h2>
-      <p class="mb-0 mt-2 opacity-90">
-        පාරිභෝගික ණය තෝරා ගෙවීම් සිදු කරන්න
-      </p>
-    </div>
-
-    <div class="card-body p-4">
-      <div class="alert alert-warning mb-3 d-flex align-items-center gap-3">
-    <label class="fw-bold text-dark mb-0">Testing Date:</label>
-    <input type="date" id="testCurrentDate" class="form-control form-control-sm w-auto" style="border: 2px solid #f39c12;">
-    <small class="text-muted text-wrap">Dada mudal check kirima sadaha meya wenas karanna.</small>
-</div>
-      <!-- Search Section -->
-      <div class="search-box">
-        <label class="form-label fw-semibold mb-3">
-          <i class="bi bi-search"></i> පාරිභෝගික සෙවුම
-        </label>
-        <div class="input-group input-group-lg">
-          <span class="input-group-text">
-            <i class="bi bi-person-circle"></i>
-          </span>
-          <input type="text" class="form-control" id="txtSearchPaymentCustomer" 
-                 placeholder="පාරිභෝගික ID ඇතුළත් කරන්න (උදා: C001)">
-          <button class="btn btn-primary" id="btnSearchPaymentCustomer">
-            <i class="bi bi-search"></i> සොයන්න
-          </button>
-        </div>
-      </div>
-
-      <!-- Customer Information -->
-      <div class="customer-info d-none" id="customerPaymentInfoSection" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px; border-left: 5px solid #2196f3;">
-        <div class="customer-name" style="font-size: 24px; font-weight: 700; color: #1565c0; margin-bottom: 10px;">
-          <i class="bi bi-person-fill"></i> <span id="paymentCustomerName">සමන් පෙරේරා</span>
-        </div>
-        <div class="row g-3">
-          <div class="col-md-4">
-            <strong>Customer ID:</strong> <span id="paymentCustomerId">C001</span>
-          </div>
-          <div class="col-md-4">
-            <strong>NIC:</strong> <span id="paymentCustomerNic">199512345678</span>
-          </div>
-          <div class="col-md-4">
-            <strong>Phone:</strong> <span id="paymentCustomerPhone">0771234567</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Active Loans List -->
-      <div id="loansListSection" class="d-none">
-        <h4 class="mb-4 mt-4">
-          <i class="bi bi-list-check"></i> ක්‍රියාත්මක ණය
-          <small class="text-muted">(ගෙවීම සඳහා ණයක් තෝරන්න)</small>
-        </h4>
-        
-        <div id="activeLoansList">
-          <!-- Loans will be populated here -->
-        </div>
-      </div>
-
-      <!-- Payment Details Section -->
-      <div id="paymentDetailsSection" class="d-none">
-        <h4 class="mb-4 mt-4">
-          <i class="bi bi-calculator"></i> ගෙවීම් විස්තර
-        </h4>
-
-        <div style="background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%); padding: 25px; border-radius: 15px; margin-top: 25px; border-left: 5px solid #fbc02d;">
-          <h5 class="mb-3 fw-bold">සාරාංශය</h5>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e0e0e0;">
-            <span class="summary-label" style="font-weight: 600; color: #555;">මුල් ණය මුදල:</span>
-            <span class="summary-value" style="font-weight: 700; color: #333;" id="summaryLoanAmount">රු. 0.00</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e0e0e0;">
-            <span class="summary-label" style="font-weight: 600; color: #555;">පොලිය:</span>
-            <span class="summary-value" style="font-weight: 700; color: #333;" id="summaryInterest">රු. 0.00</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e0e0e0;">
-            <span class="summary-label" style="font-weight: 600; color: #555;">දඩ මුදල:</span>
-            <span class="summary-value" style="font-weight: 700; color: #333;" id="summaryPenalty">රු. 0.00</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e0e0e0;">
-            <span class="summary-label" style="font-weight: 600; color: #555;">මෙතෙක් ගෙවූ මුදල:</span>
-            <span class="summary-value text-success" style="font-weight: 700;" id="summaryPaid">රු. 0.00</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0;">
-            <span class="summary-label" style="font-weight: 600; color: #555;">ගෙවිය යුතු මුළු මුදල:</span>
-            <span class="summary-value" style="font-weight: 700; color: #e65100; font-size: 20px;" id="summaryTotal">රු. 0.00</span>
-          </div>
-        </div>
-
-        <div style="background: #f5f5f5; padding: 25px; border-radius: 15px; margin-top: 20px;">
-          <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 2px solid #4caf50;">
-            <div style="font-size: 14px; color: #666; margin-bottom: 5px;">ගෙවීමේ දිනය</div>
-            <div style="font-size: 24px; font-weight: 700; color: #2e7d32;" id="paymentDate">2026-01-21</div>
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label fw-bold fs-5">ගෙවන මුදල (රු.)</label>
-            <input type="number" class="form-control" id="txtPaymentAmount" 
-                   style="font-size: 28px; font-weight: 700; text-align: center; border: 3px solid #667eea; border-radius: 12px; padding: 20px;"
-                   placeholder="0.00" step="0.01" min="0">
-            <small class="text-muted">* ගෙවීමට අවශ්‍ය මුදල ඇතුළත් කරන්න</small>
-          </div>
-
-          <div class="d-grid">
-            <button class="btn btn-lg" id="btnProcessPayment" 
-                    style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: white; font-size: 20px; font-weight: 700; padding: 18px; border: none; border-radius: 12px; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);">
-              <i class="bi bi-check-circle-fill"></i> ගෙවීම සම්පූර්ණ කරන්න
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="paymentHistorySection" class="d-none mt-5">
-  <h4 class="mb-3">
-    <i class="bi bi-clock-history"></i> අවසන් ගෙවීම් ඉතිහාසය 
-    <small class="text-muted">(වැරදි ගෙවීම් අවලංගු කිරීමට භාවිතා කරන්න)</small>
-  </h4>
-  <div class="table-responsive shadow-sm rounded-3">
-    <table class="table table-hover align-middle bg-white">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>දිනය</th>
-          <th>මුළු මුදල</th>
-          <th>පොලිය/දඩය</th>
-          <th>මූලධනයට</th>
-          <th class="text-center">Action</th>
-        </tr>
-      </thead>
-      <tbody id="paymentHistoryTableBody">
-        </tbody>
-    </table>
-  </div>
-</div>
-      <!-- No Loans Message -->
-      <div id="noLoansMessage" class="d-none" style="text-align: center; padding: 60px 20px; color: #999;">
-        <i class="bi bi-inbox" style="font-size: 80px; margin-bottom: 20px; opacity: 0.3;"></i>
-        <h5>ක්‍රියාත්මක ණය නොමැත</h5>
-        <p>මෙම පාරිභෝගිකයාට ගෙවිය යුතු ණය නොමැත.</p>
-      </div>
-    </div>
-  </div>
-</section>
-       <section id="loanManagementSection" class="dashboard-content d-none">
-    <div class="loan-section">
-        <div class="loan-header">
-            <h2 class="mb-0">
+        </section>
+        <section id="loanManagementSection" class="dashboard-content d-none">
+          <div class="loan-section">
+            <div class="loan-header">
+              <h2 class="mb-0">
                 <i class="bi bi-bank2 me-2"></i>
                 ණය කළමනාකරණ පද්ධතිය
-            </h2>
-        </div>
+              </h2>
+            </div>
 
-        <div class="card-body p-4">
-
-            <!-- Common Customer Search & Info -->
-            <div class="search-box mb-4">
+            <div class="card-body p-4">
+              <!-- Common Customer Search & Info -->
+              <div class="search-box mb-4">
                 <label class="form-label fw-semibold">
-                    <i class="bi bi-search"></i> පාරිභෝගික සෙවුම
+                  <i class="bi bi-search"></i> පාරිභෝගික සෙවුම
                 </label>
-                <input type="text" class="form-control" id="txtSearchCustomer" 
-                       placeholder="පාරිභෝගික ID හෝ නම මගින් සොයන්න...">
-            </div>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="txtSearchCustomer"
+                  placeholder="පාරිභෝගික ID හෝ නම මගින් සොයන්න..."
+                />
+              </div>
 
-            <div class="info-display mb-4">
-                <h5 class="mb-3"><i class="bi bi-person-fill"></i> පාරිභෝගික තොරතුරු</h5>
+              <div class="info-display mb-4">
+                <h5 class="mb-3">
+                  <i class="bi bi-person-fill"></i> පාරිභෝගික තොරතුරු
+                </h5>
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="info-label">නම</div>
-                        <div class="info-value" id="displayCustomerName">—</div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-label">ID අංකය</div>
-                        <div class="info-value" id="displayCustomerId">—</div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-label">NIC අංකය</div>
-                        <div class="info-value" id="displayCustomerNic">—</div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-label">දුරකථන අංකය</div>
-                        <div class="info-value" id="displayCustomerPhone">—</div>
-                    </div>
+                  <div class="col-md-3">
+                    <div class="info-label">නම</div>
+                    <div class="info-value" id="displayCustomerName">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">ID අංකය</div>
+                    <div class="info-value" id="displayCustomerId">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">NIC අංකය</div>
+                    <div class="info-value" id="displayCustomerNic">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">දුරකථන අංකය</div>
+                    <div class="info-value" id="displayCustomerPhone">—</div>
+                  </div>
                 </div>
-            </div>
+              </div>
 
-            <!-- Loan Type Tabs -->
-            <ul class="nav nav-tabs mb-4" id="loanTypeTabs" role="tablist">
+              <!-- Loan Type Tabs -->
+              <ul class="nav nav-tabs mb-4" id="loanTypeTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="vehicle-tab" data-bs-toggle="tab" data-bs-target="#vehicle" type="button" role="tab">
-                        <i class="bi bi-car-front-fill"></i> වාහන ණය
-                    </button>
+                  <button
+                    class="nav-link active"
+                    id="vehicle-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#vehicle"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-car-front-fill"></i> වාහන ණය
+                  </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="lan-tab" data-bs-toggle="tab" data-bs-target="#lan" type="button" role="tab">
-                        <i class="bi bi-gem"></i> ලං ණය
-                    </button>
+                  <button
+                    class="nav-link"
+                    id="lan-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#lan"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-gem"></i> ලං ණය
+                  </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="promissory-tab" data-bs-toggle="tab" data-bs-target="#promissory" type="button" role="tab">
-                        <i class="bi bi-file-earmark-text"></i> Promissory
-                    </button>
+                  <button
+                    class="nav-link"
+                    id="promissory-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#promissory"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-file-earmark-text"></i> Promissory
+                  </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="check-tab" data-bs-toggle="tab" data-bs-target="#check" type="button" role="tab">
-                        <i class="bi bi-credit-card-2-front"></i> Check ණය
-                    </button>
+                  <button
+                    class="nav-link"
+                    id="check-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#check"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-credit-card-2-front"></i> Check ණය
+                  </button>
                 </li>
-            </ul>
+              </ul>
 
-            <!-- All Tab Contents -->
-            <div class="tab-content" id="loanTabContent">
-
+              <!-- All Tab Contents -->
+              <div class="tab-content" id="loanTabContent">
                 <!-- 1. VEHICLE LOAN -->
-                <div class="tab-pane fade show active" id="vehicle" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4">
-                                <h5 class="mb-3 text-primary"><i class="bi bi-car-front"></i> වාහන ණය තොරතුරු</h5>
-                                <input type="hidden" id="txtVehicleLoanId" />
+                <div
+                  class="tab-pane fade show active"
+                  id="vehicle"
+                  role="tabpanel"
+                >
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-car-front"></i> වාහන ණය තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtVehicleLoanId" />
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">වාහන ණය ID</label>
-                                    <input id="txtDisplayVehicleLoanId" type="text" class="form-control bg-white" value="" readonly />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">අයිතිකාරුගේ නම *</label>
-                                    <input id="txtVehicleOwnerName" type="text" class="form-control" placeholder="නම ඇතුළත් කරන්න" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">වාහන අංකය *</label>
-                                    <input id="txtVehicleNumber" type="text" class="form-control" placeholder="ABC-1234" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">වාහන වර්ගය *</label>
-                                   <select id="txtVehicleType" class="form-select" required>
-    <option value="">වර්ගය තෝරන්න</option>
-    <option value="Car">කාර් (Car)</option>
-    <option value="Van">වෑන් (Van)</option>
-    <option value="Jeep">ජීප් (Jeep)</option>
-    <option value="Bike">බයික් (Bike)</option>
-    <option value="Lorry">ලොරි (Lorry)</option>
-    <option value="Other">වෙනත් (Other)</option>
-</select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">වර්තමාන වටිනාකම</label>
-                                    <input id="txtVehicleCurrentValue" type="number" class="form-control" placeholder="රු. 0.00" step="0.01" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">අනුමත ණය සීමාව</label>
-                                    <input id="txtVehicleLoanLimit" type="number" class="form-control" placeholder="රු. 0.00" step="0.01" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය මුදල *</label>
-                                    <input id="txtVehicleLoanAmount" type="number" class="form-control" placeholder="රු. 0.00" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය දිනය</label>
-                                    <input id="txtVehicleLoanDate" type="date" class="form-control" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">දුන් මුදල</label>
-                                    <input id="txtVehicleGivenAmount" type="number" class="form-control" placeholder="රු. 0.00" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">පොලී අනුපාතය (%)</label>
-                                    <input id="txtVehicleInterestRate" type="number" class="form-control" value="5" step="0.1" min="0" />
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-6"><button id="btnAddVehicle" class="btn btn-success w-100">Add</button></div>
-                                    <div class="col-6"><button id="btnUpdateVehicle" class="btn btn-primary w-100">Update</button></div>
-                                    <div class="col-6"><button id="btnDeleteVehicle" class="btn btn-danger w-100">Delete</button></div>
-                                    <div class="col-6"><button id="btnClearVehicle" class="btn btn-secondary w-100">Clear</button></div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayVehicleLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value=""
+                            readonly
+                          />
                         </div>
 
-                        <!-- Beneficiary + SMS - Vehicle -->
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4 h-100 d-flex flex-column">
-                                <div class="mb-4 flex-grow-1">
-                                    <h6 class="fw-bold text-warning mb-3"><i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර</h6>
-                                    <div class="subsection p-3">
-                                        <input type="hidden" id="txtVehicleBeneficiaryEditIndex" value="-1" />
-                                        <div class="mb-2"><input id="txtVehicleBeneficiaryName" type="text" class="form-control form-control-sm" placeholder="නම"></div>
-                                        <div class="mb-2"><input id="txtVehicleBeneficiaryPhone" type="tel" class="form-control form-control-sm" placeholder="0XXXXXXXXX"></div>
-                                        <div class="mb-2"><input id="txtVehicleBeneficiaryAddress" type="text" class="form-control form-control-sm" placeholder="ලිපිනය"></div>
-                                        <div class="row g-2 mt-3">
-                                            <div class="col-4"><button id="btnAddVehicleBeneficiary" class="btn btn-success btn-sm w-100">Add</button></div>
-                                            <div class="col-4"><button id="btnUpdateVehicleBeneficiary" class="btn btn-primary btn-sm w-100">Update</button></div>
-                                            <div class="col-4"><button id="btnClearVehicleBeneficiary" class="btn btn-secondary btn-sm w-100">Clear</button></div>
-                                        </div>
-                                    </div>
-                                    <div id="vehicleBeneficiaryList" class="mt-3 border rounded p-2" style="max-height:220px; overflow-y:auto; background:#fff;"></div>
-                                </div>
-
-                                <div>
-                                    <h6 class="fw-bold text-info mb-3"><i class="bi bi-chat-dots-fill"></i> SMS යැවීම</h6>
-                                    <div class="subsection p-3" style="background:#e7f3ff; border-left:4px solid #0dcaf0;">
-                                        <div class="mb-2">
-                                            <label class="form-label fw-semibold small">SMS යැවීමේ දිනය</label>
-                                            <input id="txtVehicleSmsDate" type="date" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold small">SMS පණිවිඩය</label>
-                                            <textarea id="txtVehicleSmsMessage" class="form-control form-control-sm" rows="4" placeholder="පණිවිඩය මෙහි ලියන්න..."></textarea>
-                                        </div>
-                                        <div class="d-grid">
-                                            <button id="btnSendVehicleSms" class="btn btn-info btn-sm">
-                                                <i class="bi bi-send-fill"></i> SMS යවන්න
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අයිතිකාරුගේ නම *</label
+                          >
+                          <input
+                            id="txtVehicleOwnerName"
+                            type="text"
+                            class="form-control"
+                            placeholder="නම ඇතුළත් කරන්න"
+                            required
+                          />
                         </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන අංකය *</label
+                          >
+                          <input
+                            id="txtVehicleNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="ABC-1234"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන වර්ගය *</label
+                          >
+                          <select
+                            id="txtVehicleType"
+                            class="form-select"
+                            required
+                          >
+                            <option value="">වර්ගය තෝරන්න</option>
+                            <option value="Car">කාර් (Car)</option>
+                            <option value="Van">වෑන් (Van)</option>
+                            <option value="Jeep">ජීප් (Jeep)</option>
+                            <option value="Bike">බයික් (Bike)</option>
+                            <option value="Lorry">ලොරි (Lorry)</option>
+                            <option value="Other">වෙනත් (Other)</option>
+                          </select>
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වර්තමාන වටිනාකම</label
+                          >
+                          <input
+                            id="txtVehicleCurrentValue"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අනුමත ණය සීමාව</label
+                          >
+                          <input
+                            id="txtVehicleLoanLimit"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtVehicleLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtVehicleLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtVehicleGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtVehicleInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddVehicle"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateVehicle"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteVehicle"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearVehicle"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="table-responsive">
-                                <h5 class="mb-3 fw-bold"><i class="bi bi-table"></i> වාහන ණය වාර්තාව</h5>
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>ණය ID</th>
-                                            <th>අයිතිකරු</th>
-                                            <th>වාහන අංකය</th>
-                                            <th>වර්ගය</th>
-                                            <th>ණය මුදල</th>
-                                            <th>පොලිය %</th>
-                                            <th>ආපකාරුවන්</th>
-                                            <th>SMS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblVehicleLoans">
-                                        <tr><td colspan="8" class="text-center py-4 text-muted">වාහන ණය තොරතුරු නොමැත</td></tr>
-                                    </tbody>
-                                </table>
+                    <!-- Beneficiary + SMS - Vehicle -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtVehicleBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
                             </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddVehicleBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateVehicleBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearVehicleBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="vehicleBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
                         </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtVehicleSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtVehicleSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendVehicleSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> වාහන ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>අයිතිකරු</th>
+                              <th>වාහන අංකය</th>
+                              <th>වර්ගය</th>
+                              <th>ණය මුදල</th>
+                              <th>පොලිය %</th>
+                              <th>ආපකාරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblVehicleLoans">
+                            <tr>
+                              <td
+                                colspan="8"
+                                class="text-center py-4 text-muted"
+                              >
+                                වාහන ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- 2. LAN (LAND) LOAN -->
                 <div class="tab-pane fade" id="lan" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4">
-                                <h5 class="mb-3 text-primary"><i class="bi bi-gem"></i> ලං ණය තොරතුරු</h5>
-                                <input type="hidden" id="txtLanLoanId" />
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-gem"></i> ලං ණය තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtLanLoanId" />
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ලං ණය ID</label>
-                                    <input id="txtDisplayLanLoanId" type="text" class="form-control bg-white" value="LAN001" readonly />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ලං අංකය *</label>
-                                    <input id="txtLanNumber" type="text" class="form-control" placeholder="ලං අංකය" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ඉඩම පිහිටි ස්ථානය *</label>
-                                    <input id="txtLanLocation" type="text" class="form-control" placeholder="ස්ථානය" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ඉඩමේ ප්‍රමාණය</label>
-                                    <input id="txtLanSize" type="text" class="form-control" placeholder="අක්කර / පර්චස්" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ඉඩමේ වර්තමාන වටිනාකම</label>
-                                    <input id="txtLanCurrentValue" type="number" class="form-control" placeholder="රු. 0.00" step="0.01" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">අනුමත ණය සීමාව</label>
-                                    <input id="txtLanLoanLimit" type="number" class="form-control" placeholder="රු. 0.00" step="0.01" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය මුදල *</label>
-                                    <input id="txtLanLoanAmount" type="number" class="form-control" placeholder="රු. 0.00" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය දිනය</label>
-                                    <input id="txtLanLoanDate" type="date" class="form-control" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">දුන් මුදල</label>
-                                    <input id="txtLanGivenAmount" type="number" class="form-control" placeholder="රු. 0.00" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">පොලී අනුපාතය (%)</label>
-                                    <input id="txtLanInterestRate" type="number" class="form-control" value="5" step="0.1" min="0" />
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-6"><button id="btnAddLan" class="btn btn-success w-100">Add</button></div>
-                                    <div class="col-6"><button id="btnUpdateLan" class="btn btn-primary w-100">Update</button></div>
-                                    <div class="col-6"><button id="btnDeleteLan" class="btn btn-danger w-100">Delete</button></div>
-                                    <div class="col-6"><button id="btnClearLan" class="btn btn-secondary w-100">Clear</button></div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ලං ණය ID</label>
+                          <input
+                            id="txtDisplayLanLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="LAN001"
+                            readonly
+                          />
                         </div>
 
-                        <!-- Beneficiary + SMS - Lan -->
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4 h-100 d-flex flex-column">
-                                <div class="mb-4 flex-grow-1">
-                                    <h6 class="fw-bold text-warning mb-3"><i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර</h6>
-                                    <div class="subsection p-3">
-                                        <input type="hidden" id="txtLanBeneficiaryEditIndex" value="-1" />
-                                        <div class="mb-2"><input id="txtLanBeneficiaryName" type="text" class="form-control form-control-sm" placeholder="නම"></div>
-                                        <div class="mb-2"><input id="txtLanBeneficiaryPhone" type="tel" class="form-control form-control-sm" placeholder="0XXXXXXXXX"></div>
-                                        <div class="mb-2"><input id="txtLanBeneficiaryAddress" type="text" class="form-control form-control-sm" placeholder="ලිපිනය"></div>
-                                        <div class="row g-2 mt-3">
-                                            <div class="col-4"><button id="btnAddLanBeneficiary" class="btn btn-success btn-sm w-100">Add</button></div>
-                                            <div class="col-4"><button id="btnUpdateLanBeneficiary" class="btn btn-primary btn-sm w-100">Update</button></div>
-                                            <div class="col-4"><button id="btnClearLanBeneficiary" class="btn btn-secondary btn-sm w-100">Clear</button></div>
-                                        </div>
-                                    </div>
-                                    <div id="lanBeneficiaryList" class="mt-3 border rounded p-2" style="max-height:220px; overflow-y:auto; background:#fff;"></div>
-                                </div>
-
-                                <div>
-                                    <h6 class="fw-bold text-info mb-3"><i class="bi bi-chat-dots-fill"></i> SMS යැවීම</h6>
-                                    <div class="subsection p-3" style="background:#e7f3ff; border-left:4px solid #0dcaf0;">
-                                        <div class="mb-2">
-                                            <label class="form-label fw-semibold small">SMS යැවීමේ දිනය</label>
-                                            <input id="txtLanSmsDate" type="date" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold small">SMS පණිවිඩය</label>
-                                            <textarea id="txtLanSmsMessage" class="form-control form-control-sm" rows="4" placeholder="පණිවිඩය මෙහි ලියන්න..."></textarea>
-                                        </div>
-                                        <div class="d-grid">
-                                            <button id="btnSendLanSms" class="btn btn-info btn-sm">
-                                                <i class="bi bi-send-fill"></i> SMS යවන්න
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ලං අංකය *</label
+                          >
+                          <input
+                            id="txtLanNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="ලං අංකය"
+                            required
+                          />
                         </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩම පිහිටි ස්ථානය *</label
+                          >
+                          <input
+                            id="txtLanLocation"
+                            type="text"
+                            class="form-control"
+                            placeholder="ස්ථානය"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩමේ ප්‍රමාණය</label
+                          >
+                          <input
+                            id="txtLanSize"
+                            type="text"
+                            class="form-control"
+                            placeholder="අක්කර / පර්චස්"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩමේ වර්තමාන වටිනාකම</label
+                          >
+                          <input
+                            id="txtLanCurrentValue"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අනුමත ණය සීමාව</label
+                          >
+                          <input
+                            id="txtLanLoanLimit"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtLanLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtLanLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtLanGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtLanInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddLan"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateLan"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteLan"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearLan"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="table-responsive">
-                                <h5 class="mb-3 fw-bold"><i class="bi bi-table"></i> ලං ණය වාර්තාව</h5>
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>ණය ID</th>
-                                            <th>ලං අංකය</th>
-                                            <th>ස්ථානය</th>
-                                            <th>ප්‍රමාණය</th>
-                                            <th>ණය මුදල</th>
-                                            <th>පොලිය %</th>
-                                            <th>ආපකාරුවන්</th>
-                                            <th>SMS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblLanLoans">
-                                        <tr><td colspan="8" class="text-center py-4 text-muted">ලං ණය තොරතුරු නොමැත</td></tr>
-                                    </tbody>
-                                </table>
+                    <!-- Beneficiary + SMS - Lan -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtLanBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
                             </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddLanBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateLanBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearLanBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="lanBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
                         </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtLanSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtLanSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendLanSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> ලං ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>ලං අංකය</th>
+                              <th>ස්ථානය</th>
+                              <th>ප්‍රමාණය</th>
+                              <th>ණය මුදල</th>
+                              <th>පොලිය %</th>
+                              <th>ආපකාරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblLanLoans">
+                            <tr>
+                              <td
+                                colspan="8"
+                                class="text-center py-4 text-muted"
+                              >
+                                ලං ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- 3. PROMISSORY LOAN -->
                 <div class="tab-pane fade" id="promissory" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4">
-                                <h5 class="mb-3 text-primary"><i class="bi bi-file-earmark-text"></i> Promissory ණය තොරතුරු</h5>
-                                <input type="hidden" id="txtPromissoryLoanId" />
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-file-earmark-text"></i> Promissory ණය
+                          තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtPromissoryLoanId" />
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Promissory ණය ID</label>
-                                    <input id="txtDisplayPromissoryLoanId" type="text" class="form-control bg-white" value="PRM001" readonly />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Promissory අංකය *</label>
-                                    <input id="txtPromissoryNumber" type="text" class="form-control" placeholder="Promissory අංකය" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය මුදල *</label>
-                                    <input id="txtPromissoryLoanAmount" type="number" class="form-control" placeholder="රු. 0.00" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය දිනය</label>
-                                    <input id="txtPromissoryLoanDate" type="date" class="form-control" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">දුන් මුදල</label>
-                                    <input id="txtPromissoryGivenAmount" type="number" class="form-control" placeholder="රු. 0.00" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">පොලී අනුපාතය (%)</label>
-                                    <input id="txtPromissoryInterestRate" type="number" class="form-control" value="5" step="0.1" min="0" />
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-6"><button id="btnAddPromissory" class="btn btn-success w-100">Add</button></div>
-                                    <div class="col-6"><button id="btnUpdatePromissory" class="btn btn-primary w-100">Update</button></div>
-                                    <div class="col-6"><button id="btnDeletePromissory" class="btn btn-danger w-100">Delete</button></div>
-                                    <div class="col-6"><button id="btnClearPromissory" class="btn btn-secondary w-100">Clear</button></div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Promissory ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayPromissoryLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="PRM001"
+                            readonly
+                          />
                         </div>
 
-                        <!-- Beneficiary + SMS - Promissory -->
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4 h-100 d-flex flex-column">
-                                <div class="mb-4 flex-grow-1">
-                                    <h6 class="fw-bold text-warning mb-3"><i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර</h6>
-                                    <div class="subsection p-3">
-                                        <input type="hidden" id="txtPromissoryBeneficiaryEditIndex" value="-1" />
-                                        <div class="mb-2"><input id="txtPromissoryBeneficiaryName" type="text" class="form-control form-control-sm" placeholder="නම"></div>
-                                        <div class="mb-2"><input id="txtPromissoryBeneficiaryPhone" type="tel" class="form-control form-control-sm" placeholder="0XXXXXXXXX"></div>
-                                        <div class="mb-2"><input id="txtPromissoryBeneficiaryAddress" type="text" class="form-control form-control-sm" placeholder="ලිපිනය"></div>
-                                        <div class="row g-2 mt-3">
-                                            <div class="col-4"><button id="btnAddPromissoryBeneficiary" class="btn btn-success btn-sm w-100">Add</button></div>
-                                            <div class="col-4"><button id="btnUpdatePromissoryBeneficiary" class="btn btn-primary btn-sm w-100">Update</button></div>
-                                            <div class="col-4"><button id="btnClearPromissoryBeneficiary" class="btn btn-secondary btn-sm w-100">Clear</button></div>
-                                        </div>
-                                    </div>
-                                    <div id="promissoryBeneficiaryList" class="mt-3 border rounded p-2" style="max-height:220px; overflow-y:auto; background:#fff;"></div>
-                                </div>
-
-                                <div>
-                                    <h6 class="fw-bold text-info mb-3"><i class="bi bi-chat-dots-fill"></i> SMS යැවීම</h6>
-                                    <div class="subsection p-3" style="background:#e7f3ff; border-left:4px solid #0dcaf0;">
-                                        <div class="mb-2">
-                                            <label class="form-label fw-semibold small">SMS යැවීමේ දිනය</label>
-                                            <input id="txtPromissorySmsDate" type="date" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold small">SMS පණිවිඩය</label>
-                                            <textarea id="txtPromissorySmsMessage" class="form-control form-control-sm" rows="4" placeholder="පණිවිඩය මෙහි ලියන්න..."></textarea>
-                                        </div>
-                                        <div class="d-grid">
-                                            <button id="btnSendPromissorySms" class="btn btn-info btn-sm">
-                                                <i class="bi bi-send-fill"></i> SMS යවන්න
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Promissory අංකය *</label
+                          >
+                          <input
+                            id="txtPromissoryNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="Promissory අංකය"
+                            required
+                          />
                         </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtPromissoryLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtPromissoryLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtPromissoryGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtPromissoryInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddPromissory"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdatePromissory"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeletePromissory"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearPromissory"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="table-responsive">
-                                <h5 class="mb-3 fw-bold"><i class="bi bi-table"></i> Promissory ණය වාර්තාව</h5>
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>ණය ID</th>
-                                            <th>Promissory අංකය</th>
-                                            <th>ණය මුදල</th>
-                                            <th>දිනය</th>
-                                            <th>පොලිය %</th>
-                                            <th>ආපකාරුවන්</th>
-                                            <th>SMS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblPromissoryLoans">
-                                        <tr><td colspan="7" class="text-center py-4 text-muted">Promissory ණය තොරතුරු නොමැත</td></tr>
-                                    </tbody>
-                                </table>
+                    <!-- Beneficiary + SMS - Promissory -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtPromissoryBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
                             </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddPromissoryBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdatePromissoryBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearPromissoryBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="promissoryBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
                         </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtPromissorySmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtPromissorySmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendPromissorySms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> Promissory ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>Promissory අංකය</th>
+                              <th>ණය මුදල</th>
+                              <th>දිනය</th>
+                              <th>පොලිය %</th>
+                              <th>ආපකාරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblPromissoryLoans">
+                            <tr>
+                              <td
+                                colspan="7"
+                                class="text-center py-4 text-muted"
+                              >
+                                Promissory ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- 4. CHECK LOAN -->
                 <div class="tab-pane fade" id="check" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4">
-                                <h5 class="mb-3 text-primary"><i class="bi bi-credit-card-2-front"></i> Check ණය තොරතුරු</h5>
-                                <input type="hidden" id="txtCheckLoanId" />
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-credit-card-2-front"></i> Check ණය
+                          තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtCheckLoanId" />
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Check ණය ID</label>
-                                    <input id="txtDisplayCheckLoanId" type="text" class="form-control bg-white" value="CHK001" readonly />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Check අංකය *</label>
-                                    <input id="txtCheckNumber" type="text" class="form-control" placeholder="Check අංකය" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය මුදල *</label>
-                                    <input id="txtCheckLoanAmount" type="number" class="form-control" placeholder="රු. 0.00" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">ණය දිනය</label>
-                                    <input id="txtCheckLoanDate" type="date" class="form-control" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">දුන් මුදල</label>
-                                    <input id="txtCheckGivenAmount" type="number" class="form-control" placeholder="රු. 0.00" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Check පත් හිමිකරුගේ නම</label>
-                                    <input id="txtCheckOwnerName" type="text" class="form-control" placeholder="හිමිකරුගේ නම" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Check පත් අංකය හා දිනය</label>
-                                    <input id="txtCheckDateNumber" type="text" class="form-control" placeholder="අංකය - දිනය" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">බැංකුව හා ගිණුම් අංකය</label>
-                                    <input id="txtCheckBankAccount" type="text" class="form-control" placeholder="බැංකුව - ගිණුම් අංකය" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">පොලී අනුපාතය (%)</label>
-                                    <input id="txtCheckInterestRate" type="number" class="form-control" value="5" step="0.1" min="0" />
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-6"><button id="btnAddCheck" class="btn btn-success w-100">Add</button></div>
-                                    <div class="col-6"><button id="btnUpdateCheck" class="btn btn-primary w-100">Update</button></div>
-                                    <div class="col-6"><button id="btnDeleteCheck" class="btn btn-danger w-100">Delete</button></div>
-                                    <div class="col-6"><button id="btnClearCheck" class="btn btn-secondary w-100">Clear</button></div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayCheckLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="CHK001"
+                            readonly
+                          />
                         </div>
 
-                        <!-- Beneficiary + SMS - Check -->
-                        <div class="col-lg-6">
-                            <div class="bg-light rounded-3 p-4 h-100 d-flex flex-column">
-                                <div class="mb-4 flex-grow-1">
-                                    <h6 class="fw-bold text-warning mb-3"><i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර</h6>
-                                    <div class="subsection p-3">
-                                        <input type="hidden" id="txtCheckBeneficiaryEditIndex" value="-1" />
-                                        <div class="mb-2"><input id="txtCheckBeneficiaryName" type="text" class="form-control form-control-sm" placeholder="නම"></div>
-                                        <div class="mb-2"><input id="txtCheckBeneficiaryPhone" type="tel" class="form-control form-control-sm" placeholder="0XXXXXXXXX"></div>
-                                        <div class="mb-2"><input id="txtCheckBeneficiaryAddress" type="text" class="form-control form-control-sm" placeholder="ලිපිනය"></div>
-                                        <div class="row g-2 mt-3">
-                                            <div class="col-4"><button id="btnAddCheckBeneficiary" class="btn btn-success btn-sm w-100">Add</button></div>
-                                            <div class="col-4"><button id="btnUpdateCheckBeneficiary" class="btn btn-primary btn-sm w-100">Update</button></div>
-                                            <div class="col-4"><button id="btnClearCheckBeneficiary" class="btn btn-secondary btn-sm w-100">Clear</button></div>
-                                        </div>
-                                    </div>
-                                    <div id="checkBeneficiaryList" class="mt-3 border rounded p-2" style="max-height:220px; overflow-y:auto; background:#fff;"></div>
-                                </div>
-
-                                <div>
-                                    <h6 class="fw-bold text-info mb-3"><i class="bi bi-chat-dots-fill"></i> SMS යැවීම</h6>
-                                    <div class="subsection p-3" style="background:#e7f3ff; border-left:4px solid #0dcaf0;">
-                                        <div class="mb-2">
-                                            <label class="form-label fw-semibold small">SMS යැවීමේ දිනය</label>
-                                            <input id="txtCheckSmsDate" type="date" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold small">SMS පණිවිඩය</label>
-                                            <textarea id="txtCheckSmsMessage" class="form-control form-control-sm" rows="4" placeholder="පණිවිඩය මෙහි ලියන්න..."></textarea>
-                                        </div>
-                                        <div class="d-grid">
-                                            <button id="btnSendCheckSms" class="btn btn-info btn-sm">
-                                                <i class="bi bi-send-fill"></i> SMS යවන්න
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check අංකය *</label
+                          >
+                          <input
+                            id="txtCheckNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="Check අංකය"
+                            required
+                          />
                         </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtCheckLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtCheckLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtCheckGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check පත් හිමිකරුගේ නම</label
+                          >
+                          <input
+                            id="txtCheckOwnerName"
+                            type="text"
+                            class="form-control"
+                            placeholder="හිමිකරුගේ නම"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check පත් අංකය හා දිනය</label
+                          >
+                          <input
+                            id="txtCheckDateNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="අංකය - දිනය"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >බැංකුව හා ගිණුම් අංකය</label
+                          >
+                          <input
+                            id="txtCheckBankAccount"
+                            type="text"
+                            class="form-control"
+                            placeholder="බැංකුව - ගිණුම් අංකය"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtCheckInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddCheck"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateCheck"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteCheck"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearCheck"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="table-responsive">
-                                <h5 class="mb-3 fw-bold"><i class="bi bi-table"></i> Check ණය වාර්තාව</h5>
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>ණය ID</th>
-                                            <th>Check අංකය</th>
-                                            <th>ණය මුදල</th>
-                                            <th>හිමිකරු</th>
-                                            <th>පොලිය %</th>
-                                            <th>ආපකාරුවන්</th>
-                                            <th>SMS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblCheckLoans">
-                                        <tr><td colspan="7" class="text-center py-4 text-muted">Check ණය තොරතුරු නොමැත</td></tr>
-                                    </tbody>
-                                </table>
+                    <!-- Beneficiary + SMS - Check -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ආපකාරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtCheckBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
                             </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddCheckBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateCheckBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearCheckBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="checkBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
                         </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtCheckSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtCheckSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendCheckSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> Check ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>Check අංකය</th>
+                              <th>ණය මුදල</th>
+                              <th>හිමිකරු</th>
+                              <th>පොලිය %</th>
+                              <th>ආපකාරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblCheckLoans">
+                            <tr>
+                              <td
+                                colspan="7"
+                                class="text-center py-4 text-muted"
+                              >
+                                Check ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-            </div> <!-- end tab-content -->
-        </div>
-    </div>
-</section>
-        </div>
+              </div>
+              <!-- end tab-content -->
+            </div>
+          </div>
+        </section>
+      </div>
 
       <!-- Toast Notifications -->
       <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000">
-        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div
+          id="successToast"
+          class="toast align-items-center text-white bg-success border-0"
+          role="alert"
+        >
           <div class="d-flex">
             <div class="toast-body">
               <i class="fas fa-check-circle me-2"></i>
               <span id="toastMessage">Action completed successfully!</span>
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast"
+            ></button>
           </div>
         </div>
       </div>
 
       <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000">
-        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div
+          id="errorToast"
+          class="toast align-items-center text-white bg-danger border-0"
+          role="alert"
+        >
           <div class="d-flex">
             <div class="toast-body">
               <i class="fas fa-exclamation-triangle me-2"></i>
               <span id="errorMessage">An error occurred!</span>
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast"
+            ></button>
           </div>
         </div>
       </div>
@@ -2682,16 +3492,28 @@
                 <i class="fas fa-question-circle me-2"></i>
                 Confirm Action
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
             </div>
             <div class="modal-body">
               <p id="confirmModalMessage" class="mb-0">
                 Are you sure you want to proceed?
               </p>
-              <div id="confirmModalDetails" class="alert alert-info mt-3 mb-0" style="display: none"></div>
+              <div
+                id="confirmModalDetails"
+                class="alert alert-info mt-3 mb-0"
+                style="display: none"
+              ></div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
                 <i class="fas fa-times-circle me-1"></i> Cancel
               </button>
               <button type="button" class="btn btn-danger" id="confirmModalBtn">
@@ -2711,17 +3533,14 @@
     <script src="../js/user.js"></script>
     <script src="../js/main.js"></script>
     <script src="../js/CustomerManagement.js"></script>
-    <script src="../js/EmployeeManagement.js"></script>
     <script src="../js/VehicleLoarn.js"></script>
     <script src="../js/LandLoarn.js"></script>
     <script src="../js/Payment.js"></script>
     <script src="../js/Promissory.js"></script>
     <script src="../js/CheckLoan.js"></script>
-    <script src="../js/Report.js"></script>
     <script src="../js/loanlookup.js"></script>
     <script src="../js/dashboard.js"></script>
     <script src="../js/onlineoffline.js"></script>
     <script src="../js/SmsService.js"></script>
   </body>
 </html>
-                

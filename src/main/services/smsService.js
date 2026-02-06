@@ -2,7 +2,7 @@ import db from '../config/db.js';
 
 const API_URL = "https://app.fitsms.lk/api/v4/sms/send";
 const API_TOKEN = "371|9km1jftaCr7HPp6WAu7TLoByzvik2LAYFZcWIe8B3591e7bd";
-const SENDER_ID = "The Change"; 
+const SENDER_ID = "GAGANA-INVS"; 
 
 class SMSService {
     

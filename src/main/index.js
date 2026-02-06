@@ -6,13 +6,11 @@ import db from './config/db.js'; // 🔹 Database එක import කරගන්�
 // Controllers
 import { registerUserHandlers } from './controllers/UserController.js';
 import { registerCustomerHandlers } from './controllers/CustomerController.js';
-import { registerEmployeeHandlers } from './controllers/EmployeeController.js';
 import { registerVehicleLoanHandlers } from './controllers/VehicleLoarnController.js';
 import {registerPaymentHandlers} from './controllers/PaymentController.js';
 import { registerLandLoanHandlers } from './controllers/LandLoarnControler.js';
 import { registerPromissoryLoanHandlers} from './controllers/PromissoryLoanController.js';
 import { registerCheckLoanHandlers } from './controllers/CheckLoanController.js';
-import { registerReportHandlers } from './controllers/ReportController.js';
 import { registerLoanLookupHandlers } from './controllers/LoanLookupController.js';
 import { setupSMSHandlers } from './controllers/smsController.js';
 import { registerDashbordHandlers } from './controllers/DashbordController.js'; //
@@ -32,13 +30,11 @@ async function startApp() {
          
         registerUserHandlers();
         registerCustomerHandlers();
-        registerEmployeeHandlers();
         registerVehicleLoanHandlers();
         registerPaymentHandlers();
         registerLandLoanHandlers();
         registerPromissoryLoanHandlers();
         registerCheckLoanHandlers();
-        registerReportHandlers();
         registerLoanLookupHandlers();
         setupSMSHandlers();
         registerDashbordHandlers();

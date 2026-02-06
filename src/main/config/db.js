@@ -11,38 +11,29 @@ const pool = mysql.createPool({
     multipleStatements: true,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 10000, 
+    enableKeepAlive: true
 });
 
 let isInitialized = false;
 async function initDB() {
-
     if (isInitialized) return;
     isInitialized = true;
+    
     let conn;
     try {
-        // 1. මුලින්ම Database එක හදන්න (Pool එකෙන් පිටත)
-        const tempConn = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-        });
-        await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
-        await tempConn.end();
-
-        // 2. දැන් Pool එක හරහා Connection එකක් ගන්න
+        // පියවර 1 සහ 2 වෙනුවට කෙලින්ම Pool එකෙන් Connection එකක් ගන්න
         conn = await pool.getConnection();
 
-        // 3. Queries ටික වෙන් කරලා (Split) එකින් එක Run කරන්න
-        // මෙතනදී සෙමිකෝලන් (;) එකෙන් වෙන් කරලා එකින් එක Loop එකක Run කරනවා
+        // පියවර 3: ටේබල් සෑදීම
         const queries = createTablesQuery.split(';').filter(q => q.trim() !== "");
-        
         for (let query of queries) {
             await conn.query(query);
         }
-        console.log("✅ MySQL Database & All Tables Initialized Successfully!");
+        console.log("✅ Remote MySQL Database & Tables Initialized!");
 
-        // 4. Admin User පරීක්ෂාව
+        // පියවර 4: Admin User පරීක්ෂාව
         const [rows] = await conn.query("SELECT * FROM Users WHERE Username = 'admin'");
         if (rows.length === 0) {
             const salt = await bcrypt.genSalt(10);
@@ -55,7 +46,7 @@ async function initDB() {
         }
 
     } catch (err) {
-        console.error("❌ DB Setup Error: ", err.message);
+        console.error("❌ Remote DB Setup Error: ", err.message);
     } finally {
         if (conn) conn.release();
     }
