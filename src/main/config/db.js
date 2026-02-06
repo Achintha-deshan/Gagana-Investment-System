@@ -1,8 +1,23 @@
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
-import 'dotenv/config';
+import path from 'path';
+import dotenv from 'dotenv';
+import { app } from 'electron';
 import { createTablesQuery } from './schema.js';
 
+/**
+ * .env file එක සොයාගැනීම (Security + Build Success)
+ * Develop කරන විට: Project root එකේ ඇති .env කියවයි.
+ * Build කළ පසු: Resources folder එකට copy වූ .env කියවයි.
+ */
+const isDev = !app.isPackaged;
+const envPath = isDev 
+    ? path.join(process.cwd(), '.env') 
+    : path.join(process.resourcesPath, '.env');
+
+dotenv.config({ path: envPath });
+
+// Database Connection Pool එක සෑදීම
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -12,28 +27,29 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 10000, 
+    connectTimeout: 15000, // Remote DB නිසා කාලය ටිකක් වැඩි කළා
     enableKeepAlive: true
 });
 
 let isInitialized = false;
+
 async function initDB() {
     if (isInitialized) return;
     isInitialized = true;
     
     let conn;
     try {
-        // පියවර 1 සහ 2 වෙනුවට කෙලින්ම Pool එකෙන් Connection එකක් ගන්න
+        console.log("Connecting to Remote Database...");
         conn = await pool.getConnection();
 
-        // පියවර 3: ටේබල් සෑදීම
+        // 1. Tables සෑදීම
         const queries = createTablesQuery.split(';').filter(q => q.trim() !== "");
         for (let query of queries) {
             await conn.query(query);
         }
         console.log("✅ Remote MySQL Database & Tables Initialized!");
 
-        // පියවර 4: Admin User පරීක්ෂාව
+        // 2. Default Admin User පරීක්ෂාව
         const [rows] = await conn.query("SELECT * FROM Users WHERE Username = 'admin'");
         if (rows.length === 0) {
             const salt = await bcrypt.genSalt(10);
@@ -47,6 +63,8 @@ async function initDB() {
 
     } catch (err) {
         console.error("❌ Remote DB Setup Error: ", err.message);
+        // මෙතනදී Error එකක් ආවොත් main window එකට දැනුම් දීමට අවශ්‍ය ලොජික් එක මෙතැනට දැමිය හැක
+        throw err; 
     } finally {
         if (conn) conn.release();
     }

@@ -26,6 +26,9 @@
   "build": {
     "appId": "com.gaganainvestment.app",
     "productName": "Gagana Investment",
+    "extraResources": [
+      ".env" 
+    ],
     "directories": {
       "output": "dist"
     },
