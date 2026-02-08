@@ -72,7 +72,9 @@ contextBridge.exposeInMainWorld('api', {
         getActiveLoans: (customerId) => ipcRenderer.invoke('payment:getActiveLoans', customerId),
         process: (paymentData) => ipcRenderer.invoke('payment:process', paymentData),
         getHistory: (loanId) => ipcRenderer.invoke('payment:getHistory', loanId),
-        voidPayment: (paymentId) => ipcRenderer.invoke('payment:void', paymentId) // මෙය අලුතින් එක් කරන්න
+        voidPayment: (paymentId) => ipcRenderer.invoke('payment:void', paymentId), 
+        processSettlement: (settleData) => ipcRenderer.invoke('settlement:process', settleData),
+        searchSettlement: (searchText) => ipcRenderer.invoke('settlement:searchLoan', searchText),
     },
 
     loanLookup: {

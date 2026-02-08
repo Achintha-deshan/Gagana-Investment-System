@@ -42,61 +42,75 @@ class SMSService {
         }
     }
 
-// 2. දිනපතා SMS පරීක්ෂාව සහ යැවීම
-async checkAndSendDailyReminders() {
-    try {
-        const sql = `
-            SELECT l.LoanID, c.CustomerPhone, c.CustomerName, l.NextDueDate 
-            FROM loans l 
-            JOIN customers c ON l.CustomerID = c.CustomerID 
-            WHERE l.NextDueDate = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-            AND (l.SmsDate IS NULL OR DATE(l.SmsDate) != CURDATE())
-            AND l.Status = 'ACTIVE'`;
+    // 2. දිනපතා SMS පරීක්ෂාව සහ යැවීම (Gender එකතු කරන ලදී)
+    async checkAndSendDailyReminders() {
+        try {
+            const sql = `
+                SELECT 
+                    l.LoanID, 
+                    c.CustomerPhone, 
+                    c.CustomerName, 
+                    c.Gender, 
+                    l.NextDueDate 
+                FROM loans l 
+                JOIN customers c ON l.CustomerID = c.CustomerID 
+                WHERE l.NextDueDate = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                AND (l.SmsDate IS NULL OR DATE(l.SmsDate) != CURDATE())
+                AND l.Status = 'ACTIVE'`;
 
-        const [rows] = await db.execute(sql);
-        
-        // පාරිභෝගිකයින් නැතිනම් මෙතනින්ම ඉවර කරන්න
-        if (rows.length === 0) {
-            return { success: true, sentCount: 0 };
-        }
-
-        let sentCount = 0;
-
-        for (let row of rows) {
-            const dateObj = new Date(row.NextDueDate);
-            const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
-            const firstName = row.CustomerName ? row.CustomerName.split(' ')[0] : 'පාරිභෝගිකයා';
-            const message = `සිහි කැඳවීමයි! ${firstName}, ඔබගේ වාරිකය ${formattedDate} දිනට ගෙවිය යුතුයි. Gagana Investment`;
-
-            // SMS එක යැවීම
-            const res = await this.sendSMS(row.CustomerPhone, message);
-
-            // වැදගත්: SMS එක යැවීම අසාර්ථක වුණොත් (උදා: Balance අවසන් නම්)
-            if (!res.success) {
-                // Loop එක නවත්වලා දෝෂය සහ statusCode එක return කරනවා
-                return { 
-                    success: false, 
-                    message: res.data?.message || "SMS ශේෂය අවසන් වී ඇති බව පෙනේ.", 
-                    statusCode: res.statusCode 
-                };
+            const [rows] = await db.execute(sql);
+            
+            if (rows.length === 0) {
+                return { success: true, sentCount: 0 };
             }
 
-            // සාර්ථක නම් පමණක් Database update කරනවා
-            await db.execute(
-                "UPDATE loans SET SmsDate = NOW(), SmsMessage = ? WHERE LoanID = ?", 
-                [message, row.LoanID]
-            );
-            sentCount++;
+            let sentCount = 0;
+
+            for (let row of rows) {
+                const dateObj = new Date(row.NextDueDate);
+                const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+                
+                // නමේ මුල් කෑල්ල ගැනීම
+                const firstName = row.CustomerName ? row.CustomerName.split(' ')[0] : 'පාරිභෝගිකයා';
+                
+                // Gender එක අනුව ගෞරව නාමය තේරීම
+                let title = "";
+                if (row.Gender === 'Male') {
+                    title = "මහතා"; // Mr.
+                } else if (row.Gender === 'Female') {
+                    title = "මහත්මිය"; // Mrs./Miss
+                }
+
+                // මැසේජ් එක සැකසීම
+                const message = `සිහි කැඳවීමයි! ${firstName} ${title}, ඔබගේ වාරිකය ${formattedDate} දිනට ගෙවිය යුතුයි. Gagana Investment`;
+
+                // SMS එක යැවීම
+                const res = await this.sendSMS(row.CustomerPhone, message);
+
+                if (!res.success) {
+                    return { 
+                        success: false, 
+                        message: res.data?.message || "SMS ශේෂය අවසන් වී ඇති බව පෙනේ.", 
+                        statusCode: res.statusCode 
+                    };
+                }
+
+                // සාර්ථක නම් පමණක් Database update කිරීම
+                await db.execute(
+                    "UPDATE loans SET SmsDate = NOW(), SmsMessage = ? WHERE LoanID = ?", 
+                    [message, row.LoanID]
+                );
+                sentCount++;
+            }
+
+            return { success: true, sentCount: sentCount };
+
+        } catch (error) {
+            console.error("Critical Backend Error:", error);
+            return { success: false, message: error.message };
         }
-
-        // සියල්ල සාර්ථකව අවසන් වුණොත්
-        return { success: true, sentCount: sentCount };
-
-    } catch (error) {
-        console.error("Critical Backend Error:", error);
-        return { success: false, message: error.message };
     }
-}
+
     // 3. යැවූ සහ යැවිය යුතු සියලු දෙනාගේ වාර්තාව
     async getLogsByDate(targetDate) {
         try {

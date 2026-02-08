@@ -1022,7 +1022,11 @@
             <span>Customer Management</span>
           </a>
 
-          <a class="menu-item" data-section="userManagementSection">
+          <a
+            class="menu-item"
+            data-section="userManagementSection"
+            id="menuUserManagement"
+          >
             <i class="fas fa-user-cog"></i>
             <span>User Management</span>
           </a>
@@ -1034,7 +1038,10 @@
             <i class="fas fa-money-check-alt"></i>
             <span>Loan Payment</span>
           </a>
-
+          <a class="menu-item" data-section="loanSettlementSection">
+            <i class="fas fa-money-check-alt"></i>
+            <span>Loan Settlement</span>
+          </a>
           <a class="menu-item" data-section="loanLookupSection">
             <i class="fas fa-search"></i>
             <span>Loan Lookup</span>
@@ -1557,6 +1564,17 @@
                       />
                     </div>
                     <div class="mb-3">
+                      <label class="form-label fw-semibold">Gender *</label>
+                      <select id="cmbCustomerGender" class="form-select">
+                        <option value="" selected disabled>
+                          Select Gender
+                        </option>
+                        <option value="Male">Male (පුරුෂ)</option>
+                        <option value="Female">Female (ස්ත්‍රී)</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
                       <div
                         class="form-check form-switch p-3 border rounded-3 bg-white shadow-sm"
                       >
@@ -1648,6 +1666,7 @@
                           <th class="fw-bold">Customer ID</th>
                           <th class="fw-bold">Name</th>
                           <th class="fw-bold">NIC</th>
+                          <th class="fw-bold">Gender</th>
                           <th class="fw-bold">Phone</th>
                           <th class="fw-bold text-center">Address</th>
                           <th class="fw-bold text-center">Status</th>
@@ -2019,21 +2038,28 @@
                     margin-top: 20px;
                   "
                 >
-                  <div class="mb-4">
-                    <label class="form-label fw-bold fs-5"
-                      >ගෙවන මුදල (රු.)</label
-                    >
-                    <input
-                      type="number"
-                      class="form-control form-control-lg fw-bold text-center border-primary"
-                      id="txtPaymentAmount"
-                      style="
-                        font-size: 28px;
-                        padding: 15px;
-                        border-radius: 12px;
-                      "
-                    />
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold"
+                        ><i class="bi bi-calendar-event"></i> ගෙවීම් දිනය</label
+                      >
+                      <input
+                        type="date"
+                        class="form-control form-control-lg border-primary"
+                        id="txtPaymentManualDate"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">ගෙවන මුදල (රු.)</label>
+                      <input
+                        type="number"
+                        class="form-control form-control-lg fw-bold text-center border-primary"
+                        id="txtPaymentAmount"
+                        style="font-size: 28px; border-radius: 12px"
+                      />
+                    </div>
                   </div>
+
                   <div class="d-grid">
                     <button
                       class="btn btn-success btn-lg py-3 fw-bold rounded-3 shadow"
@@ -2072,6 +2098,195 @@
               >
                 <i class="bi bi-inbox fs-1 opacity-25"></i>
                 <h5>ක්‍රියාත්මක ණය නොමැත</h5>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="loanSettlementSection" class="dashboard-content d-none">
+          <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-header text-white py-4"
+              style="
+                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+              "
+            >
+              <h2 class="mb-0 d-flex align-items-center gap-3">
+                <i class="bi bi-file-earmark-lock2-fill fs-1"></i>
+                ණය ගිණුම පියවා වසා දැමීම
+              </h2>
+            </div>
+
+            <div class="card-body p-4">
+              <div class="search-box mb-4">
+                <div class="input-group input-group-lg shadow-sm">
+                  <span class="input-group-text bg-white border-end-0"
+                    ><i class="bi bi-search text-danger"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control border-start-0"
+                    id="txtSettleSearchLoan"
+                    placeholder="Customer ID / Name / NIC හෝ Loan ID ඇතුළත් කරන්න..."
+                  />
+                  <button class="btn btn-danger px-4" id="btnSearchSettleLoan">
+                    සොයන්න
+                  </button>
+                </div>
+              </div>
+
+              <div id="loanCardsContainer" class="row g-3 mb-4"></div>
+
+              <div id="settleDetailsWrapper" class="d-none">
+                <div
+                  class="customer-info shadow-sm mb-4"
+                  id="settleLoanDetailsSection"
+                  style="
+                    background: #f8f9fa;
+                    padding: 25px;
+                    border-radius: 15px;
+                    border-left: 5px solid #c0392b;
+                  "
+                >
+                  <div class="row">
+                    <div class="col-md-4">
+                      <p class="mb-1 text-muted small text-uppercase fw-bold">
+                        ගනුදෙනුකරු
+                      </p>
+                      <h5 id="settleCustomerName" class="fw-bold">---</h5>
+                      <span id="settleLoanType" class="badge bg-secondary"
+                        >---</span
+                      >
+                    </div>
+                    <div class="col-md-4 text-center border-start border-end">
+                      <p class="mb-1 text-muted small text-uppercase fw-bold">
+                        ණය මුදල
+                      </p>
+                      <h5 id="settleMainAmount" class="fw-bold text-dark">
+                        රු. 0.00
+                      </h5>
+                      <small class="text-muted"
+                        >ලබාදුන් දිනය:
+                        <span id="settleLoanDate">--</span></small
+                      >
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                      <p class="mb-1 text-muted small text-uppercase fw-bold">
+                        දැනට පවතින ශේෂය (Capital)
+                      </p>
+                      <h4 id="settleCurrentBalance" class="fw-bold text-danger">
+                        රු. 0.00
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="settleCalculationSection">
+                  <div class="row g-4">
+                    <div class="col-md-7">
+                      <div
+                        class="card border-0 shadow-sm p-4 rounded-4 bg-white"
+                      >
+                        <h5 class="mb-3 fw-bold border-bottom pb-2 text-danger">
+                          පියවීම් ගණනය කිරීම
+                        </h5>
+                        <div
+                          class="alert alert-info py-2"
+                          id="interestLogicNote"
+                        >
+                          <i class="bi bi-info-circle-fill me-2"></i> පොලිය ගණනය
+                          වන්නේ අවසන් ගෙවීමේ සිට අද දක්වායි.
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"
+                              >දින ගණන සඳහා පොලිය (Interest)</label
+                            >
+                            <input
+                              type="text"
+                              class="form-control form-control-lg bg-light"
+                              id="txtSettleInterestDisplay"
+                              readonly
+                            />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"
+                              >ප්‍රමාද ගාස්තු / දඩය</label
+                            >
+                            <input
+                              type="number"
+                              class="form-control form-control-lg border-danger text-danger fw-bold"
+                              id="txtSettlePenalty"
+                              value="0"
+                              oninput="calculateFinalSettle()"
+                            />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"
+                              >විශේෂ වට්ටම්</label
+                            >
+                            <input
+                              type="number"
+                              class="form-control form-control-lg border-success text-success fw-bold"
+                              id="txtSettleDiscount"
+                              value="0"
+                              oninput="calculateFinalSettle()"
+                            />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"
+                              >සටහන</label
+                            >
+                            <input
+                              type="text"
+                              class="form-control form-control-lg"
+                              id="txtSettleRemarks"
+                              placeholder="සටහන්..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-5">
+                      <div
+                        class="p-4 rounded-4 text-white shadow-lg h-100 d-flex flex-column justify-content-center text-center"
+                        style="
+                          background: linear-gradient(
+                            135deg,
+                            #1a2a6c 0%,
+                            #b21f1f 100%
+                          );
+                        "
+                      >
+                        <h6 class="opacity-75 mb-2 text-uppercase">
+                          සම්පූර්ණයෙන්ම පියවීමට අවශ්‍ය මුදල
+                        </h6>
+                        <h1
+                          id="settleFinalTotal"
+                          class="display-4 fw-bold mb-4"
+                        >
+                          රු. 0.00
+                        </h1>
+                        <button
+                          class="btn btn-warning btn-lg py-3 fw-bold rounded-pill shadow"
+                          id="btnConfirmSettlement"
+                        >
+                          <i class="bi bi-check-circle-fill me-2"></i> ගිණුම
+                          පියවා වසා දමන්න
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="noSettleLoanMessage" class="d-none text-center py-5">
+                <i
+                  class="bi bi-exclamation-circle fs-1 text-muted opacity-50"
+                ></i>
+                <h5 class="mt-3 text-muted">
+                  ක්‍රියාත්මක ණය කිසිවක් හමු නොවීය.
+                </h5>
               </div>
             </div>
           </div>
@@ -3652,5 +3867,6 @@
     <script src="../js/onlineoffline.js"></script>
     <script src="../js/SmsService.js"></script>
     <script src="../js/bacup.js"></script>
+    <script src="../js/loansettlment.js"></script>
   </body>
 </html>

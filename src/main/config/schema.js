@@ -14,16 +14,10 @@ CREATE TABLE IF NOT EXISTS customers (
     CustomerName VARCHAR(100) NOT NULL,
     NIC VARCHAR(20) UNIQUE,
     CustomerPhone VARCHAR(20),
+     Gender VARCHAR(10),
     CustomerAddress TEXT,
     IsBlacklisted TINYINT(1) DEFAULT 0,
     BlacklistReason TEXT  -- අලුතින් එක් කළ කොටස
-);
-
-CREATE TABLE IF NOT EXISTS employee (
-    EmployeeID VARCHAR(50) PRIMARY KEY,
-    EmployeeName VARCHAR(100) NOT NULL,
-    EmployeePhone VARCHAR(20),
-    position VARCHAR(50)
 );
 
 -- 3. පොදු ණය වගුව (සියලුම ණය වර්ග සඳහා පොදු Logic මෙහි පවතී)

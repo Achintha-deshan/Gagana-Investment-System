@@ -42,4 +42,25 @@ ipcMain.handle('payment:void', async (event, paymentId) => {
         return { success: false, error: error.message };
     }
 });
+
+// 5. Settlement එක සිදුකර ණය ගිණුම වසා දැමීම (Process Settlement)
+ipcMain.handle('settlement:process', async (event, settleData) => {
+    try {
+        // service එකේ processSettlement function එකට data යැවීම
+        return await loanPaymentService.processSettlement(settleData);
+    } catch (error) {
+        console.error("IPC Error (processSettlement):", error);
+        return { success: false, error: error.message };
+    }
+});
+// 6. Settlement සඳහා ණය සහ පාරිභෝගික විස්තර සෙවීම
+    ipcMain.handle('settlement:searchLoan', async (event, searchText) => {
+        try {
+            // Service එකේ තියෙන searchSettlement function එකට call කිරීම
+            return await loanPaymentService.searchSettlement(searchText);
+        } catch (error) {
+            console.error("IPC Error (searchLoanForSettlement):", error);
+            return { success: false, error: error.message };
+        }
+    });
 }

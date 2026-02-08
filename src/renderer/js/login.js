@@ -9,49 +9,39 @@ $(document).ready(function () {
     $('#loginForm').on('submit', async function (e) {
         e.preventDefault();
 
-        // UI එකෙන් දත්ත ලබා ගැනීම
         const username = $('#txtloginUsername').val().trim();
         const password = $('#txtinputPassworde').val().trim();
         const loginBtn = $('#txtsLogin');
 
-        // Validation - හිස් දත්ත ඇත්නම් notification එකක් පෙන්වනවා
         if (!username || !password) {
             notify.toast('කරුණාකර Username සහ Password ඇතුළත් කරන්න!', 'warning');
             return;
         }
 
-        // Button එක loading state එකකට පත් කරනවා
         loginBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Signing In...');
 
         try {
-            // Backend (Main Process) එකට දත්ත යවනවා (Preload හරහා)
             const result = await window.api.auth.login({ username, password });
 
             if (result.success) {
-                // Login සාර්ථකයි නම්
                 notify.toast(`${result.user.Username} ලෙස සාර්ථකව ඇතුළු වුණා!`, 'success');
-                
-                // User ගේ විස්තර session එකේ තබා ගන්නවා
                 sessionStorage.setItem('user', JSON.stringify(result.user));
                 
-                // තත්පරයකට පසු Dashboard එක පෙන්වනවා
                 setTimeout(() => {
                     showDashboard(result.user);
                 }, 800);
             } else {
-                // Login අසාර්ථකයි නම් (වැරදි password හෝ user නැතිනම්)
                 notify.toast(result.error || 'ඇතුළත් කළ දත්ත වැරදියි!', 'error');
             }
         } catch (error) {
             console.error('Login Error:', error);
-            notify.toast('පද්ධතියේ දෝෂයක් පවතී. පසුව උත්සාහ කරන්න.', 'error');
+            notify.toast('පද්ධතියේ දෝෂයක් පවතී.', 'error');
         } finally {
-            // Button එක සාමාන්‍ය තත්වයට පත් කරනවා
             loginBtn.prop('disabled', false).text('Sign In');
         }
     });
 
-    // 3. UI එක Login සිට Dashboard එකට මාරු කරන Function එක
+    // 3. UI එක Dashboard එකට මාරු කරන සහ Permissions පාලනය කරන Function එක
     function showDashboard(user) {
         // Login section එක හංගලා App section එක පෙන්වනවා
         $('#loginSection').fadeOut(300, function() {
@@ -59,18 +49,55 @@ $(document).ready(function () {
             $('#appSection').removeClass('d-none').hide().fadeIn(400);
         });
 
-        // Dashboard එකේ User ගේ නම සහ Role එක Update කරනවා
-        // (UI එකේ තියෙන Sidebar එකේ නම පෙන්වන තැන් වලට මේ IDs දාගන්න)
+        // User තොරතුරු Sidebar එකේ Update කිරීම
         $('.user-info h6').text(user.Username);
-        $('.user-info p').text(user.Role);
+        $('.user-info p').text(user.Role.charAt(0).toUpperCase() + user.Role.slice(1));
 
-        // Role එක අනුව සමහර දේවල් සීමා කරන්න පුළුවන්
-        if (user.Role !== 'Admin') {
-            $('.admin-only').hide(); // Admin ට විතරක් පේන්න ඕන දේවල් හංගනවා
+        /**
+         * ROLE BASED ACCESS CONTROL
+         * User 'admin' නෙවෙයි නම් User Management menu එක හංගන්න.
+         * මෙහිදී db එකේ role එක simple letters වලින් ('admin') ඇති බව උපකල්පනය කෙරේ.
+         */
+        if (user.Role.toLowerCase() !== 'admin') {
+            $('[data-section="userManagementSection"]').addClass('d-none');
+            $('.admin-only').hide(); 
+        } else {
+            $('[data-section="userManagementSection"]').removeClass('d-none');
+            $('.admin-only').show();
         }
+
+        // මුලින්ම Dashboard section එක පෙන්වන්න
+        switchSection('dashboardSection');
     }
 
-    // 4. Logout වීමේ Logic එක
+    // 4. Sidebar Menu Navigation Logic
+    // සෑම menu-item එකක්ම click කරන විට අදාළ section එක පෙන්වීම
+    $('.menu-item').on('click', function (e) {
+        e.preventDefault();
+        
+        const sectionId = $(this).data('section');
+        if (sectionId) {
+            switchSection(sectionId);
+            
+            // Active class එක මාරු කිරීම
+            $('.menu-item').removeClass('active');
+            $(this).addClass('active');
+        }
+    });
+
+    // Section මාරු කිරීම සඳහා පොදු function එක
+    function switchSection(sectionId) {
+        // සියලුම content sections මුලින් හංගන්න
+        // (ඔබේ HTML වල හැම section එකකටම 'content-section' class එක ලබා දී තිබිය යුතුය)
+        $('.content-section').addClass('d-none');
+        
+        // අදාළ section එක පමණක් පෙන්වන්න
+        $('#' + sectionId).removeClass('d-none');
+        
+        console.log("Switched to section:", sectionId);
+    }
+
+    // 5. Logout වීමේ Logic එක
     $('#btnLogout').on('click', async function () {
         const confirmLogout = await notify.confirm(
             'ඔබට පද්ධතියෙන් ඉවත් වීමට අවශ්‍යද?',
@@ -80,7 +107,7 @@ $(document).ready(function () {
 
         if (confirmLogout) {
             sessionStorage.removeItem('user');
-            location.reload(); // මුල සිටම පද්ධතිය පටන් ගන්නවා (Login පෙන්වයි)
+            location.reload(); 
         }
     });
 });

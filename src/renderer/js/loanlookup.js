@@ -184,21 +184,38 @@ async function loadLoanFullAnalysis(loanId) {
                 notesArea.innerHTML = `<div class="alert alert-success border-0 shadow-sm rounded-4"><i class="bi bi-check-circle-fill me-2"></i> මෙම ණය මුදල නිවැරදිව පවත්වාගෙන යයි.</div>`;
             }
 
-            // --- 5. ගෙවීම් ඉතිහාසය (History Table - New Format) ---
-            const historyTableBody = document.getElementById('vHistoryTable');
-            if (d.history && d.history.length > 0) {
-                historyTableBody.innerHTML = d.history.map(row => `
-                    <tr>
-                        <td><span class="badge bg-light text-dark border">${formatCustomDateTime(row.PaymentDate)}</span></td>
-                        <td class="fw-bold text-success">Rs. ${parseFloat(row.PaidAmount).toLocaleString()}</td>
-                        <td class="text-danger">Rs. ${parseFloat(row.PenaltyPaid).toLocaleString()}</td>
-                        <td>Rs. ${parseFloat(row.InterestPaid).toLocaleString()}</td>
-                        <td class="fw-bold bg-light">Rs. ${parseFloat(row.CapitalPaid).toLocaleString()}</td>
-                    </tr>
-                `).join('');
-            } else {
-                historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">ගෙවීම් ඉතිහාසයක් නොමැත.</td></tr>';
-            }
+           // --- 5. ගෙවීම් ඉතිහාසය (History Table - Improved) ---
+const historyTableBody = document.getElementById('vHistoryTable');
+
+if (d.history && d.history.length > 0) {
+    historyTableBody.innerHTML = d.history.map(row => {
+        // අගයන් තිබේදැයි පරීක්ෂා කර නොමැති නම් 0 ලෙස ගැනීම (Error වැලැක්වීමට)
+        const paid = parseFloat(row.PaidAmount || 0);
+        const penalty = parseFloat(row.PenaltyPaid || 0);
+        const interest = parseFloat(row.InterestPaid || 0);
+        const capital = parseFloat(row.CapitalPaid || 0);
+        
+        // පේළියේ වර්ණය: පියවීමක් (Settlement) නම් වෙනස් පැහැයක් දීමට අවශ්‍ය නම්
+        const rowClass = (row.PaymentType === 'SETTLEMENT') ? 'table-info' : '';
+
+        return `
+            <tr class="${rowClass}">
+                <td>
+                    <span class="badge bg-light text-dark border">
+                        ${formatCustomDateTime(row.PaymentDate)}
+                    </span>
+                    ${row.PaymentType === 'SETTLEMENT' ? '<br><small class="badge bg-danger">Settled</small>' : ''}
+                </td>
+                <td class="fw-bold text-success">Rs. ${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td class="text-danger">Rs. ${penalty.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td>Rs. ${interest.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td class="fw-bold bg-light">Rs. ${capital.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            </tr>
+        `;
+    }).join('');
+} else {
+    historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">ගෙවීම් ඉතිහාසයක් නොමැත.</td></tr>';
+}
 
             lookupDetailsPane.classList.remove('d-none');
             lookupDetailsPane.scrollIntoView({ behavior: 'smooth' });

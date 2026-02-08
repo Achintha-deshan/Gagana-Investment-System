@@ -13,9 +13,13 @@ $(document).ready(function () {
 
     // 2. ඊළඟ Customer ID එක පෙන්වීම
     async function setNextCustomerId() {
-        const nextId = await window.api.customer.getNextId();
-        $('#txtDisplayCustomerId').val(nextId);
-        $('#txtCustomerId').val(nextId);
+        try {
+            const nextId = await window.api.customer.getNextId();
+            $('#txtDisplayCustomerId').val(nextId);
+            $('#txtCustomerId').val(nextId);
+        } catch (err) {
+            console.error("ID loading error:", err);
+        }
     }
 
     // 3. Blacklist Switch එක Toggle වන විට
@@ -34,7 +38,7 @@ $(document).ready(function () {
     // 4. Table එක Load කිරීම
     async function loadCustomerTable() {
         const tbody = $('#tblCustomers');
-        tbody.html('<tr><td colspan="7" class="text-center py-3"><div class="spinner-border spinner-border-sm text-info"></div></td></tr>');
+        tbody.html('<tr><td colspan="8" class="text-center py-3"><div class="spinner-border spinner-border-sm text-info"></div></td></tr>');
 
         try {
             const customers = await window.api.customer.getAll();
@@ -55,20 +59,22 @@ $(document).ready(function () {
                         data-nic="${cus.NIC}" 
                         data-phone="${cus.CustomerPhone}" 
                         data-address="${cus.CustomerAddress}"
+                        data-gender="${cus.Gender || ''}"
                         data-blacklisted="${cus.IsBlacklisted}"
                         data-reason="${cus.BlacklistReason || ''}">
                         <td><span class="badge bg-info text-dark">${cus.CustomerID}</span></td>
                         <td class="${isBlocked ? 'fw-bold text-danger' : ''}">${cus.CustomerName}</td>
                         <td>${cus.NIC}</td>
+                        <td class="text-muted small">${cus.Gender || 'N/A'}</td>
                         <td class="fw-bold text-primary">${cus.CustomerPhone || 'N/A'}</td>
                         <td>${cus.CustomerAddress || 'N/A'}</td>
                         <td class="text-center">${statusBadge}</td>
                         <td class="text-danger small">${cus.BlacklistReason || '-'}</td>
                     </tr>`;
             });
-            tbody.html(rows || '<tr><td colspan="7" class="text-center">No customers found.</td></tr>');
+            tbody.html(rows || '<tr><td colspan="8" class="text-center">No customers found.</td></tr>');
         } catch (err) {
-            tbody.html('<tr><td colspan="7" class="text-center text-danger">Error loading data.</td></tr>');
+            tbody.html('<tr><td colspan="8" class="text-center text-danger">Error loading data.</td></tr>');
         }
     }
 
@@ -85,6 +91,7 @@ $(document).ready(function () {
         $('#txtCustomerNIC').val($(this).data('nic'));
         $('#txtCustomerPhone').val($(this).data('phone'));
         $('#txtCustomerAddress').val($(this).data('address'));
+        $('#cmbCustomerGender').val($(this).data('gender')); // Gender Dropdown එක Update කිරීම
         
         $('#chkBlacklist').prop('checked', isBlacklisted);
         $('#txtBlacklistReason').val($(this).data('reason'));
@@ -101,6 +108,7 @@ $(document).ready(function () {
     // 6. Customer එකතු කිරීම
     $('#btnCustomerAdd').on('click', async function () {
         const phone = $('#txtCustomerPhone').val().trim();
+        const gender = $('#cmbCustomerGender').val();
         const isBlacklisted = $('#chkBlacklist').is(':checked');
         const reason = $('#txtBlacklistReason').val().trim();
 
@@ -109,30 +117,39 @@ $(document).ready(function () {
             NIC: $('#txtCustomerNIC').val().trim(),
             CustomerPhone: phone,
             CustomerAddress: $('#txtCustomerAddress').val().trim(),
+            Gender: gender,
             IsBlacklisted: isBlacklisted,
             BlacklistReason: isBlacklisted ? reason : null
         };
 
         // --- Validations ---
-        if (!data.CustomerName || !data.NIC) return notify.toast('Name and NIC required!', 'warning');
+        if (!data.CustomerName || !data.NIC || !data.Gender) {
+            return notify.toast('Name, NIC and Gender are required!', 'warning');
+        }
         
-        // 🛑 Phone Number Validation (+94700000000)
         if (!isValidSriLankanPhone(data.CustomerPhone)) {
-            return notify.toast('Invalid phone! Must be in +94700000000 format.', 'error');
+            return notify.toast('Invalid phone! Must be in +947XXXXXXXX format.', 'error');
         }
 
         if (isBlacklisted && !reason) return notify.toast('Blacklist reason is required!', 'warning');
 
-        const res = await window.api.customer.add(data);
-        if (res.success) {
-            notify.toast(`Customer ${res.newId} added!`, 'success');
-            clearCustomerForm();
+        try {
+            const res = await window.api.customer.add(data);
+            if (res.success) {
+                notify.toast(`Customer ${res.newId} added!`, 'success');
+                clearCustomerForm();
+            } else {
+                notify.toast('Error: ' + res.message, 'error');
+            }
+        } catch (err) {
+            notify.toast('System Error!', 'error');
         }
     });
 
     // 7. Customer යාවත්කාලීන කිරීම
     $('#btnCustomerUpdate').on('click', async function () {
         const phone = $('#txtCustomerPhone').val().trim();
+        const gender = $('#cmbCustomerGender').val();
         const isBlacklisted = $('#chkBlacklist').is(':checked');
         const reason = $('#txtBlacklistReason').val().trim();
 
@@ -142,28 +159,35 @@ $(document).ready(function () {
             NIC: $('#txtCustomerNIC').val().trim(),
             CustomerPhone: phone,
             CustomerAddress: $('#txtCustomerAddress').val().trim(),
+            Gender: gender,
             IsBlacklisted: isBlacklisted,
             BlacklistReason: isBlacklisted ? reason : null
         };
 
         if (!data.CustomerID) return notify.toast('Select a customer to update!', 'warning');
+        if (!data.Gender) return notify.toast('Please select gender!', 'warning');
         
-        // 🛑 Phone Number Validation (+94700000000)
         if (!isValidSriLankanPhone(data.CustomerPhone)) {
             return notify.toast('Invalid phone! Use +947XXXXXXXX format.', 'error');
         }
 
         if (isBlacklisted && !reason) return notify.toast('Blacklist reason is required!', 'warning');
 
-        const res = await window.api.customer.update(data);
-        if (res.success) {
-            notify.toast('Customer updated successfully!', 'success');
-            clearCustomerForm();
+        try {
+            const res = await window.api.customer.update(data);
+            if (res.success) {
+                notify.toast('Customer updated successfully!', 'success');
+                clearCustomerForm();
+            } else {
+                notify.toast('Error: ' + res.message, 'error');
+            }
+        } catch (err) {
+            notify.toast('System Error!', 'error');
         }
     });
 
-  // 8. Customer ඉවත් කිරීම
-   $('#btnCustomerDelete').on('click', async function () {
+    // 8. Customer ඉවත් කිරීම
+    $('#btnCustomerDelete').on('click', async function () {
         const id = $('#txtCustomerId').val();
         if(!id) return notify.toast('කරුණාකර පාරිභෝගිකයෙකු තෝරාගන්න!', 'warning');
         
@@ -171,14 +195,11 @@ $(document).ready(function () {
         
         if (confirmed) {
             try {
-                // API එකේ නම නිවැරදිද බලන්න (customer ද customers ද කියා)
                 const result = await window.api.customer.delete(id); 
                 
                 if (result.success) {
                     notify.toast('පාරිභෝගිකයා සාර්ථකව ඉවත් කළා!', 'success');
                     clearCustomerForm();
-                    // List එක refresh කරන function එකක් තියෙනවා නම් මෙතනට දාන්න
-                    if (typeof loadCustomers === 'function') loadCustomers();
                 } else {
                     notify.toast('වැරැද්දක් වුණා: ' + result.message, 'error');
                 }
@@ -187,12 +208,13 @@ $(document).ready(function () {
                 console.error(err);
             }
         }
-   });
+    });
 
     $('#btnCustomerClear').on('click', clearCustomerForm);
 
     function clearCustomerForm() {
-        $('#txtCustomerName, #txtCustomerNIC, #txtCustomerPhone, #txtCustomerAddress, #txtBlacklistReason').val('');
+        $('#txtCustomerId, #txtDisplayCustomerId, #txtCustomerName, #txtCustomerNIC, #txtCustomerPhone, #txtCustomerAddress, #txtBlacklistReason').val('');
+        $('#cmbCustomerGender').val(''); // Dropdown එක Reset කිරීම
         $('#chkBlacklist').prop('checked', false);
         $('#divBlacklistReason').addClass('d-none').hide();
         $('#btnCustomerAdd').prop('disabled', false);
