@@ -2,7 +2,6 @@ import db from '../config/db.js';
 
 class PaymentService {
     
-    // 1. පාරිභෝගිකයාගේ ID එක අනුව සක්‍රීය ණය ලබා ගැනීම
     async getActiveLoans(customerId) {
         try {
             const sql = `
@@ -17,9 +16,7 @@ class PaymentService {
             console.error("Database Error (getActiveLoans):", error);
             return [];
         }
-    } // <--- මෙන්න මේ Brace එක කලින් තිබුණේ නැහැ.
-
-    // 2. ගෙවීම් Process කිරීම
+    } 
     async processPayment(paymentData) {
         const { LoanID, PaidAmount, InterestAmount, PenaltyAmount, PaymentDate, MonthsPaid } = paymentData;
         
@@ -38,7 +35,6 @@ class PaymentService {
             let currentCapital = parseFloat(loanRows[0].LoanAmount) || 0;
             let remaining = paid;
             
-            // Deduction Priority: Penalty -> Interest -> Capital
             const deductionFromPenalty = Math.min(remaining, penaltyDue);
             remaining -= deductionFromPenalty;
 
@@ -48,13 +44,11 @@ class PaymentService {
             const deductionFromCapital = remaining; 
             const newCapital = Math.max(0, currentCapital - deductionFromCapital);
 
-            // History වාර්තාව
             const insertPaymentSql = `INSERT INTO payment_history (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, PaymentDate) VALUES (?, ?, ?, ?, ?, ?)`;
             await conn.execute(insertPaymentSql, [LoanID, paid, deductionFromPenalty, deductionFromInterest, deductionFromCapital, PaymentDate]);
 
             const statusUpdate = newCapital <= 0 ? 'CLOSED' : 'ACTIVE';
 
-            // Loans Table Update - NextDueDate එක මාස ගණනකින් ඉදිරියට ගෙන යාම
             const updateLoanSql = `
                 UPDATE loans 
                 SET LoanAmount = ?, 
@@ -76,7 +70,6 @@ class PaymentService {
         }
     }
 
-    // 3. ගෙවීම් ඉතිහාසය ලබා ගැනීම
     async getPaymentHistory(loanId) {
         try {
             const sql = `
@@ -93,40 +86,59 @@ class PaymentService {
         }
     }
 
-    // 4. ගෙවීමක් අවලංගු කිරීම (Void)
-    async voidPayment(paymentId) {
-        const conn = await db.getConnection();
-        try {
-            await conn.beginTransaction();
+  async voidPayment(paymentId) {
+    const conn = await db.getConnection();
+    try {
+        await conn.beginTransaction();
 
-            const [payRows] = await conn.execute('SELECT * FROM payment_history WHERE PaymentID = ?', [paymentId]);
-            if (!payRows.length) throw new Error("ගෙවීම සොයාගත නොහැක.");
-            
-            const { LoanID, CapitalPaid } = payRows[0];
+        // 1. මේ ගෙවීමේ විස්තර සහ ණය ලබාගත් මුල් දිනය (LoanDate) ලබාගන්න
+        const [payRows] = await conn.execute(`
+            SELECT ph.*, l.LoanDate 
+            FROM payment_history ph
+            JOIN loans l ON ph.LoanID = l.LoanID
+            WHERE ph.PaymentID = ?`, [paymentId]);
 
-            // ණය මුදල ආපසු වැඩි කිරීම සහ Due Date එක මාසයක් ආපසු හැරවීම
-            const revertLoanSql = `
-                UPDATE loans 
-                SET LoanAmount = LoanAmount + ?, 
-                    NextDueDate = DATE_SUB(NextDueDate, INTERVAL 1 MONTH),
-                    Status = 'ACTIVE' 
-                WHERE LoanID = ?`;
+        if (!payRows.length) throw new Error("ගෙවීම සොයාගත නොහැක.");
+        
+        const { LoanID, CapitalPaid, LoanDate } = payRows[0];
 
-            await conn.execute(revertLoanSql, [CapitalPaid, LoanID]);
-            await conn.execute('DELETE FROM payment_history WHERE PaymentID = ?', [paymentId]);
+        // 2. දැනට පවතින ගෙවීම් ඉතිහාසයෙන් මේ ගෙවීම ඉවත් කරන්න
+        await conn.execute('DELETE FROM payment_history WHERE PaymentID = ?', [paymentId]);
 
-            await conn.commit();
-            return { success: true };
-        } catch (error) {
-            await conn.rollback();
-            console.error("Void Process Error:", error);
-            return { success: false, error: error.message };
-        } finally {
-            conn.release();
-        }
+        // 3. දැන් ඉතිරිව ඇති ගෙවීම් වාර්තා වලින් මුළු ගෙවූ මාස ගණන ගණනය කරන්න
+        // (මෙහිදී MonthsPaid කියන column එකේ එකතුව ලබා ගැනීම වඩාත් නිවැරදි වේ)
+        const [historySummary] = await conn.execute(
+            'SELECT SUM(MonthsPaid) as TotalMonthsPaid FROM payment_history WHERE LoanID = ? AND IsVoided = 0', 
+            [LoanID]
+        );
+        
+        const totalMonthsPaid = parseInt(historySummary[0].TotalMonthsPaid) || 0;
+
+        // 4. නිවැරදි NextDueDate එක ගණනය කිරීම:
+        // මුල් දිනය + (දැනට ඉතිරිව ඇති ගෙවූ මාස ගණන + 1) = මීළඟට ගෙවිය යුතු දිනය
+        const monthsToAddForNextDue = totalMonthsPaid + 1;
+
+        const revertLoanSql = `
+            UPDATE loans 
+            SET LoanAmount = LoanAmount + ?, 
+                NextDueDate = DATE_ADD(LoanDate, INTERVAL ? MONTH),
+                Status = 'ACTIVE' 
+            WHERE LoanID = ?`;
+
+        await conn.execute(revertLoanSql, [CapitalPaid, monthsToAddForNextDue, LoanID]);
+
+        await conn.commit();
+        return { success: true };
+
+    } catch (error) {
+        await conn.rollback();
+        console.error("Void Process Error:", error);
+        return { success: false, error: error.message };
+    } finally {
+        conn.release();
     }
+}
 
-    // 5. ණයක විස්තර සහ දඩ ගණනය කිරීම
     async getLoanBreakdown(loanId) {
         try {
             const query = `
@@ -165,7 +177,6 @@ class PaymentService {
         }
     }
 
-    // 6. Settlement (ණය සම්පූර්ණ පියවීම)
     async processSettlement(settleData) {
         const { LoanID, TotalPaid, CapitalPaid, InterestPaid, PenaltyPaid, PaymentDate } = settleData;
         const conn = await db.getConnection();
@@ -194,7 +205,6 @@ class PaymentService {
         }
     }
 
-    // 7. Settlement සඳහා සෙවීම
     async searchSettlement(query) {
         const sql = `
             SELECT 
