@@ -1054,6 +1054,10 @@
             <i class="fas fa-database"></i>
             <span>System Backup</span>
           </a>
+          <a class="menu-item" data-section="loanMigrationSection">
+            <i class="fas fa-database"></i>
+            <span>Add Old Data</span>
+          </a>
         </nav>
 
         <div class="p-4 mt-auto">
@@ -1882,9 +1886,10 @@
                           <tr>
                             <th>දිනය</th>
                             <th>ගෙවූ මුදල</th>
-                            <th>දඩය</th>
+                            <th class="text-warning">හිඟ පියවීම්</th>
+                            <th class="text-danger">දඩ මුදල</th>
                             <th>පොලිය</th>
-                            <th>මූලධනය</th>
+                            <th class="bg-light">මූලධනය</th>
                           </tr>
                         </thead>
                         <tbody id="vHistoryTable"></tbody>
@@ -2009,6 +2014,14 @@
                   <div
                     class="d-flex justify-content-between py-2 border-bottom border-warning border-opacity-25"
                   >
+                    <span class="fw-semibold">පෙර හිඟ මුදල් (Arrears):</span>
+                    <span id="summaryArrears" class="fw-bold text-danger"
+                      >රු. 0.00</span
+                    >
+                  </div>
+                  <div
+                    class="d-flex justify-content-between py-2 border-bottom border-warning border-opacity-25"
+                  >
                     <span class="fw-semibold">පොලිය:</span>
                     <span id="summaryInterest" class="fw-bold text-end"
                       >රු. 0.00</span
@@ -2083,6 +2096,7 @@
                         <th>ID</th>
                         <th>දිනය</th>
                         <th>මුදල</th>
+                        <th class="text-warning">හිඟ පියවීම්</th>
                         <th>පොලිය/දඩය</th>
                         <th>මූලධනයට</th>
                         <th class="text-center">Action</th>
@@ -2098,6 +2112,166 @@
               >
                 <i class="bi bi-inbox fs-1 opacity-25"></i>
                 <h5>ක්‍රියාත්මක ණය නොමැත</h5>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="loanMigrationSection" class="dashboard-content d-none">
+          <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-header text-white py-4"
+              style="
+                background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+              "
+            >
+              <h2 class="mb-0 d-flex align-items-center gap-3">
+                <i class="bi bi-database-fill-up fs-1"></i>
+                Loan Data Migration
+              </h2>
+              <p class="mb-0 mt-2 opacity-90">
+                Import existing loan records and last payment details into the
+                system
+              </p>
+            </div>
+
+            <div class="card-body p-4">
+              <div class="search-box mb-4">
+                <div class="input-group input-group-lg">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="txtMigrateSearch"
+                    placeholder="Search by Customer ID, Name or NIC..."
+                  />
+                  <button
+                    class="btn btn-warning text-white"
+                    id="btnMigrateSearch"
+                  >
+                    <i class="bi bi-search"></i> Search
+                  </button>
+                </div>
+              </div>
+
+              <div id="migrateLoansList" class="row g-3 mb-4"></div>
+
+              <div
+                id="migrationFormArea"
+                class="d-none border p-4 rounded-4 bg-light"
+              >
+                <h4 class="text-primary mb-4 border-bottom pb-2">
+                  Last Payment Details -
+                  <span id="targetLoanIdDisplay" class="text-dark"></span>
+                </h4>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">Last Payment Date</label>
+                    <input
+                      type="date"
+                      id="mLastPaidDate"
+                      class="form-control form-control-lg border-warning"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold"
+                      >Months Paid (Duration)</label
+                    >
+                    <input
+                      type="number"
+                      id="mMonthsPaid"
+                      class="form-control form-control-lg"
+                      value="1"
+                    />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold">Total Paid Amount</label>
+                    <input
+                      type="number"
+                      id="mPaidAmount"
+                      class="form-control"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold text-danger"
+                      >Penalty Paid</label
+                    >
+                    <input
+                      type="number"
+                      id="mPenaltyPaid"
+                      class="form-control text-danger"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold text-primary"
+                      >Interest Paid</label
+                    >
+                    <input
+                      type="number"
+                      id="mInterestPaid"
+                      class="form-control text-primary"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold text-success"
+                      >Capital Paid</label
+                    >
+                    <input
+                      type="number"
+                      id="mCapitalPaid"
+                      class="form-control text-success"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold text-warning"
+                      >Arrears Remaining</label
+                    >
+                    <input
+                      type="number"
+                      id="mArrearsRemaining"
+                      class="form-control text-warning"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="alert alert-info py-3 border-0 shadow-sm">
+                      <label class="form-label fw-bold mb-1 text-dark">
+                        Current Outstanding Capital Balance
+                      </label>
+                      <input
+                        type="number"
+                        id="mCurrentLoanBalance"
+                        class="form-control form-control-lg fw-bold"
+                        placeholder="Remaining balance after this payment"
+                      />
+                      <small class="text-muted mt-1 d-block"
+                        >This balance will be used for future interest
+                        calculations.</small
+                      >
+                    </div>
+                  </div>
+
+                  <div class="col-md-12 text-end mt-4">
+                    <button
+                      class="btn btn-secondary btn-lg me-2"
+                      onclick="resetMigrationForm()"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      class="btn btn-warning btn-lg px-5 text-white fw-bold shadow"
+                      id="btnSubmitMigration"
+                    >
+                      <i class="bi bi-cloud-upload-fill"></i> Process Migration
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2328,11 +2502,7 @@
                         <select
                           id="selBackupYear"
                           class="form-select form-select-lg border-2"
-                        >
-                          <option value="2024">2024</option>
-                          <option value="2025" selected>2025</option>
-                          <option value="2026">2026</option>
-                        </select>
+                        ></select>
                       </div>
 
                       <div class="col-md-6">
@@ -2394,6 +2564,7 @@
             </div>
           </div>
         </section>
+
         <section id="loanManagementSection" class="dashboard-content d-none">
           <div class="loan-section">
             <div class="loan-header">
@@ -2407,7 +2578,8 @@
               <!-- Common Customer Search & Info -->
               <div class="search-box mb-4">
                 <label class="form-label fw-semibold">
-                  <i class="bi bi-search"></i> පාරිභෝගික සෙවුම
+                  <i class="bi bi-search"></i> Search Customer by ID, Name or
+                  NIC
                 </label>
                 <input
                   type="text"
@@ -2419,23 +2591,23 @@
 
               <div class="info-display mb-4">
                 <h5 class="mb-3">
-                  <i class="bi bi-person-fill"></i> පාරිභෝගික තොරතුරු
+                  <i class="bi bi-person-fill"></i> Customer Information
                 </h5>
                 <div class="row g-3">
                   <div class="col-md-3">
-                    <div class="info-label">නම</div>
+                    <div class="info-label">Name</div>
                     <div class="info-value" id="displayCustomerName">—</div>
                   </div>
                   <div class="col-md-3">
-                    <div class="info-label">ID අංකය</div>
+                    <div class="info-label">ID Number</div>
                     <div class="info-value" id="displayCustomerId">—</div>
                   </div>
                   <div class="col-md-3">
-                    <div class="info-label">NIC අංකය</div>
+                    <div class="info-label">NIC Number</div>
                     <div class="info-value" id="displayCustomerNic">—</div>
                   </div>
                   <div class="col-md-3">
-                    <div class="info-label">දුරකථන අංකය</div>
+                    <div class="info-label">Phone Number</div>
                     <div class="info-value" id="displayCustomerPhone">—</div>
                   </div>
                 </div>
@@ -2452,7 +2624,7 @@
                     type="button"
                     role="tab"
                   >
-                    <i class="bi bi-car-front-fill"></i> වාහන ණය
+                    <i class="bi bi-car-front-fill"></i> Vehicle Loan
                   </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -2476,7 +2648,7 @@
                     type="button"
                     role="tab"
                   >
-                    <i class="bi bi-file-earmark-text"></i> Promissory
+                    <i class="bi bi-file-earmark-text"></i> Promissory loan
                   </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -2488,7 +2660,7 @@
                     type="button"
                     role="tab"
                   >
-                    <i class="bi bi-credit-card-2-front"></i> Check ණය
+                    <i class="bi bi-credit-card-2-front"></i> check loan
                   </button>
                 </li>
               </ul>
@@ -2505,13 +2677,13 @@
                     <div class="col-lg-6">
                       <div class="bg-light rounded-3 p-4">
                         <h5 class="mb-3 text-primary">
-                          <i class="bi bi-car-front"></i> වාහන ණය තොරතුරු
+                          <i class="bi bi-car-front"></i> Vehicle Loan Details
                         </h5>
                         <input type="hidden" id="txtVehicleLoanId" />
 
                         <div class="mb-3">
                           <label class="form-label fw-semibold"
-                            >වාහන ණය ID</label
+                            >Vehicle Loan ID</label
                           >
                           <input
                             id="txtDisplayVehicleLoanId"
@@ -2610,6 +2782,16 @@
                           <label class="form-label fw-semibold">ණය දිනය</label>
                           <input
                             id="txtVehicleLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ලියාපදිංචි කළ යුතු දිනය</label
+                          >
+                          <input
+                            id="txtVehicleRegDeadlineDate"
                             type="date"
                             class="form-control"
                           />
@@ -2805,7 +2987,7 @@
                     <div class="col-12">
                       <div class="table-responsive">
                         <h5 class="mb-3 fw-bold">
-                          <i class="bi bi-table"></i> වාහන ණය වාර්තාව
+                          <i class="bi bi-table"></i> Vehicle Loan Information
                         </h5>
                         <table class="table table-hover">
                           <thead>
@@ -2826,7 +3008,8 @@
                                 colspan="8"
                                 class="text-center py-4 text-muted"
                               >
-                                වාහන ණය තොරතුරු නොමැත
+                                Vehicle Loan Information not found. Please
+                                search and add a loan to see details here.
                               </td>
                             </tr>
                           </tbody>
@@ -2842,7 +3025,7 @@
                     <div class="col-lg-6">
                       <div class="bg-light rounded-3 p-4">
                         <h5 class="mb-3 text-primary">
-                          <i class="bi bi-gem"></i> Land Loan තොරතුරු
+                          <i class="bi bi-gem"></i> Land Loan Information
                         </h5>
                         <input type="hidden" id="txtLanLoanId" />
 
@@ -3135,7 +3318,7 @@
                     <div class="col-12">
                       <div class="table-responsive">
                         <h5 class="mb-3 fw-bold">
-                          <i class="bi bi-table"></i> ලං ණය වාර්තාව
+                          <i class="bi bi-table"></i> Land Loan Information
                         </h5>
                         <table class="table table-hover">
                           <thead>
@@ -3156,7 +3339,8 @@
                                 colspan="8"
                                 class="text-center py-4 text-muted"
                               >
-                                ලං ණය තොරතුරු නොමැත
+                                Land Loan Information not found. Please search
+                                and add a loan to see details here.
                               </td>
                             </tr>
                           </tbody>
@@ -3172,8 +3356,8 @@
                     <div class="col-lg-6">
                       <div class="bg-light rounded-3 p-4">
                         <h5 class="mb-3 text-primary">
-                          <i class="bi bi-file-earmark-text"></i> Promissory ණය
-                          තොරතුරු
+                          <i class="bi bi-file-earmark-text"></i> Promissory
+                          Loan Information
                         </h5>
                         <input type="hidden" id="txtPromissoryLoanId" />
 
@@ -3415,7 +3599,8 @@
                     <div class="col-12">
                       <div class="table-responsive">
                         <h5 class="mb-3 fw-bold">
-                          <i class="bi bi-table"></i> Promissory ණය වාර්තාව
+                          <i class="bi bi-table"></i> Promissory Loan
+                          Information
                         </h5>
                         <table class="table table-hover">
                           <thead>
@@ -3435,7 +3620,8 @@
                                 colspan="7"
                                 class="text-center py-4 text-muted"
                               >
-                                Promissory ණය තොරතුරු නොමැත
+                                Promissory Loan Information not found. Please
+                                search and add a loan to see details here.
                               </td>
                             </tr>
                           </tbody>
@@ -3451,14 +3637,14 @@
                     <div class="col-lg-6">
                       <div class="bg-light rounded-3 p-4">
                         <h5 class="mb-3 text-primary">
-                          <i class="bi bi-credit-card-2-front"></i> Check ණය
-                          තොරතුරු
+                          <i class="bi bi-credit-card-2-front"></i> Check Loan
+                          Information
                         </h5>
                         <input type="hidden" id="txtCheckLoanId" />
 
                         <div class="mb-3">
                           <label class="form-label fw-semibold"
-                            >Check ණය ID</label
+                            >Check loan ID</label
                           >
                           <input
                             id="txtDisplayCheckLoanId"
@@ -3730,7 +3916,7 @@
                     <div class="col-12">
                       <div class="table-responsive">
                         <h5 class="mb-3 fw-bold">
-                          <i class="bi bi-table"></i> Check ණය වාර්තාව
+                          <i class="bi bi-table"></i> Check loan Information
                         </h5>
                         <table class="table table-hover">
                           <thead>
@@ -3750,7 +3936,8 @@
                                 colspan="7"
                                 class="text-center py-4 text-muted"
                               >
-                                Check ණය තොරතුරු නොමැත
+                                Check Loan Information not found. Please search
+                                and add a loan to see details here.
                               </td>
                             </tr>
                           </tbody>
@@ -3868,5 +4055,6 @@
     <script src="../js/SmsService.js"></script>
     <script src="../js/bacup.js"></script>
     <script src="../js/loansettlment.js"></script>
+    <script src="../js/addOldData.js"></script>
   </body>
 </html>

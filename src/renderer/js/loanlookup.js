@@ -1,8 +1,3 @@
-/**
- * Gagana Investment - Loan Lookup Controller
- * පාරිභෝගික ණය විශ්ලේෂණ පාලක
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const txtLookupSearch = document.getElementById('txtLookupSearch');
     const btnLookupSearch = document.getElementById('btnLookupSearch');
@@ -34,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const res = await window.api.loanLookup.getCustomerLoans(customer.CustomerID);
                     
                     if (res.success) {
-                        // පාරිභෝගික විස්තර පිරවීම
                         document.getElementById('vCustName').innerText = customer.CustomerName || '-';
                         document.getElementById('vCustNic').innerText = customer.NIC || '-';
                         document.getElementById('vCustPhone').innerText = customer.CustomerPhone || '-';
@@ -58,26 +52,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * දිනය සහ වෙලාව සකසන ශ්‍රිතය (Format: 2025.01.12 10.30 a.m)
+ * දිනය YYYY.MM.DD ආකාරයට සකසන පොදු Function එක
  */
-function formatCustomDateTime(dateString) {
+function formatToStandardDate(dateString) {
     if (!dateString) return '-';
     const date = new Date(dateString);
+    if (isNaN(date)) return '-';
 
-    // දිනය: YYYY.MM.DD
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
 
-    // වෙලාව: HH.MM a.m/p.m
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'p.m' : 'a.m';
-
-    hours = hours % 12;
-    hours = hours ? hours : 12; // පැය 0 නම් 12 ලෙස පෙන්වන්න
-
-    return `${year}.${month}.${day} ${hours}.${minutes} ${ampm}`;
+    return `${year}.${month}.${day}`;
 }
 
 function renderLoanList(loans) {
@@ -103,9 +89,6 @@ function renderLoanList(loans) {
     }).join('');
 }
 
-/**
- * 3. තෝරාගත් ණයේ සම්පූර්ණ විශ්ලේෂණය පෙන්වීම
- */
 async function loadLoanFullAnalysis(loanId) {
     const lookupDetailsPane = document.getElementById('lookupDetailsPane');
     
@@ -115,7 +98,7 @@ async function loadLoanFullAnalysis(loanId) {
         if (res.success) {
             const d = res.data;
 
-            // --- 1. මූල්‍ය දත්ත (Financial Stats) ---
+            // මුල්‍ය දත්ත
             document.getElementById('vLoanAmt').innerText = `Rs. ${d.financials.originalAmount.toLocaleString()}`;
             
             const arrearsLbl = document.getElementById('vArrearsMonths');
@@ -125,27 +108,40 @@ async function loadLoanFullAnalysis(loanId) {
             document.getElementById('vOverdueDays').innerText = `${d.overdue.days} Days`;
             document.getElementById('vTotalPayable').innerText = `Rs. ${d.financials.totalPayableNow.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
-            // දින වකවානු යාවත්කාලීන කිරීම (New Format)
-            document.getElementById('vDueDate').innerText = d.dates.nextDueDate ? formatCustomDateTime(d.dates.nextDueDate) : 'N/A';
-            document.getElementById('vGivenDate').innerText = formatCustomDateTime(d.dates.issuedDate);
+            // සාමාන්‍ය ණය දින (Standard Format)
+            document.getElementById('vDueDate').innerText = d.dates.nextDueDate ? formatToStandardDate(d.dates.nextDueDate) : 'N/A';
+            document.getElementById('vGivenDate').innerText = formatToStandardDate(d.dates.issuedDate);
             document.getElementById('vIntRate').innerText = `Rs. ${d.financials.monthlyInterest.toLocaleString()}`;
             
             const lastPaidLabel = document.getElementById('vLastPaidDate');
-            lastPaidLabel.innerText = d.dates.lastPaymentDate ? formatCustomDateTime(d.dates.lastPaymentDate) : 'No Payments Yet';
+            lastPaidLabel.innerText = d.dates.lastPaymentDate ? formatToStandardDate(d.dates.lastPaymentDate) : 'No Payments Yet';
 
-            // --- 2. ඇප වත්කම් විස්තර (Asset Specifics) ---
+            // වාහන හෝ ඇප විස්තර (Asset Details)
             const assetArea = document.getElementById('vAssetDetailsArea');
             const assetContent = document.getElementById('vAssetDetailsContent');
             
             if (d.specifics) {
                 assetArea.classList.remove('d-none');
                 let html = '<div class="row">';
-                for (const [key, value] of Object.entries(d.specifics)) {
+                for (let [key, value] of Object.entries(d.specifics)) {
                     if (key !== 'LoanID' && key !== 'ID' && value) {
+                        
+                        let displayKey = key.replace(/([A-Z])/g, ' $1').trim();
+                        let displayValue = value;
+
+                        // විශේෂ ලේබල් සහ දින සැකසීම
+                        if (key === 'Liyapadinchikalayuthudinaya') {
+                            displayKey = "Registration Date";
+                            displayValue = formatToStandardDate(value);
+                        } else if (key === 'RegistrationDate') {
+                            displayKey = "Loan Date";
+                            displayValue = formatToStandardDate(value);
+                        }
+
                         html += `
                             <div class="col-md-4 mb-2">
-                                <small class="text-muted d-block text-capitalize">${key.replace(/([A-Z])/g, ' $1')}</small>
-                                <span class="fw-bold">${value}</span>
+                                <small class="text-muted d-block text-capitalize">${displayKey}</small>
+                                <span class="fw-bold text-dark">${displayValue}</span>
                             </div>`;
                     }
                 }
@@ -155,7 +151,7 @@ async function loadLoanFullAnalysis(loanId) {
                 assetArea.classList.add('d-none');
             }
 
-            // --- 3. ඇපකරුවන්ගේ විස්තර (Beneficiaries) ---
+            // ඇපකරුවන්
             const benArea = document.getElementById('vBeneficiaryArea');
             const benTable = document.getElementById('vBeneficiaryTable');
             
@@ -172,7 +168,7 @@ async function loadLoanFullAnalysis(loanId) {
                 benArea.classList.add('d-none');
             }
 
-            // --- 4. Alert Notes ---
+            // ප්‍රමාද සටහන්
             const notesArea = document.getElementById('vLoanNotes');
             if (d.overdue.days > 0 || d.overdue.months > 0) {
                 notesArea.innerHTML = `
@@ -184,38 +180,36 @@ async function loadLoanFullAnalysis(loanId) {
                 notesArea.innerHTML = `<div class="alert alert-success border-0 shadow-sm rounded-4"><i class="bi bi-check-circle-fill me-2"></i> මෙම ණය මුදල නිවැරදිව පවත්වාගෙන යයි.</div>`;
             }
 
-           // --- 5. ගෙවීම් ඉතිහාසය (History Table - Improved) ---
-const historyTableBody = document.getElementById('vHistoryTable');
+            // ගෙවීම් ඉතිහාසය (Payment History)
+            const historyTableBody = document.getElementById('vHistoryTable');
 
-if (d.history && d.history.length > 0) {
-    historyTableBody.innerHTML = d.history.map(row => {
-        // අගයන් තිබේදැයි පරීක්ෂා කර නොමැති නම් 0 ලෙස ගැනීම (Error වැලැක්වීමට)
-        const paid = parseFloat(row.PaidAmount || 0);
-        const penalty = parseFloat(row.PenaltyPaid || 0);
-        const interest = parseFloat(row.InterestPaid || 0);
-        const capital = parseFloat(row.CapitalPaid || 0);
-        
-        // පේළියේ වර්ණය: පියවීමක් (Settlement) නම් වෙනස් පැහැයක් දීමට අවශ්‍ය නම්
-        const rowClass = (row.PaymentType === 'SETTLEMENT') ? 'table-info' : '';
+            if (d.history && d.history.length > 0) {
+                historyTableBody.innerHTML = d.history.map(row => {
+                    const paid = parseFloat(row.PaidAmount || 0);
+                    const penalty = parseFloat(row.PenaltyPaid || 0);
+                    const interest = parseFloat(row.InterestPaid || 0);
+                    const capital = parseFloat(row.CapitalPaid || 0);
+                    
+                    const rowClass = (row.PaymentType === 'SETTLEMENT') ? 'table-info' : '';
 
-        return `
-            <tr class="${rowClass}">
-                <td>
-                    <span class="badge bg-light text-dark border">
-                        ${formatCustomDateTime(row.PaymentDate)}
-                    </span>
-                    ${row.PaymentType === 'SETTLEMENT' ? '<br><small class="badge bg-danger">Settled</small>' : ''}
-                </td>
-                <td class="fw-bold text-success">Rs. ${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                <td class="text-danger">Rs. ${penalty.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                <td>Rs. ${interest.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                <td class="fw-bold bg-light">Rs. ${capital.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-            </tr>
-        `;
-    }).join('');
-} else {
-    historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">ගෙවීම් ඉතිහාසයක් නොමැත.</td></tr>';
-}
+                    return `
+                        <tr class="${rowClass}">
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    ${formatToStandardDate(row.PaymentDate)}
+                                </span>
+                                ${row.PaymentType === 'SETTLEMENT' ? '<br><small class="badge bg-danger">Settled</small>' : ''}
+                            </td>
+                            <td class="fw-bold text-success">Rs. ${paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td class="text-danger">Rs. ${penalty.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td>Rs. ${interest.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td class="fw-bold bg-light">Rs. ${capital.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">ගෙවීම් ඉතිහාසයක් නොමැත.</td></tr>';
+            }
 
             lookupDetailsPane.classList.remove('d-none');
             lookupDetailsPane.scrollIntoView({ behavior: 'smooth' });
@@ -224,11 +218,6 @@ if (d.history && d.history.length > 0) {
         console.error("Analysis Error:", err);
         notify.toast("විශ්ලේෂණ දත්ත ලබා ගැනීමේ දෝෂයකි.", "error");
     }
-}
-
-// පැරණි function එක නව format එකට map කිරීම
-function formatDateOnly(dateString) {
-    return formatCustomDateTime(dateString);
 }
 
 function resetLookupUI() {

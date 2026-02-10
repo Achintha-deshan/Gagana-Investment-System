@@ -48,8 +48,10 @@ CREATE TABLE IF NOT EXISTS vehicle_details (
     CurrentValue DECIMAL(15, 2),
     LoanLimit DECIMAL(15, 2),
     RegistrationDate DATE,
+    Liyapadinchikalayuthudinaya DATE NULL, -- මෙතැනට අලුත් තීරුව එක් කරන ලදි
     FOREIGN KEY (LoanID) REFERENCES loans(LoanID) ON DELETE CASCADE
 );
+
 
 -- 5. ඉඩම් ණය වලටම පමණක් අදාළ දත්ත
 CREATE TABLE IF NOT EXISTS land_details (
@@ -90,7 +92,7 @@ CREATE TABLE IF NOT EXISTS loan_beneficiaries (
 );
 
 
--- 9. ගෙවීම් වාර්තා (IsVoided Column එක සමඟ)
+-- 9. ගෙවීම් වාර්තා
 CREATE TABLE IF NOT EXISTS payment_history (
     PaymentID INT AUTO_INCREMENT PRIMARY KEY,
     LoanID VARCHAR(50),
@@ -98,12 +100,11 @@ CREATE TABLE IF NOT EXISTS payment_history (
     PenaltyPaid DECIMAL(15, 2) DEFAULT 0, 
     InterestPaid DECIMAL(15, 2) DEFAULT 0, 
     CapitalPaid DECIMAL(15, 2) DEFAULT 0, 
-    MonthsPaid INT DEFAULT 1,            -- ගෙවූ මාස ගණන ගබඩා කිරීමට
+    ArrearsAmount DECIMAL(15, 2) DEFAULT 0.00, -- මෙතනට කෙලින්ම එකතු කළා
+    MonthsPaid INT DEFAULT 1,     
     PaymentDate DATE NOT NULL,
-    IsVoided TINYINT(1) DEFAULT 0,       -- ගෙවීම අවලංගු කර ඇත්දැයි බැලීමට (අවශ්‍යයි!)
+    IsVoided TINYINT(1) DEFAULT 0,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (LoanID) REFERENCES loans(LoanID) ON DELETE CASCADE
 );
-
-
 `;

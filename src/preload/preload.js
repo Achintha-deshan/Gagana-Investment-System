@@ -1,13 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
-    // Authentication කෑල්ල
     auth: {
         login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
         logout: () => ipcRenderer.invoke('auth:logout')
     },
 
-    // ඔයා ඉල්ලපු api.user කෑල්ල (User Management CRUD)
     user: {
         getAll: () => ipcRenderer.invoke('users:get-all'),
         add: (userData) => ipcRenderer.invoke('users:add', userData),
@@ -90,6 +88,10 @@ getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),   } ,
 system: {
         checkStatus: () => ipcRenderer.invoke('db:check-status'),
         runBackup: (year, month) => ipcRenderer.invoke('system:run-backup', { year, month })
-    }
+    },
+    migration: {
+    searchLoans: (query) => ipcRenderer.invoke('migration:searchLoans', query),
+    process: (data) => ipcRenderer.invoke('migration:process', data)
+}
 
 });

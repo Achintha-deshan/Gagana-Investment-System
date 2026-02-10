@@ -1,112 +1,1370 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div class="tab-pane fade" id="reports" role="tabpanel">
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card bg-danger text-white border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title text-uppercase small">
-                මුළු හිඟ වාරික ප්‍රමාණය
-              </h6>
-              <h2 id="summaryTotalArrears" class="fw-bold">රු. 0.00</h2>
-              <i
-                class="bi bi-exclamation-octagon position-absolute top-0 end-0 m-3 fs-1 opacity-25"
-              ></i>
+ <section id="loanManagementSection" class="dashboard-content d-none">
+          <div class="loan-section">
+            <div class="loan-header">
+              <h2 class="mb-0">
+                <i class="bi bi-bank2 me-2"></i>
+                ණය කළමනාකරණ පද්ධතිය
+              </h2>
             </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-success text-white border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title text-uppercase small">
-                අද දින ලැබුණු එකතුව
-              </h6>
-              <h2 id="summaryTodayCollection" class="fw-bold">රු. 0.00</h2>
-              <i
-                class="bi bi-cash-stack position-absolute top-0 end-0 m-3 fs-1 opacity-25"
-              ></i>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-primary text-white border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title text-uppercase small">සක්‍රීය ණය ගිණුම්</h6>
-              <h2 id="summaryActiveLoans" class="fw-bold">0</h2>
-              <i
-                class="bi bi-file-earmark-text position-absolute top-0 end-0 m-3 fs-1 opacity-25"
-              ></i>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="card mt-4 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="row align-items-end g-3">
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">වාර්තා වර්ගය</label>
-              <select id="selReportType" class="form-select">
-                <option value="arrears">හිඟ වාරික වාර්තාව (Arrears)</option>
-                <option value="collection">
-                  මුදල් එකතු කිරීමේ වාර්තාව (Collection)
-                </option>
-                <option value="settled">
-                  පියවා අවසන් කළ ණය (Settled Loans)
-                </option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">සිට</label>
-              <input type="date" id="reportStartDate" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">දක්වා</label>
-              <input type="date" id="reportEndDate" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <button id="btnGenerateReport" class="btn btn-dark w-100">
-                <i class="bi bi-search"></i> වාර්තාව බලන්න
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            <div class="card-body p-4">
+              <!-- Common Customer Search & Info -->
+              <div class="search-box mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-search"></i> පාරිභෝගික සෙවුම
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="txtSearchCustomer"
+                  placeholder="පාරිභෝගික ID හෝ නම මගින් සොයන්න..."
+                />
+              </div>
 
-      <div class="card mt-4 border-0 shadow-sm">
-        <div
-          class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
-        >
-          <h5 class="mb-0 fw-bold text-secondary" id="reportTitle">
-            වාර්තාවේ නම
-          </h5>
-          <button id="btnPrintReport" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-printer"></i> Print Report
-          </button>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="tblReport">
-              <thead class="bg-light">
-                <tr id="reportTableHeader"></tr>
-              </thead>
-              <tbody id="reportTableBody">
-                <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">
-                    පෙරහන් (Filters) භාවිතා කර වාර්තාව ජනනය කරන්න.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              <div class="info-display mb-4">
+                <h5 class="mb-3">
+                  <i class="bi bi-person-fill"></i> පාරිභෝගික තොරතුරු
+                </h5>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <div class="info-label">නම</div>
+                    <div class="info-value" id="displayCustomerName">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">ID අංකය</div>
+                    <div class="info-value" id="displayCustomerId">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">NIC අංකය</div>
+                    <div class="info-value" id="displayCustomerNic">—</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-label">දුරකථන අංකය</div>
+                    <div class="info-value" id="displayCustomerPhone">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loan Type Tabs -->
+              <ul class="nav nav-tabs mb-4" id="loanTypeTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="nav-link active"
+                    id="vehicle-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#vehicle"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-car-front-fill"></i> වාහන ණය
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="nav-link"
+                    id="lan-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#lan"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-gem"></i> Land Loan
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="nav-link"
+                    id="promissory-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#promissory"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-file-earmark-text"></i> Promissory
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="nav-link"
+                    id="check-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#check"
+                    type="button"
+                    role="tab"
+                  >
+                    <i class="bi bi-credit-card-2-front"></i> Check ණය
+                  </button>
+                </li>
+              </ul>
+
+              <!-- All Tab Contents -->
+              <div class="tab-content" id="loanTabContent">
+                <!-- 1. VEHICLE LOAN -->
+                <div
+                  class="tab-pane fade show active"
+                  id="vehicle"
+                  role="tabpanel"
+                >
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-car-front"></i> වාහන ණය තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtVehicleLoanId" />
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayVehicleLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value=""
+                            readonly
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අයිතිකාරුගේ නම *</label
+                          >
+                          <input
+                            id="txtVehicleOwnerName"
+                            type="text"
+                            class="form-control"
+                            placeholder="නම ඇතුළත් කරන්න"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන අංකය *</label
+                          >
+                          <input
+                            id="txtVehicleNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="ABC-1234"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වාහන වර්ගය *</label
+                          >
+                          <select
+                            id="txtVehicleType"
+                            class="form-select"
+                            required
+                          >
+                            <option value="">වර්ගය තෝරන්න</option>
+                            <option value="Car">කාර් (Car)</option>
+                            <option value="Van">වෑන් (Van)</option>
+                            <option value="Jeep">ජීප් (Jeep)</option>
+                            <option value="Bike">බයික් (Bike)</option>
+                            <option value="Lorry">ලොරි (Lorry)</option>
+                            <option value="Other">වෙනත් (Other)</option>
+                          </select>
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >වර්තමාන වටිනාකම</label
+                          >
+                          <input
+                            id="txtVehicleCurrentValue"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අනුමත ණය සීමාව</label
+                          >
+                          <input
+                            id="txtVehicleLoanLimit"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtVehicleLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtVehicleLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtVehicleGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtVehicleInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddVehicle"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateVehicle"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteVehicle"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearVehicle"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Beneficiary + SMS - Vehicle -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ඇපකරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtVehicleBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtVehicleBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddVehicleBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateVehicleBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearVehicleBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="vehicleBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
+                        </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtVehicleSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtVehicleSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendVehicleSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> වාහන ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>අයිතිකරු</th>
+                              <th>වාහන අංකය</th>
+                              <th>වර්ගය</th>
+                              <th>ණය මුදල</th>
+                              <th>පොලිය %</th>
+                              <th>ඇපකරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblVehicleLoans">
+                            <tr>
+                              <td
+                                colspan="8"
+                                class="text-center py-4 text-muted"
+                              >
+                                වාහන ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. LAN (LAND) LOAN -->
+                <div class="tab-pane fade" id="lan" role="tabpanel">
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-gem"></i> Land Loan තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtLanLoanId" />
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Land Loan ID</label
+                          >
+                          <input
+                            id="txtDisplayLanLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="LAN001"
+                            readonly
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Land අංකය *</label
+                          >
+                          <input
+                            id="txtLanNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="ලං අංකය"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩම පිහිටි ස්ථානය *</label
+                          >
+                          <input
+                            id="txtLanLocation"
+                            type="text"
+                            class="form-control"
+                            placeholder="ස්ථානය"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩමේ ප්‍රමාණය</label
+                          >
+                          <input
+                            id="txtLanSize"
+                            type="text"
+                            class="form-control"
+                            placeholder="අක්කර / පර්චස්"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ඉඩමේ වර්තමාන වටිනාකම</label
+                          >
+                          <input
+                            id="txtLanCurrentValue"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >අනුමත ණය සීමාව</label
+                          >
+                          <input
+                            id="txtLanLoanLimit"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtLanLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtLanLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtLanGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtLanInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddLan"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateLan"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteLan"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearLan"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Beneficiary + SMS - Lan -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ඇපකරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtLanBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtLanBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddLanBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateLanBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearLanBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="lanBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
+                        </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtLanSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtLanSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendLanSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> ලං ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>land අංකය</th>
+                              <th>ස්ථානය</th>
+                              <th>ප්‍රමාණය</th>
+                              <th>ණය මුදල</th>
+                              <th>පොලිය %</th>
+                              <th>ඇපකරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblLanLoans">
+                            <tr>
+                              <td
+                                colspan="8"
+                                class="text-center py-4 text-muted"
+                              >
+                                ලං ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. PROMISSORY LOAN -->
+                <div class="tab-pane fade" id="promissory" role="tabpanel">
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-file-earmark-text"></i> Promissory ණය
+                          තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtPromissoryLoanId" />
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Promissory ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayPromissoryLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="PRM001"
+                            readonly
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Promissory අංකය *</label
+                          >
+                          <input
+                            id="txtPromissoryNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="Promissory අංකය"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtPromissoryLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtPromissoryLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtPromissoryGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtPromissoryInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddPromissory"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdatePromissory"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeletePromissory"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearPromissory"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Beneficiary + SMS - Promissory -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ඇපකරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtPromissoryBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtPromissoryBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddPromissoryBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdatePromissoryBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearPromissoryBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="promissoryBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
+                        </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtPromissorySmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtPromissorySmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendPromissorySms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> Promissory ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>Promissory අංකය</th>
+                              <th>ණය මුදල</th>
+                              <th>දිනය</th>
+                              <th>පොලිය %</th>
+                              <th>ඇපකරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblPromissoryLoans">
+                            <tr>
+                              <td
+                                colspan="7"
+                                class="text-center py-4 text-muted"
+                              >
+                                Promissory ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. CHECK LOAN -->
+                <div class="tab-pane fade" id="check" role="tabpanel">
+                  <div class="row g-4">
+                    <div class="col-lg-6">
+                      <div class="bg-light rounded-3 p-4">
+                        <h5 class="mb-3 text-primary">
+                          <i class="bi bi-credit-card-2-front"></i> Check ණය
+                          තොරතුරු
+                        </h5>
+                        <input type="hidden" id="txtCheckLoanId" />
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check ණය ID</label
+                          >
+                          <input
+                            id="txtDisplayCheckLoanId"
+                            type="text"
+                            class="form-control bg-white"
+                            value="CHK001"
+                            readonly
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check අංකය *</label
+                          >
+                          <input
+                            id="txtCheckNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="Check අංකය"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >ණය මුදල *</label
+                          >
+                          <input
+                            id="txtCheckLoanAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                            required
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">ණය දිනය</label>
+                          <input
+                            id="txtCheckLoanDate"
+                            type="date"
+                            class="form-control"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >දුන් මුදල</label
+                          >
+                          <input
+                            id="txtCheckGivenAmount"
+                            type="number"
+                            class="form-control"
+                            placeholder="රු. 0.00"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check පත් හිමිකරුගේ නම</label
+                          >
+                          <input
+                            id="txtCheckOwnerName"
+                            type="text"
+                            class="form-control"
+                            placeholder="හිමිකරුගේ නම"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >Check පත් අංකය හා දිනය</label
+                          >
+                          <input
+                            id="txtCheckDateNumber"
+                            type="text"
+                            class="form-control"
+                            placeholder="අංකය - දිනය"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >බැංකුව හා ගිණුම් අංකය</label
+                          >
+                          <input
+                            id="txtCheckBankAccount"
+                            type="text"
+                            class="form-control"
+                            placeholder="බැංකුව - ගිණුම් අංකය"
+                          />
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold"
+                            >පොලී අනුපාතය (%)</label
+                          >
+                          <input
+                            id="txtCheckInterestRate"
+                            type="number"
+                            class="form-control"
+                            value="5"
+                            step="0.1"
+                            min="0"
+                          />
+                        </div>
+
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button
+                              id="btnAddCheck"
+                              class="btn btn-success w-100"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnUpdateCheck"
+                              class="btn btn-primary w-100"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnDeleteCheck"
+                              class="btn btn-danger w-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button
+                              id="btnClearCheck"
+                              class="btn btn-secondary w-100"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Beneficiary + SMS - Check -->
+                    <div class="col-lg-6">
+                      <div
+                        class="bg-light rounded-3 p-4 h-100 d-flex flex-column"
+                      >
+                        <div class="mb-4 flex-grow-1">
+                          <h6 class="fw-bold text-warning mb-3">
+                            <i class="bi bi-people-fill"></i> ඇපකරුවන්ගේ විස්තර
+                          </h6>
+                          <div class="subsection p-3">
+                            <input
+                              type="hidden"
+                              id="txtCheckBeneficiaryEditIndex"
+                              value="-1"
+                            />
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryName"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="නම"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryPhone"
+                                type="tel"
+                                class="form-control form-control-sm"
+                                placeholder="0XXXXXXXXX"
+                              />
+                            </div>
+                            <div class="mb-2">
+                              <input
+                                id="txtCheckBeneficiaryAddress"
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="ලිපිනය"
+                              />
+                            </div>
+                            <div class="row g-2 mt-3">
+                              <div class="col-4">
+                                <button
+                                  id="btnAddCheckBeneficiary"
+                                  class="btn btn-success btn-sm w-100"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnUpdateCheckBeneficiary"
+                                  class="btn btn-primary btn-sm w-100"
+                                >
+                                  Update
+                                </button>
+                              </div>
+                              <div class="col-4">
+                                <button
+                                  id="btnClearCheckBeneficiary"
+                                  class="btn btn-secondary btn-sm w-100"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            id="checkBeneficiaryList"
+                            class="mt-3 border rounded p-2"
+                            style="
+                              max-height: 220px;
+                              overflow-y: auto;
+                              background: #fff;
+                            "
+                          ></div>
+                        </div>
+
+                        <div>
+                          <h6 class="fw-bold text-info mb-3">
+                            <i class="bi bi-chat-dots-fill"></i> SMS යැවීම
+                          </h6>
+                          <div
+                            class="subsection p-3"
+                            style="
+                              background: #e7f3ff;
+                              border-left: 4px solid #0dcaf0;
+                            "
+                          >
+                            <div class="mb-2">
+                              <label class="form-label fw-semibold small"
+                                >SMS යැවීමේ දිනය</label
+                              >
+                              <input
+                                id="txtCheckSmsDate"
+                                type="date"
+                                class="form-control form-control-sm"
+                              />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-semibold small"
+                                >SMS පණිවිඩය</label
+                              >
+                              <textarea
+                                id="txtCheckSmsMessage"
+                                class="form-control form-control-sm"
+                                rows="4"
+                                placeholder="පණිවිඩය මෙහි ලියන්න..."
+                              ></textarea>
+                            </div>
+                            <div class="d-grid">
+                              <button
+                                id="btnSendCheckSms"
+                                class="btn btn-info btn-sm"
+                              >
+                                <i class="bi bi-send-fill"></i> SMS යවන්න
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="table-responsive">
+                        <h5 class="mb-3 fw-bold">
+                          <i class="bi bi-table"></i> Check ණය වාර්තාව
+                        </h5>
+                        <table class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ණය ID</th>
+                              <th>Check අංකය</th>
+                              <th>ණය මුදල</th>
+                              <th>හිමිකරු</th>
+                              <th>පොලිය %</th>
+                              <th>ඇපකරුවන්</th>
+                              <th>SMS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tblCheckLoans">
+                            <tr>
+                              <td
+                                colspan="7"
+                                class="text-center py-4 text-muted"
+                              >
+                                Check ණය තොරතුරු නොමැත
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- end tab-content -->
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+        </section>

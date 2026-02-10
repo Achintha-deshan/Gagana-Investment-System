@@ -1,8 +1,4 @@
 let selectedLoanForPayment = null;
-
-/**
- * 1. ගෙවීම් ඉතිහාසය ලබා ගැනීම (Backend එකෙන් දත්ත ගෙන UI එකට දමයි)
- */
 async function loadPaymentHistory(loanId) {
     try {
         const history = await window.api.payment.getHistory(loanId);
@@ -13,13 +9,22 @@ async function loadPaymentHistory(loanId) {
             $('#paymentHistorySection').removeClass('d-none');
             history.forEach(pay => {
                 const voidClass = pay.IsVoided ? 'table-secondary opacity-50' : '';
+                
+                // දත්ත නිවැරදිව Parse කරගැනීම (ඔයාගේ Schema එකේ නම් වලට අනුව)
+                const paidAmt = parseFloat(pay.PaidAmount || 0);
+                const arrearsPaid = parseFloat(pay.ArrearsAmount || 0); // Schema එකේ තියෙන නම
+                const penaltyPaid = parseFloat(pay.PenaltyPaid || 0);
+                const interestPaid = parseFloat(pay.InterestPaid || 0);
+                const capitalPaid = parseFloat(pay.CapitalPaid || 0);
+
                 tbody.append(`
                     <tr class="${voidClass}">
                         <td>#${pay.PaymentID}</td>
                         <td>${formatCustomDateTime(pay.PaymentDate)}</td>
-                        <td class="fw-bold">රු. ${parseFloat(pay.PaidAmount).toLocaleString()}</td>
-                        <td><small>දඩ: ${pay.PenaltyPaid} | පොලී: ${pay.InterestPaid}</small></td>
-                        <td class="text-success fw-bold">රු. ${parseFloat(pay.CapitalPaid).toLocaleString()}</td>
+                        <td class="fw-bold text-primary">රු. ${paidAmt.toLocaleString()}</td>
+                        <td class="text-warning fw-bold">රු. ${arrearsPaid.toLocaleString()}</td>
+                        <td><small>දඩ: ${penaltyPaid} | පොලී: ${interestPaid}</small></td>
+                        <td class="text-success fw-bold">රු. ${capitalPaid.toLocaleString()}</td>
                         <td class="text-center">
                             ${!pay.IsVoided ? `
                                 <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="voidPayment(${pay.PaymentID})">
@@ -38,9 +43,7 @@ async function loadPaymentHistory(loanId) {
     }
 }
 
-/**
- * 2. ගෙවීමක් අවලංගු කිරීම (Void)
- */
+
 async function voidPayment(paymentId) {
     const confirmVoid = await notify.confirm("මෙම ගෙවීම අවලංගු කිරීමට ස්ථිරද? ණය ශේෂය සහ දිනයන් නැවත පරණ තත්වයට පත්වනු ඇත.");
     if (!confirmVoid) return;
@@ -63,9 +66,7 @@ async function voidPayment(paymentId) {
     }
 }
 
-/**
- * 3. ණය මුදල් ලැයිස්තුව පෙන්වීම
- */
+
 async function loadCustomerActiveLoans(customerId) {
     try {
         const loans = await window.api.payment.getActiveLoans(customerId);
@@ -93,9 +94,6 @@ async function loadCustomerActiveLoans(customerId) {
     } catch (err) { console.error(err); }
 }
 
-/**
- * 4. පොලිය සහ දඩය ගණනය කිරීම
- */
 function calculateAndDisplayPayment(loan) {
     if (!loan) return;
     const manualDateVal = $('#txtPaymentManualDate').val();
@@ -106,37 +104,50 @@ function calculateAndDisplayPayment(loan) {
     currentDueDate.setHours(0, 0, 0, 0);
 
     const loanAmount = parseFloat(loan.LoanAmount) || 0;
+    const currentArrears = parseFloat(loan.ArrearsAmount) || 0;
     const interestRate = parseFloat(loan.InterestRate) || 0;
     const penaltyRate = parseFloat(loan.PenaltyRateOnInterest) || 0;
+    
     const monthlyInterest = loanAmount * (interestRate / 100);
     const dailyPenaltyRate = (monthlyInterest * (penaltyRate / 100)) / 30;
 
-    let totalInterest = 0, totalPenalty = 0, monthsPaidCount = 0, totalOverdueDays = 0;
+    let totalInterest = 0, totalPenalty = 0, monthsPaidCount = 0, totalDaysOverdue = 0;
     let tempDate = new Date(currentDueDate);
 
+    // අද දිනට අදාළ පොලිය සහ දඩය ගණනය කිරීම
     if (calculationDate >= currentDueDate) {
+        // සම්පූර්ණ දින ප්‍රමාදය ගණනය කිරීම
+        totalDaysOverdue = Math.floor((calculationDate - currentDueDate) / (1000 * 60 * 60 * 24));
+
         while (tempDate <= calculationDate) {
             monthsPaidCount++;
             totalInterest += monthlyInterest;
+            
             const diffInDays = Math.floor((calculationDate - tempDate) / (1000 * 60 * 60 * 24));
             if (diffInDays > 2) {
                 totalPenalty += dailyPenaltyRate * diffInDays;
-                totalOverdueDays += diffInDays;
             }
             tempDate.setMonth(tempDate.getMonth() + 1);
-            if (tempDate > calculationDate) break;
         }
     }
 
+    // UI එකට දත්ත පෙන්වීම (සහ වරහන් ඇතුළේ විස්තර)
+    $('#summaryArrears').text(`රු. ${currentArrears.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
+    
+    // දඩය පෙන්වන තැනට ප්‍රමාද දින ගණන එකතු කළා
+    $('#summaryPenalty').text(`රු. ${totalPenalty.toLocaleString(undefined, {minimumFractionDigits: 2})} (${totalDaysOverdue} Days)`);
+    
+    // පොලිය පෙන්වන තැනට මාස ගණන එකතු කළා
+    $('#summaryInterest').text(`රු. ${totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2})} (${monthsPaidCount} Months)`);
+    
+    const totalPayable = currentArrears + totalInterest + totalPenalty;
+    $('#summaryTotal').text(`රු. ${totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
+    $('#txtPaymentAmount').val(totalPayable.toFixed(2));
+
+    // Backend එකට යැවීමට object එක update කිරීම
     selectedLoanForPayment.totalInterestDue = totalInterest;
     selectedLoanForPayment.totalPenaltyDue = totalPenalty;
     selectedLoanForPayment.calculatedMonths = monthsPaidCount;
-
-    $('#summaryInterest').text(`රු. ${totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2})} (මාස ${monthsPaidCount})`);
-    $('#summaryPenalty').text(`රු. ${totalPenalty.toLocaleString(undefined, {minimumFractionDigits: 2})} (දින ${totalOverdueDays})`);
-    const totalPayable = totalInterest + totalPenalty;
-    $('#summaryTotal').text(`රු. ${totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
-    $('#txtPaymentAmount').val(totalPayable.toFixed(2));
 }
 
 function resetPaymentUI() {
@@ -150,9 +161,6 @@ function formatCustomDateTime(dateString) {
     return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
 
-/**
- * 5. Document Ready (Events)
- */
 $(document).ready(function () {
     $('#txtPaymentManualDate').val(new Date().toISOString().slice(0, 10));
 

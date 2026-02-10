@@ -2,6 +2,7 @@ import db from '../config/db.js';
 
 class LoanLookupService {
     
+    // පාරිභෝගිකයාගේ සියලුම ණය ලැයිස්තුව ලබා ගැනීම
     async getCustomerLoans(customerId) {
         try {
             const sql = `SELECT LoanID, LoanType, LoanAmount, Status, LoanDate FROM loans WHERE CustomerID = ?`;
@@ -12,6 +13,7 @@ class LoanLookupService {
         }
     }
 
+    // තෝරාගත් ණය මුදලක සම්පූර්ණ විශ්ලේෂණය (Full Analysis)
     async getDetailedBreakdown(loanId) {
         try {
             const sql = `
@@ -31,6 +33,7 @@ class LoanLookupService {
 
             const nextDueDate = new Date(loan.NextDueDate);
             const loanAmount = parseFloat(loan.LoanAmount) || 0;
+            const currentArrearsBalance = parseFloat(loan.ArrearsAmount) || 0; // පරණ හිඟ මුදල
             const interestRate = parseFloat(loan.InterestRate) || 0;
             const monthlyInterest = loanAmount * (interestRate / 100);
 
@@ -38,9 +41,9 @@ class LoanLookupService {
             let totalInterest = 0;
             let statusMessage = "";
 
-            // --- Arrears Months සහ Interest Logic එක ---
+            // --- 1. පොලිය ගණනය කිරීම (Arrears Months & Interest) ---
             if (today > nextDueDate) {
-                // නියමිත දිනය පහු වී ඇති අවස්ථාව (Overdue)
+                // නියමිත දිනය පහු වී ඇති අවස්ථාව
                 let diffMonths = (today.getFullYear() - nextDueDate.getFullYear()) * 12;
                 diffMonths += today.getMonth() - nextDueDate.getMonth();
 
@@ -52,11 +55,8 @@ class LoanLookupService {
                 totalInterest = monthlyInterest * arrearsMonths;
                 statusMessage = `මාස ${arrearsMonths} ක් සඳහා පොලිය ප්‍රමාදයි`;
             } else {
-                // නියමිත දිනය පහු වී නැති අවස්ථාව (Not Overdue)
-                // මෙහිදී arrearsMonths අනිවාර්යයෙන්ම 0 විය යුතුය
+                // නියමිත කාලය ඇතුළත (Pro-rata Interest)
                 arrearsMonths = 0; 
-                
-                // වත්මන් මාසය සඳහා ගෙවිය යුතු පොලිය දින ගණන අනුව බැලීම
                 const lastCycleDate = new Date(nextDueDate);
                 lastCycleDate.setMonth(lastCycleDate.getMonth() - 1);
                 
@@ -78,7 +78,7 @@ class LoanLookupService {
                 }
             }
 
-            // --- දඩ මුදල් ගණනය කිරීම (Penalty) ---
+            // --- 2. දඩ මුදල් ගණනය කිරීම (Penalty) ---
             let totalPenalty = 0;
             let overdueDays = 0;
             if (today > nextDueDate) {
@@ -90,26 +90,15 @@ class LoanLookupService {
                 }
             }
 
-            // --- අනෙකුත් විස්තර ලබා ගැනීම ---
+            // --- 3. අමතර විස්තර (Asset & Beneficiaries) ලබා ගැනීම ---
             const [beneficiaries] = await db.execute(
-                `SELECT Name, Phone, Address FROM loan_beneficiaries WHERE LoanID = ?`, 
-                [loanId]
+                `SELECT Name, Phone, Address FROM loan_beneficiaries WHERE LoanID = ?`, [loanId]
             );
 
-            let specificDetails = null;
-            const type = loan.LoanType;
-            const detailTables = { 
-                'VEHICLE': 'vehicle_details', 
-                'LAND': 'land_details', 
-                'PROMISSORY': 'promissory_details', 
-                'CHECK': 'check_details' 
-            };
-            
-            if (detailTables[type]) {
-                const [res] = await db.execute(`SELECT * FROM ${detailTables[type]} WHERE LoanID = ?`, [loanId]);
-                specificDetails = res[0] || null;
-            }
+            // Asset Details (Vehicle, Land, etc.)
+            const specificDetails = await this.getSpecificDetails(loanId, loan.LoanType);
 
+            // Payment History (ArrearsPaid ද ඇතුළුව)
             const [history] = await db.execute(
                 `SELECT * FROM payment_history WHERE LoanID = ? AND IsVoided = 0 ORDER BY PaymentDate DESC LIMIT 10`,
                 [loanId]
@@ -132,17 +121,19 @@ class LoanLookupService {
                     },
                     financials: {
                         originalAmount: loanAmount,
+                        currentArrears: currentArrearsBalance,
                         monthlyInterest: monthlyInterest,
                         totalInterestDue: totalInterest,
                         totalPenaltyDue: totalPenalty,
-                        totalPayableNow: loanAmount + totalInterest + totalPenalty
+                        // මුළු ගෙවිය යුතු මුදල = පරණ හිඟය + අලුත් පොලිය + දඩය
+                        totalPayableNow: currentArrearsBalance + totalInterest + totalPenalty
                     },
                     overdue: { 
                         days: overdueDays, 
                         months: arrearsMonths, 
                         statusNote: statusMessage 
                     },
-                    type: type,
+                    type: loan.LoanType,
                     specifics: specificDetails,
                     beneficiaries: beneficiaries,
                     history: history
@@ -154,12 +145,25 @@ class LoanLookupService {
         }
     }
 
+    // ණය වර්ගය අනුව අදාළ Table එකෙන් දත්ත ලබා ගැනීම
     async getSpecificDetails(loanId, type) {
-        const tableMap = { 'VEHICLE': 'vehicle_details', 'LAND': 'land_details' };
+        const tableMap = { 
+            'VEHICLE': 'vehicle_details', 
+            'LAND': 'land_details',
+            'PROMISSORY': 'promissory_details',
+            'CHECK': 'check_details'
+        };
+
         const table = tableMap[type] || null;
         if (!table) return null;
-        const [rows] = await db.execute(`SELECT * FROM ${table} WHERE LoanID = ?`, [loanId]);
-        return rows[0] || null;
+
+        try {
+            const [rows] = await db.execute(`SELECT * FROM ${table} WHERE LoanID = ?`, [loanId]);
+            return rows[0] || null;
+        } catch (error) {
+            console.error(`Error fetching from ${table}:`, error);
+            return null;
+        }
     }
 }
 

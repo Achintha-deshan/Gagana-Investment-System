@@ -13,6 +13,7 @@ async function initVehicleLoanPage() {
         setupEventListeners();
 
         $('#btnAddVehicle').prop('disabled', true);
+        $('#btnUpdateVehicle, #btnDeleteVehicle').prop('disabled', true);
         console.log("✅ Vehicle Loan page initialized");
     } catch (error) {
         console.error(error);
@@ -42,22 +43,26 @@ async function loadVehicleLoans() {
         tbody.empty();
 
         if (!loans || loans.length === 0) {
-            tbody.html('<tr><td colspan="8" class="text-center py-4 text-muted">වාහන ණය තොරතුරු නොමැත</td></tr>');
+            tbody.html('<tr><td colspan="10" class="text-center py-4 text-muted">වාහන ණය තොරතුරු නොමැත</td></tr>');
             return;
         }
 
         loans.forEach(loan => {
+            // Backend එකෙන් එන දත්ත වලට අනුව (JOIN query එක නිසා loan object එකේම මේවා තිබේ)
             const beneficiaries = loan.BeneficiaryNames || '-';
+            
             tbody.append(`
-                <tr data-id="${loan.LoanID}">
+                <tr data-id="${loan.LoanID}" style="cursor:pointer;">
                     <td>${loan.LoanID}</td>
-                    <td>${loan.OwnerName}</td>
-                    <td>${loan.VehicleNumber}</td>
-                    <td>${loan.VehicleType}</td>
-                    <td>${loan.LoanAmount}</td>
-                    <td>${loan.InterestRate}</td>
-                    <td>${beneficiaries}</td>
-                    <td>${loan.SmsMessage || '-'}</td>
+                    <td>${loan.OwnerName || 'N/A'}</td>
+                    <td>${loan.VehicleNumber || 'N/A'}</td>
+                    <td>${loan.VehicleType || 'N/A'}</td>
+                    <td class="text-end">${parseFloat(loan.LoanAmount || 0).toLocaleString()}</td>
+                    <td class="text-center">${loan.InterestRate}%</td>
+                    <td class="small">${beneficiaries}</td>
+                    <td class="text-center">
+                        <span class="badge ${loan.Status === 'ACTIVE' ? 'bg-success' : 'bg-secondary'}">${loan.Status || 'ACTIVE'}</span>
+                    </td>
                 </tr>
             `);
         });
@@ -71,65 +76,49 @@ async function loadVehicleLoans() {
 // ------------------------
 function setupEventListeners() {
 
- // 1. පාරිභෝගිකයා සෙවීම (Customer Search)
-// 1. පාරිභෝගිකයා සෙවීම (Customer Search)
-$('#txtSearchCustomer').on('input', async function () {
-    const query = $(this).val().trim();
-    if (query.length >= 2) {
-        try {
-            const results = await window.api.customer.search(query);
-            
-            if (results && results.length > 0) {
-                const customer = results[0];
+    // පාරිභෝගිකයා සෙවීම
+    $('#txtSearchCustomer').on('input', async function () {
+        const query = $(this).val().trim();
+        if (query.length >= 2) {
+            try {
+                const results = await window.api.customer.search(query);
                 
-                // Debugging: Console එකේ බලන්න දත්ත එන හැටි
-                console.log("Customer Found:", customer);
+                if (results && results.length > 0) {
+                    const customer = results[0];
 
-                // 🛑 පාරිභෝගිකයා Blacklisted දැයි පරීක්ෂා කිරීම (1 හෝ true)
-                if (customer.IsBlacklisted == 1 || customer.IsBlacklisted == true) {
+                    if (customer.IsBlacklisted == 1 || customer.IsBlacklisted == true) {
+                        const reason = customer.BlacklistReason || "හේතුවක් සඳහන් කර නොමැත.";
+                        await notify.confirm(
+                            `මෙම පාරිභෝගිකයා (${customer.CustomerName}) Blacklist ඇතුළත් කර ඇත.\n\n` +
+                            `🚫 හේතුව: ${reason}\n\n` +
+                            `මොහුට නව ණය ලබා දීම පද්ධතිය මගින් අවහිර කර ඇත.`,
+                            'පාරිභෝගිකයා අවහිර කර ඇත (Blocked)',
+                            { confirmText: 'හරි (OK)', showCancelButton: false, confirmColor: '#ef4444' }
+                        );
+                        $(this).val('');
+                        clearCustomerDisplay();
+                        return;
+                    }
                     
-                    // Database එකෙන් ලැබෙන Column name එක Capital ද Small ද කියා පරීක්ෂා කර අගය ගනී
-                    const reason = customer.BlacklistReason || customer.blacklistreason || "හේතුවක් සඳහන් කර නොමැත.";
+                    $('#displayCustomerName').text(customer.CustomerName || '---');
+                    $('#displayCustomerId').text(customer.CustomerID || '---').data('id', customer.CustomerID);
+                    $('#displayCustomerNic').text(customer.NIC || '---');
+                    $('#displayCustomerPhone').text(customer.CustomerPhone || '---');
+                    $('.info-display').fadeIn();
 
-                    // පාරිභෝගිකයා සම්පූර්ණයෙන්ම අවහිර කිරීම (හේතුව සමඟ)
-                    await notify.confirm(
-                        `මෙම පාරිභෝගිකයා (${customer.CustomerName}) කළු ලැයිස්තුවට (Blacklist) ඇතුළත් කර ඇත.\n\n` +
-                        `🚫 හේතුව: ${reason}\n\n` +
-                        `මොහුට නව ණය ලබා දීම පද්ධතිය මගින් අවහිර කර ඇත.`,
-                        'පාරිභෝගිකයා අවහිර කර ඇත (Blocked)',
-                        {
-                            confirmText: 'හරි (OK)',
-                            showCancelButton: false, 
-                            confirmColor: '#ef4444'   // රතු පැහැය
-                        }
-                    );
-
-                    // Alert එකේ OK කළ පසු සෙවුම් කොටුව හිස් කර Display එක අයින් කරයි
-                    $(this).val('');
+                } else {
                     clearCustomerDisplay();
-                    return;
                 }
-                
-                // Blacklisted නොවේ නම් විස්තර පෙන්වීම
-                $('#displayCustomerName').text(customer.CustomerName || '---');
-                $('#displayCustomerId').text(customer.CustomerID || '---').data('id', customer.CustomerID);
-                $('#displayCustomerNic').text(customer.NIC || '---');
-                $('#displayCustomerPhone').text(customer.CustomerPhone || '---');
-                $('.info-display').fadeIn();
-
-            } else {
-                clearCustomerDisplay();
+            } catch (error) {
+                console.error("සෙවීමේදී දෝෂයක්:", error);
             }
-        } catch (error) {
-            console.error("සෙවීමේදී දෝෂයක්:", error);
+        } else {
+            clearCustomerDisplay();
         }
-    } else {
-        clearCustomerDisplay();
-    }
-    checkAddButtonState();
-});
+        checkAddButtonState();
+    });
 
-    // 2. ඇපකරුවන් එකතු කිරීම (Add Beneficiary)
+    // ඇපකරුවන් එකතු කිරීම
     $('#btnAddVehicleBeneficiary').click(async function (e) {
         e.preventDefault();
         const name = $('#txtVehicleBeneficiaryName').val().trim();
@@ -145,9 +134,8 @@ $('#txtSearchCustomer').on('input', async function () {
             return notify.toast("මෙම ඇපකරු දැනටමත් සක්‍රීය වාහන ණයක සිටී!", "error");
         }
 
-        const index = $('#vehicleBeneficiaryList .beneficiary-item').length;
         $('#vehicleBeneficiaryList').append(`
-            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2" data-index="${index}">
+            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2 mb-1 bg-light rounded"">
                 <span><strong>${name}</strong> - ${phone}</span>
                 <button type="button" class="btn btn-sm btn-danger btnDeleteBeneficiary">මකන්න</button>
                 <input type="hidden" class="ben-name" value="${name}">
@@ -160,20 +148,16 @@ $('#txtSearchCustomer').on('input', async function () {
         checkAddButtonState();
     });
 
-    // 3. ඇපකරු මකා දැමීම (Delete Beneficiary)
     $(document).on('click', '.btnDeleteBeneficiary', function () {
         $(this).closest('.beneficiary-item').remove();
         checkAddButtonState();
     });
 
-    // 4. වාහන ණය ඇතුළත් කිරීම (Add Vehicle Loan)
+    // ණය ඇතුළත් කිරීම (ADD)
     $('#btnAddVehicle').click(async function () {
-        // Customer ID එක නිවැරදිව ලබා ගැනීම
         const customerId = $('#displayCustomerId').data('id');
         
-        if (!customerId) {
-            return notify.toast("කරුණාකර පාරිභෝගිකයෙකු තෝරා සිටින්න.", "warning");
-        }
+        if (!customerId) return notify.toast("කරුණාකර පාරිභෝගිකයෙකු තෝරා සිටින්න.", "warning");
 
         const beneficiaries = [];
         $('#vehicleBeneficiaryList .beneficiary-item').each(function () {
@@ -194,44 +178,34 @@ $('#txtSearchCustomer').on('input', async function () {
             LoanAmount: parseFloat($('#txtVehicleLoanAmount').val()) || 0,
             GivenAmount: parseFloat($('#txtVehicleGivenAmount').val()) || 0,
             LoanDate: $('#txtVehicleLoanDate').val(),
+            RegDeadlineDate: $('#txtVehicleRegDeadlineDate').val(), // ලියාපදිංචි කළ යුතු දිනය
             InterestRate: parseFloat($('#txtVehicleInterestRate').val()) || 0,
             RegistrationDate: new Date().toISOString().slice(0, 10),
             Beneficiaries: beneficiaries
         };
 
-        if (!data.OwnerName || !data.VehicleNumber || beneficiaries.length === 0) {
-            return notify.toast("අවශ්‍ය සියලුම තොරතුරු සහ අවම වශයෙන් එක් ඇපකරුවෙකු ඇතුළත් කරන්න.", "warning");
-        }
-
         const result = await window.api.vehicleLoan.add(data);
         if (result.success) {
             notify.toast("වාහන ණය සාර්ථකව ඇතුළත් කරන ලදි.", "success");
             clearForm();
-            await setNextVehicleLoanId();
             await loadVehicleLoans();
         } else {
-            notify.toast("ඇතුළත් කිරීමේදී දෝෂයක්: " + result.error, "error");
+            notify.toast("දෝෂයක්: " + result.error, "error");
         }
     });
-    // 6. Table Row එකක් Click කළ විට දත්ත Form එකට ගැනීම
-    $('#tblVehicleLoans').on('click', 'tr', async function () {
+
+    // Row Click Logic (Form එක පිරවීම)
+    $('#tblVehicleLoans').off('click', 'tr').on('click', 'tr', async function () {
         const loanId = $(this).data('id');
         if (!loanId) return;
 
-        const loan = await window.api.vehicleLoan.getById(loanId);
-        
-        // Row එක Highlight කිරීම
         $('#tblVehicleLoans tr').removeClass('table-primary');
         $(this).addClass('table-primary');
 
         try {
-            // Backend එකෙන් අදාළ Loan එකේ සියලුම විස්තර (Beneficiaries ඇතුළුව) ලබා ගැනීම
             const loan = await window.api.vehicleLoan.getById(loanId);
-            
             if (loan) {
-                // Form එකට දත්ත පිරවීම
-                $('#txtVehicleLoanId').val(loan.LoanID);
-                $('#txtDisplayVehicleLoanId').val(loan.LoanID);
+                $('#txtVehicleLoanId, #txtDisplayVehicleLoanId').val(loan.LoanID);
                 $('#txtVehicleOwnerName').val(loan.OwnerName);
                 $('#txtVehicleNumber').val(loan.VehicleNumber);
                 $('#txtVehicleType').val(loan.VehicleType);
@@ -239,22 +213,32 @@ $('#txtSearchCustomer').on('input', async function () {
                 $('#txtVehicleLoanLimit').val(loan.LoanLimit);
                 $('#txtVehicleLoanAmount').val(loan.LoanAmount);
                 $('#txtVehicleGivenAmount').val(loan.GivenAmount);
-                $('#txtVehicleLoanDate').val(loan.LoanDate);
                 $('#txtVehicleInterestRate').val(loan.InterestRate);
+                
+                // දින සැකසීම
+                if (loan.LoanDate) {
+                    $('#txtVehicleLoanDate').val(new Date(loan.LoanDate).toISOString().split('T')[0]);
+                }
+                
+                // ලියාපදිංචි කළ යුතු අවසාන දිනය (Backend එකේ Liyapadinchikalayuthudinaya)
+                if (loan.Liyapadinchikalayuthudinaya) {
+                    $('#txtVehicleRegDeadlineDate').val(new Date(loan.Liyapadinchikalayuthudinaya).toISOString().split('T')[0]);
+                } else {
+                    $('#txtVehicleRegDeadlineDate').val('');
+                }
 
-                // Customer තොරතුරු පෙන්වීම
-                $('#displayCustomerName').text(loan.CustomerName);
+                $('#displayCustomerName').text(loan.CustomerName || 'N/A');
                 $('#displayCustomerId').text(loan.CustomerID).data('id', loan.CustomerID);
-                $('#displayCustomerNic').text(loan.NIC);
-                $('#displayCustomerPhone').text(loan.CustomerPhone);
+                $('#displayCustomerNic').text(loan.NIC || 'N/A');
+                $('#displayCustomerPhone').text(loan.CustomerPhone || 'N/A');
                 $('.info-display').fadeIn();
 
-                // ඇපකරුවන් ලැයිස්තුව පිරවීම
+                // ඇපකරුවන් ලැයිස්තුව
                 $('#vehicleBeneficiaryList').empty();
-                if (loan.Beneficiaries && loan.Beneficiaries.length > 0) {
-                    loan.Beneficiaries.forEach((ben, index) => {
+                if (loan.Beneficiaries) {
+                    loan.Beneficiaries.forEach(ben => {
                         $('#vehicleBeneficiaryList').append(`
-                            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2" data-index="${index}">
+                            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2 bg-white mb-1 shadow-sm rounded">
                                 <span><strong>${ben.Name}</strong> - ${ben.Phone}</span>
                                 <button type="button" class="btn btn-sm btn-danger btnDeleteBeneficiary">මකන්න</button>
                                 <input type="hidden" class="ben-name" value="${ben.Name}">
@@ -265,17 +249,15 @@ $('#txtSearchCustomer').on('input', async function () {
                     });
                 }
 
-                // Buttons හසුරුවීම
                 $('#btnAddVehicle').prop('disabled', true);
                 $('#btnUpdateVehicle, #btnDeleteVehicle').prop('disabled', false);
             }
         } catch (error) {
-            console.error("Error fetching loan details:", error);
-            notify.toast("දත්ත ලබා ගැනීමේදී දෝෂයක් සිදුවිය.", "error");
+            console.error("Row Click Error:", error);
         }
     });
 
-    // 7. Update Button Click Logic
+    // ණය යාවත්කාලීන කිරීම (UPDATE)
     $('#btnUpdateVehicle').click(async function () {
         const loanId = $('#txtVehicleLoanId').val();
         
@@ -298,6 +280,7 @@ $('#txtSearchCustomer').on('input', async function () {
             LoanAmount: parseFloat($('#txtVehicleLoanAmount').val()) || 0,
             GivenAmount: parseFloat($('#txtVehicleGivenAmount').val()) || 0,
             LoanDate: $('#txtVehicleLoanDate').val(),
+            RegDeadlineDate: $('#txtVehicleRegDeadlineDate').val(), // නව දිනය
             InterestRate: parseFloat($('#txtVehicleInterestRate').val()) || 0,
             Beneficiaries: beneficiaries
         };
@@ -312,56 +295,32 @@ $('#txtSearchCustomer').on('input', async function () {
         }
     });
 
-  // 8. Delete Button Click Logic (With Custom Notification System)
-$('#btnDeleteVehicle').click(async function () {
-    const loanId = $('#txtVehicleLoanId').val();
-    
-    if (!loanId) {
-        return notify.toast("කරුණාකර මකා දැමීමට අදාළ ණය ගිණුම තෝරන්න.", "warning");
-    }
+    // ණය මකා දැමීම (DELETE)
+    $('#btnDeleteVehicle').click(async function () {
+        const loanId = $('#txtVehicleLoanId').val();
+        if (!loanId) return;
 
-    // 🔹 පද්ධතියේ ඇති Confirm Dialog එක භාවිතා කිරීම
-    const isConfirmed = await notify.confirm(
-        `ඔබ ස්ථිරවම ${loanId} ණය ගිණුම සහ ඒ හා සම්බන්ධ සියලුම දත්ත මකා දමනවාද? මෙය ආපසු හැරවිය නොහැකි ක්‍රියාවකි.`,
-        'ණය ගිණුම මකා දැමීම',
-        {
-            confirmText: 'ඔව්, මකන්න',
-            confirmColor: '#ef4444', // මකා දැමීම නිසා රතු පැහැය භාවිතා කිරීම වඩාත් සුදුසුයි
-            cancelText: 'එපා, අයින් වන්න'
-        }
-    );
+        const isConfirmed = await notify.confirm(
+            `ඔබ ස්ථිරවම ${loanId} ණය ගිණුම මකා දමනවාද? මෙය ආපසු හැරවිය නොහැක.`,
+            'ණය ගිණුම මකා දැමීම',
+            { confirmText: 'ඔව්, මකන්න', confirmColor: '#ef4444', cancelText: 'එපා' }
+        );
 
-    // පරිශීලකයා 'ඔව්' කිව්වොත් පමණක් Delete එක සිදු කරයි
-    if (isConfirmed) {
-        try {
+        if (isConfirmed) {
             const result = await window.api.vehicleLoan.delete(loanId);
-            
             if (result.success) {
-                // සාර්ථක වූ විට Toast එකක් පෙන්වීම
-                notify.toast(`${loanId} ණය ගිණුම සාර්ථකව මකා දමන ලදි.`, "success");
-                
-                // Form එක Clear කර Table එක Refresh කිරීම
+                notify.toast(`${loanId} මකා දමන ලදි.`, "success");
                 clearForm();
                 await loadVehicleLoans();
-                await setNextVehicleLoanId(); // මීළඟට එන අංකය නැවත සකස් කිරීම
             } else {
-                // Backend එකෙන් දෝෂයක් ආවොත්
-                notify.toast("මකා දැමීමේදී දෝෂයක්: " + result.error, "error");
+                notify.toast("දෝෂයක්: " + result.error, "error");
             }
-        } catch (error) {
-            // පද්ධතියේ වෙනත් දෝෂයක් ආවොත්
-            notify.toast("මකා දැමීම අසාර්ථක විය. කරුණාකර නැවත උත්සාහ කරන්න.", "error");
-            console.error("Delete Error:", error);
         }
-    }
-});
-
-    // 9. Clear Button Click Logic
-    $('#btnClearVehicle').click(function () {
-        clearForm();
     });
 
-    // 5. Input වෙනස් වන විට බොත්තම පරීක්ෂා කිරීම
+    $('#btnClearVehicle').click(function () { clearForm(); });
+    
+    // වැදගත් input වෙනස් වන විට Add button state එක බැලීම
     $('#txtVehicleOwnerName, #txtVehicleNumber, #txtVehicleLoanAmount').on('input', checkAddButtonState);
 }
 
@@ -375,7 +334,6 @@ function checkAddButtonState() {
     const benCount = $('#vehicleBeneficiaryList .beneficiary-item').length;
 
     const canAdd = (customerId && owner && vehicleNo && benCount > 0);
-    
     $('#btnAddVehicle').prop('disabled', !canAdd);
 }
 
@@ -383,26 +341,15 @@ function checkAddButtonState() {
 // Clear Form
 // ------------------------
 function clearForm() {
-    // සියලුම input fields හිස් කිරීම
-    $('#txtVehicleOwnerName, #txtVehicleNumber, #txtVehicleType, #txtVehicleCurrentValue,#txtVehicleLoanLimit, #txtVehicleLoanAmount, #txtVehicleLoanDate,#txtVehicleGivenAmount, #txtVehicleInterestRate').val('');
-    
-    // Beneficiary list එක හිස් කිරීම
+    $('#txtVehicleOwnerName, #txtVehicleNumber, #txtVehicleType, #txtVehicleCurrentValue, #txtVehicleLoanLimit, #txtVehicleLoanAmount, #txtVehicleLoanDate, #txtVehicleGivenAmount, #txtVehicleInterestRate, #txtVehicleRegDeadlineDate, #txtSearchCustomer').val('');
     $('#vehicleBeneficiaryList').empty();
-    
-    // Customer තොරතුරු පෙන්වන ස්ථානය හිස් කිරීම
     clearCustomerDisplay();
-    
-    // Table එකේ select වී ඇති row එක අයින් කිරීම
     $('#tblVehicleLoans tr').removeClass('table-primary');
-    
-    // මීළඟට එන Loan ID එක නැවත සැකසීම
     setNextVehicleLoanId();
-    
-    // බොත්තම් වල තත්ත්වය මාරු කිරීම
     $('#btnAddVehicle').prop('disabled', true);
     $('#btnUpdateVehicle, #btnDeleteVehicle').prop('disabled', true);
-    $('#txtSearchCustomer').val('');
 }
+
 // ------------------------
 // Clear Customer Display
 // ------------------------

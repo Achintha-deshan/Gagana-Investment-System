@@ -2,28 +2,28 @@ import db from '../config/db.js';
 
 class VehicleLoanService {
 
-   // 🔹 Generate Next Vehicle Loan ID (VLI00001)
-async generateNextLoanId() {
-    try {
-        const [rows] = await db.execute(
-            "SELECT LoanID FROM loans WHERE LoanType='VEHICLE' ORDER BY LoanID DESC LIMIT 1"
-        );
+    // -----------------------------------------
+    // 1. Generate Next Loan ID
+    // -----------------------------------------
+    async generateNextLoanId() {
+        try {
+            const [rows] = await db.execute(
+                "SELECT LoanID FROM loans WHERE LoanType='VEHICLE' ORDER BY LoanID DESC LIMIT 1"
+            );
 
-        // පළමු වාර්තාව නම් VLI00001 ලබා දෙන්න
-        if (rows.length === 0) return 'VLI00001';
+            if (rows.length === 0) return 'VLI00001';
 
-        // 'VLI' කොටස ඉවත් කර අංකය ලබාගෙන 1ක් එකතු කරන්න
-        const num = parseInt(rows[0].LoanID.replace('VLI', ''));
-        
-        // padStart(5, '0') මගින් VLI පසුව ඉලක්කම් 5ක දිගක් පවත්වා ගනී (උදා: VLI00001)
-        return 'VLI' + (num + 1).toString().padStart(5, '0');
-    } catch (error) {
-        console.error("Vehicle Loan ID Generation Error:", error);
-        throw error;
+            const num = parseInt(rows[0].LoanID.replace('VLI', ''));
+            return 'VLI' + (num + 1).toString().padStart(5, '0');
+        } catch (error) {
+            console.error("Vehicle Loan ID Generation Error:", error);
+            throw error;
+        }
     }
-}
 
-    // 🔹 Check if beneficiary is already ACTIVE
+    // -----------------------------------------
+    // 2. Check Beneficiary Activity
+    // -----------------------------------------
     async checkBeneficiaryActive(name, phone) {
         const [rows] = await db.execute(`
             SELECT lb.LoanID 
@@ -34,7 +34,9 @@ async generateNextLoanId() {
         return rows.length > 0;
     }
 
-    // 🔹 Get Single Vehicle Loan by ID
+    // -----------------------------------------
+    // 3. Get Vehicle Loan By ID
+    // -----------------------------------------
     async getVehicleLoanById(loanId) {
         try {
             const [rows] = await db.execute(`
@@ -60,7 +62,9 @@ async generateNextLoanId() {
         }
     }
 
-    // 🔹 Add Vehicle Loan with Beneficiaries (Transaction-safe)
+    // -----------------------------------------
+    // 4. Add New Vehicle Loan
+    // -----------------------------------------
     async addVehicleLoan(data) {
         const loanId = await this.generateNextLoanId();
         const connection = await db.getConnection();
@@ -68,8 +72,7 @@ async generateNextLoanId() {
         try {
             await connection.beginTransaction();
 
-            // 1️⃣ loans table එකට Insert කිරීම
-            // PenaltyRateOnInterest එකටත් data.InterestRate ම යවා ඇත.
+            // Loans table insert
             await connection.execute(`
                 INSERT INTO loans
                 (LoanID, CustomerID, LoanType, LoanAmount, GivenAmount, LoanDate, InterestRate, PenaltyRateOnInterest, NextDueDate, Status)
@@ -77,42 +80,37 @@ async generateNextLoanId() {
             `, [
                 loanId,
                 data.CustomerID,
-                data.LoanAmount,
-                data.GivenAmount,
-                data.LoanDate,
-                data.InterestRate,      // Interest Rate
-                data.InterestRate,      // Penalty Rate (දඩයත් පොලී අනුපාතයම වේ)
-                data.LoanDate
+                data.LoanAmount || 0,
+                data.GivenAmount || 0,
+                data.LoanDate || null,
+                data.InterestRate || 0,
+                data.InterestRate || 0,
+                data.LoanDate || null
             ]);
 
-            // 2️⃣ vehicle_details table එකට Insert කිරීම
+            // Vehicle details insert (Handles undefined with '|| null')
             await connection.execute(`
                 INSERT INTO vehicle_details
-                (LoanID, OwnerName, VehicleNumber, VehicleType, CurrentValue, LoanLimit, RegistrationDate)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (LoanID, OwnerName, VehicleNumber, VehicleType, CurrentValue, LoanLimit, RegistrationDate, Liyapadinchikalayuthudinaya)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 loanId,
-                data.OwnerName,
-                data.VehicleNumber,
-                data.VehicleType,
-                data.CurrentValue,
-                data.LoanLimit,
-                data.RegistrationDate
+                data.OwnerName || null,
+                data.VehicleNumber || null,
+                data.VehicleType || null,
+                data.CurrentValue || 0,
+                data.LoanLimit || 0,
+                data.RegistrationDate || null,
+                data.RegDeadlineDate || null
             ]);
 
-            // 3️⃣ Beneficiaries Insert කිරීම
-            if (!data.Beneficiaries || data.Beneficiaries.length === 0) {
-                throw new Error("අවම වශයෙන් එක් ඇපකරුවෙකු අනිවාර්ය වේ.");
-            }
-
-            for (const b of data.Beneficiaries) {
-                const isActive = await this.checkBeneficiaryActive(b.Name, b.Phone);
-                if (isActive) throw new Error(`ඇපකරු ${b.Name} දැනටමත් සක්‍රීය වාහන ණයක සිටී!`);
-
-                await connection.execute(`
-                    INSERT INTO loan_beneficiaries (LoanID, Name, Phone, Address)
-                    VALUES (?, ?, ?, ?)
-                `, [loanId, b.Name, b.Phone, b.Address]);
+            if (data.Beneficiaries && data.Beneficiaries.length > 0) {
+                for (const b of data.Beneficiaries) {
+                    await connection.execute(`
+                        INSERT INTO loan_beneficiaries (LoanID, Name, Phone, Address)
+                        VALUES (?, ?, ?, ?)
+                    `, [loanId, b.Name, b.Phone, b.Address]);
+                }
             }
 
             await connection.commit();
@@ -126,50 +124,59 @@ async generateNextLoanId() {
         }
     }
 
-    // 🔹 Get all Vehicle Loans
-    async getAllVehicleLoans() {
-        const [rows] = await db.execute(`
-            SELECT l.*, v.*, 
-            (SELECT GROUP_CONCAT(Name SEPARATOR ', ') 
-                FROM loan_beneficiaries 
-                WHERE LoanID = l.LoanID) AS BeneficiaryNames
-            FROM loans l
-            JOIN vehicle_details v ON l.LoanID = v.LoanID
-            WHERE l.LoanType='VEHICLE'
-            ORDER BY l.CreatedAt DESC
-        `);
-        return rows;
-    }
-
-    // 🔹 Update Vehicle Loan (Transaction-safe)
+    // -----------------------------------------
+    // 5. Update Vehicle Loan (FULL CORRECTED CODE)
+    // -----------------------------------------
     async updateVehicleLoan(data) {
         const connection = await db.getConnection();
         try {
             await connection.beginTransaction();
 
-            // 1. Loans Table එක Update කිරීම (PenaltyRate එකත් සමඟ)
+            // Update loans table
             await connection.execute(`
                 UPDATE loans SET 
-                    LoanAmount = ?, GivenAmount = ?, InterestRate = ?, PenaltyRateOnInterest = ?
+                    LoanAmount = ?, 
+                    GivenAmount = ?, 
+                    InterestRate = ?, 
+                    PenaltyRateOnInterest = ?
                 WHERE LoanID = ?
-            `, [data.LoanAmount, data.GivenAmount, data.InterestRate, data.InterestRate, data.LoanID]);
+            `, [
+                data.LoanAmount || 0, 
+                data.GivenAmount || 0, 
+                data.InterestRate || 0, 
+                data.InterestRate || 0, 
+                data.LoanID
+            ]);
 
-            // 2. Vehicle Details Table එක Update කිරීම
+            // Update vehicle_details table 
+            // Ensures no 'undefined' values are passed to SQL
             await connection.execute(`
                 UPDATE vehicle_details SET 
-                    OwnerName = ?, VehicleNumber = ?, VehicleType = ?, 
-                    CurrentValue = ?, LoanLimit = ?
+                    OwnerName = ?, 
+                    VehicleNumber = ?, 
+                    VehicleType = ?, 
+                    CurrentValue = ?, 
+                    LoanLimit = ?, 
+                    Liyapadinchikalayuthudinaya = ?
                 WHERE LoanID = ?
-            `, [data.OwnerName, data.VehicleNumber, data.VehicleType, data.CurrentValue, data.LoanLimit, data.LoanID]);
+            `, [
+                data.OwnerName || null, 
+                data.VehicleNumber || null, 
+                data.VehicleType || null, 
+                data.CurrentValue || 0, 
+                data.LoanLimit || 0, 
+                data.RegDeadlineDate || null, // Important: handles the date
+                data.LoanID
+            ]);
 
-            // 3. ඇපකරුවන් Update කිරීම (Delete and Re-insert)
+            // Update beneficiaries (Delete old and re-insert)
             if (data.Beneficiaries) {
                 await connection.execute("DELETE FROM loan_beneficiaries WHERE LoanID = ?", [data.LoanID]);
                 for (const b of data.Beneficiaries) {
                     await connection.execute(`
                         INSERT INTO loan_beneficiaries (LoanID, Name, Phone, Address)
                         VALUES (?, ?, ?, ?)
-                    `, [data.LoanID, b.Name, b.Phone, b.Address]);
+                    `, [data.LoanID, b.Name || null, b.Phone || null, b.Address || null]);
                 }
             }
 
@@ -184,20 +191,30 @@ async generateNextLoanId() {
         }
     }
 
-    // 🔹 Delete Vehicle Loan
-    async deleteVehicleLoan(loanId) {
-        await db.execute(`DELETE FROM loans WHERE LoanID = ?`, [loanId]);
-        return { success: true };
-    }
-
-    async deleteBeneficiary(beneficiaryId) {
-        await db.execute(`DELETE FROM loan_beneficiaries WHERE BeneficiaryID = ?`, [beneficiaryId]);
-        return { success: true };
-    }
-
-    async getBeneficiaries(loanId) {
-        const [rows] = await db.execute(`SELECT * FROM loan_beneficiaries WHERE LoanID = ?`, [loanId]);
+    // -----------------------------------------
+    // 6. Utility Functions (Get All, Delete)
+    // -----------------------------------------
+    async getAllVehicleLoans() {
+        const [rows] = await db.execute(`
+            SELECT l.*, v.*, 
+            (SELECT GROUP_CONCAT(Name SEPARATOR ', ') 
+                FROM loan_beneficiaries 
+                WHERE LoanID = l.LoanID) AS BeneficiaryNames
+            FROM loans l
+            JOIN vehicle_details v ON l.LoanID = v.LoanID
+            WHERE l.LoanType='VEHICLE'
+            ORDER BY l.CreatedAt DESC
+        `);
         return rows;
+    }
+
+    async deleteVehicleLoan(loanId) {
+        try {
+            await db.execute(`DELETE FROM loans WHERE LoanID = ?`, [loanId]);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
     }
 }
 

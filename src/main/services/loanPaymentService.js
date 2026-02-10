@@ -17,51 +17,115 @@ class PaymentService {
             return [];
         }
     } 
-    async processPayment(paymentData) {
+async processPayment(paymentData) {
         const { LoanID, PaidAmount, InterestAmount, PenaltyAmount, PaymentDate, MonthsPaid } = paymentData;
-        
-        const paid = parseFloat(PaidAmount) || 0;
-        const interestDue = parseFloat(InterestAmount) || 0;
-        const penaltyDue = parseFloat(PenaltyAmount) || 0;
-        const monthsToIncrement = parseInt(MonthsPaid) || 0;
+        let remaining = parseFloat(PaidAmount) || 0;
+        const conn = await db.getConnection();
 
-        const conn = await db.getConnection(); 
         try {
             await conn.beginTransaction();
 
-            const [loanRows] = await conn.execute('SELECT LoanAmount FROM loans WHERE LoanID = ?', [LoanID]);
-            if (!loanRows.length) throw new Error("ණය ගිණුම සොයාගත නොහැක!");
+            const [loanRows] = await conn.execute(
+                'SELECT LoanAmount, ArrearsAmount FROM loans WHERE LoanID = ?', [LoanID]
+            );
+            let currentCapital = parseFloat(loanRows[0].LoanAmount);
+            let currentArrears = parseFloat(loanRows[0].ArrearsAmount);
 
-            let currentCapital = parseFloat(loanRows[0].LoanAmount) || 0;
-            let remaining = paid;
+            let arrearsPaid = 0;
+            let penaltyPaid = 0;
+            let interestPaid = 0;
+            let capitalPaid = 0;
+
+            // 1. Arrears පියවීම
+            if (remaining > 0 && currentArrears > 0) {
+                arrearsPaid = Math.min(remaining, currentArrears);
+                remaining -= arrearsPaid;
+            }
+
+            // 2. Penalty පියවීම
+            if (remaining > 0) {
+                penaltyPaid = Math.min(remaining, parseFloat(PenaltyAmount));
+                remaining -= penaltyPaid;
+            }
+
+            // 3. Interest පියවීම
+            if (remaining > 0) {
+                interestPaid = Math.min(remaining, parseFloat(InterestAmount));
+                remaining -= interestPaid;
+            }
+
+            // 4. Capital පියවීම
+            if (remaining > 0) {
+                capitalPaid = remaining;
+                remaining = 0;
+            }
+
+            const newCapital = Math.max(0, currentCapital - capitalPaid);
             
-            const deductionFromPenalty = Math.min(remaining, penaltyDue);
-            remaining -= deductionFromPenalty;
+            // වැදගත්: නොගෙවූ දඩ සහ පොලී තිබේ නම් ඒවා නව Arrears ලෙස එකතු වේ
+            const unpaidCharges = (parseFloat(PenaltyAmount) - penaltyPaid) + (parseFloat(InterestAmount) - interestPaid);
+            const newArrears = Math.max(0, currentArrears - arrearsPaid) + unpaidCharges;
 
-            const deductionFromInterest = Math.min(remaining, interestDue);
-            remaining -= deductionFromInterest;
+            // History එකට දාද්දී 'ArrearsAmount' ලෙස සේව් කරන්නේ මේ ගෙවීමේදී පියවූ Arrears ප්‍රමාණයයි
+            await conn.execute(
+                `INSERT INTO payment_history 
+                (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, ArrearsAmount, PaymentDate, MonthsPaid, IsVoided) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+                [LoanID, PaidAmount, penaltyPaid, interestPaid, capitalPaid, arrearsPaid, PaymentDate, MonthsPaid]
+            );
 
-            const deductionFromCapital = remaining; 
-            const newCapital = Math.max(0, currentCapital - deductionFromCapital);
-
-            const insertPaymentSql = `INSERT INTO payment_history (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, PaymentDate) VALUES (?, ?, ?, ?, ?, ?)`;
-            await conn.execute(insertPaymentSql, [LoanID, paid, deductionFromPenalty, deductionFromInterest, deductionFromCapital, PaymentDate]);
-
-            const statusUpdate = newCapital <= 0 ? 'CLOSED' : 'ACTIVE';
-
-            const updateLoanSql = `
-                UPDATE loans 
-                SET LoanAmount = ?, 
-                    NextDueDate = DATE_ADD(NextDueDate, INTERVAL ? MONTH),
-                    LastInterestDate = ?,
-                    Status = ?
-                WHERE LoanID = ?`;
-
-            await conn.execute(updateLoanSql, [newCapital, monthsToIncrement, PaymentDate, statusUpdate, LoanID]);
+            await conn.execute(
+                `UPDATE loans 
+                 SET LoanAmount = ?, ArrearsAmount = ?, NextDueDate = DATE_ADD(NextDueDate, INTERVAL ? MONTH)
+                 WHERE LoanID = ?`,
+                [newCapital, newArrears, MonthsPaid, LoanID]
+            );
 
             await conn.commit();
-            return { success: true, newCapital: newCapital, status: statusUpdate };
+            return { success: true };
+        } catch (error) {
+            await conn.rollback();
+            return { success: false, error: error.message };
+        } finally {
+            conn.release();
+        }
+    }
 
+    async voidPayment(paymentId) {
+        const conn = await db.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            const [payRows] = await conn.execute(`
+                SELECT * FROM payment_history WHERE PaymentID = ? AND IsVoided = 0`, [paymentId]);
+
+            if (!payRows.length) throw new Error("ගෙවීම සොයාගත නොහැක.");
+            
+            const { LoanID, PaidAmount, CapitalPaid, ArrearsAmount, PenaltyPaid, InterestPaid, MonthsPaid } = payRows[0];
+
+            // 1. අවලංගු කිරීම සටහන් කරන්න
+            await conn.execute('UPDATE payment_history SET IsVoided = 1 WHERE PaymentID = ?', [paymentId]);
+
+            // 2. Logic එක:
+            // Revert විය යුතු Arrears = (මේ ගෙවීමේදී පියවූ ArrearsAmount) + (ගෙවීමට තිබී නොගෙවූ දඩ/පොලී)
+            // නමුත් වඩාත් නිවැරදි ක්‍රමය: PaidAmount එකෙන් Capital එකට ගිය ටික අඩු කර ඉතිරි මුළු මුදලම Arrears වලට එකතු කිරීමයි.
+            
+            const [currentLoan] = await conn.execute('SELECT PenaltyRateOnInterest, InterestRate, LoanAmount FROM loans WHERE LoanID = ?', [LoanID]);
+            
+            // ගෙවීමේදී පියවූ Arrears, Penalty සහ Interest යන සියල්ලම නැවත Arrears වලට එකතු විය යුතුයි.
+            const totalArrearsToRestore = parseFloat(ArrearsAmount) + parseFloat(PenaltyPaid) + parseFloat(InterestPaid);
+
+            const revertLoanSql = `
+                UPDATE loans 
+                SET LoanAmount = LoanAmount + ?, 
+                    ArrearsAmount = ArrearsAmount + ?,
+                    NextDueDate = DATE_SUB(NextDueDate, INTERVAL ? MONTH)
+                WHERE LoanID = ?`;
+
+            await conn.execute(revertLoanSql, [CapitalPaid, totalArrearsToRestore, MonthsPaid, LoanID]);
+
+            await conn.commit();
+            return { success: true };
         } catch (error) {
             await conn.rollback();
             return { success: false, error: error.message };
@@ -86,58 +150,7 @@ class PaymentService {
         }
     }
 
-  async voidPayment(paymentId) {
-    const conn = await db.getConnection();
-    try {
-        await conn.beginTransaction();
 
-        // 1. මේ ගෙවීමේ විස්තර සහ ණය ලබාගත් මුල් දිනය (LoanDate) ලබාගන්න
-        const [payRows] = await conn.execute(`
-            SELECT ph.*, l.LoanDate 
-            FROM payment_history ph
-            JOIN loans l ON ph.LoanID = l.LoanID
-            WHERE ph.PaymentID = ?`, [paymentId]);
-
-        if (!payRows.length) throw new Error("ගෙවීම සොයාගත නොහැක.");
-        
-        const { LoanID, CapitalPaid, LoanDate } = payRows[0];
-
-        // 2. දැනට පවතින ගෙවීම් ඉතිහාසයෙන් මේ ගෙවීම ඉවත් කරන්න
-        await conn.execute('DELETE FROM payment_history WHERE PaymentID = ?', [paymentId]);
-
-        // 3. දැන් ඉතිරිව ඇති ගෙවීම් වාර්තා වලින් මුළු ගෙවූ මාස ගණන ගණනය කරන්න
-        // (මෙහිදී MonthsPaid කියන column එකේ එකතුව ලබා ගැනීම වඩාත් නිවැරදි වේ)
-        const [historySummary] = await conn.execute(
-            'SELECT SUM(MonthsPaid) as TotalMonthsPaid FROM payment_history WHERE LoanID = ? AND IsVoided = 0', 
-            [LoanID]
-        );
-        
-        const totalMonthsPaid = parseInt(historySummary[0].TotalMonthsPaid) || 0;
-
-        // 4. නිවැරදි NextDueDate එක ගණනය කිරීම:
-        // මුල් දිනය + (දැනට ඉතිරිව ඇති ගෙවූ මාස ගණන + 1) = මීළඟට ගෙවිය යුතු දිනය
-        const monthsToAddForNextDue = totalMonthsPaid + 1;
-
-        const revertLoanSql = `
-            UPDATE loans 
-            SET LoanAmount = LoanAmount + ?, 
-                NextDueDate = DATE_ADD(LoanDate, INTERVAL ? MONTH),
-                Status = 'ACTIVE' 
-            WHERE LoanID = ?`;
-
-        await conn.execute(revertLoanSql, [CapitalPaid, monthsToAddForNextDue, LoanID]);
-
-        await conn.commit();
-        return { success: true };
-
-    } catch (error) {
-        await conn.rollback();
-        console.error("Void Process Error:", error);
-        return { success: false, error: error.message };
-    } finally {
-        conn.release();
-    }
-}
 
     async getLoanBreakdown(loanId) {
         try {
@@ -183,11 +196,11 @@ class PaymentService {
         try {
             await conn.beginTransaction();
 
-            const insertHistorySql = `
-                INSERT INTO payment_history 
-                (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, PaymentDate) 
-                VALUES (?, ?, ?, ?, ?, ?)`;
-            
+            // processSettlement ඇතුළත Insert Query එක මෙහෙම වෙනස් කරන්න
+const insertHistorySql = `
+    INSERT INTO payment_history 
+    (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, ArrearsAmount, PaymentDate) 
+    VALUES (?, ?, ?, ?, ?, 0, ?)`; // ArrearsAmount එකට 0 දාන්න
             const [result] = await conn.execute(insertHistorySql, [
                 LoanID, TotalPaid, PenaltyPaid, InterestPaid, CapitalPaid, PaymentDate
             ]);
