@@ -4,55 +4,59 @@ class DashboardService {
     async getSuperDashboardStats() {
         try {
             const today = new Date();
-            // මේ මාසයේ පළමු දිනය (YYYY-MM-01)
+            // මේ මාසයේ පළමු සහ අවසන් දින සකසා ගැනීම
             const firstDayOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            // 1. මුළු ණය ආයෝජනය (Total Capital Out) - දැනට ACTIVE මට්ටමේ පවතින මුළු මුදල
+            // 1. ACTIVE LOANS: දැනට ලබා දී ඇති මුළු ප්‍රාග්ධනය (Total Out)
             const [capOut] = await db.execute(`
-                SELECT SUM(LoanAmount) as total 
-                FROM loans 
-                WHERE Status = 'ACTIVE'
+                SELECT SUM(TotalAmount) as total 
+                FROM loan_disbursements 
+                WHERE DisbursementStatus = 'ACTIVE'
             `);
 
-            // 2. ලැබීමට ඇති පොලිය (Monthly Target Interest) 
-            // සූත්‍රය: ACTIVE ණය වල (මුදල * පොලී අනුපාතය / 100)
+            // 2. MONTHLY TARGET: මේ මාසයේ Due Date එක යෙදී ඇති ණය වල පොලී එකතුව පමණි
+            // NextDueDate එක මේ මාසයේ පළමු දින සහ අවසන් දින අතර තිබිය යුතුය
             const [targetInt] = await db.execute(`
-                SELECT SUM(LoanAmount * InterestRate / 100) as expected 
-                FROM loans 
-                WHERE Status = 'ACTIVE'
-            `);
+                SELECT SUM(RemainingPrincipal * InterestRate / 100) as expected 
+                FROM loan_disbursements 
+                WHERE DisbursementStatus = 'ACTIVE' 
+                AND NextDueDate BETWEEN ? AND ?
+            `, [firstDayOfMonth, lastDayOfMonth]);
 
-            // 3. මේ මාසයේ ඇත්තටම ලැබුණු පොලිය (Received Interest)
+            // 3. RECEIVED INTEREST: මේ මාසය තුළදී පාරිභෝගිකයන් විසින් ගෙවා ඇති මුළු පොලිය
             const [receivedInt] = await db.execute(`
                 SELECT SUM(InterestPaid) as got 
                 FROM payment_history 
-                WHERE PaymentDate >= ? AND IsVoided = 0
-            `, [firstDayOfMonth]);
+                WHERE PaymentDate BETWEEN ? AND ? AND IsVoided = 0
+            `, [firstDayOfMonth, lastDayOfMonth]);
 
-            // 4. අසාදු ලේඛනගත පාරිභෝගිකයින් (Blacklisted)
+            // 4. RISK ALERT: Blacklisted පාරිභෝගිකයින් ගණන
             const [blacklisted] = await db.execute(`
                 SELECT COUNT(*) as count 
                 FROM customers 
                 WHERE IsBlacklisted = 1
             `);
 
-            // 5. මුළු පාරිභෝගිකයින් සංඛ්‍යාව
+            // 5. මුළු පාරිභෝගිකයින් ගණන
             const [totalCust] = await db.execute("SELECT COUNT(*) as count FROM customers");
 
-            // 6. ණය වර්ගීකරණය (Portfolio Distribution) - ප්‍රස්ථාරයට අවශ්‍ය වේ
+            // 6. Portfolio Distribution
             const [distribution] = await db.execute(`
-                SELECT LoanType, COUNT(*) as count, SUM(LoanAmount) as totalAmount 
-                FROM loans 
-                WHERE Status = 'ACTIVE' 
-                GROUP BY LoanType
+                SELECT l.LoanType, COUNT(ld.DisbursementID) as count, SUM(ld.RemainingPrincipal) as totalAmount 
+                FROM loans l
+                JOIN loan_disbursements ld ON l.LoanID = ld.LoanID
+                WHERE ld.DisbursementStatus = 'ACTIVE'
+                GROUP BY l.LoanType
             `);
 
-            // 7. මෑතකාලීනව ලබාදුන් ණය (Recent 5 Loans)
+            // 7. මෑතකදී ලබාදුන් ණය 5
             const [recentLoans] = await db.execute(`
-                SELECT l.LoanID, c.CustomerName, l.LoanType, l.LoanAmount, l.InterestRate, l.LoanDate 
+                SELECT l.LoanID, c.CustomerName, l.LoanType, ld.TotalAmount as LoanAmount, ld.InterestRate, ld.DisbursedDate as LoanDate 
                 FROM loans l
                 JOIN customers c ON l.CustomerID = c.CustomerID 
-                ORDER BY l.CreatedAt DESC 
+                JOIN loan_disbursements ld ON l.LoanID = ld.LoanID
+                ORDER BY ld.DisbursementID DESC 
                 LIMIT 5
             `);
 
@@ -66,7 +70,7 @@ class DashboardService {
                 recentLoans: recentLoans
             };
         } catch (error) {
-            console.error("Dashboard Service Error:", error);
+            console.error("❌ Dashboard Service Error:", error);
             throw error;
         }
     }

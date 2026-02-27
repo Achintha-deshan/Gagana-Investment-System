@@ -1,21 +1,31 @@
 import { ipcMain } from 'electron';
-// පාරිභෝගිකයාගේ Service එකත් අවශ්‍ය වෙයි නම් මෙතනට එකතු කරගන්න
 import loanPaymentService from '../services/loanPaymentService.js';
 
 export function registerPaymentHandlers() {
     
-    // 1. පාරිභෝගිකයාගේ සක්‍රීය ණය ලබා ගැනීම
-    ipcMain.handle('payment:getActiveLoans', async (event, customerId) => {
+    // 1. Master Loan එක සහ ඒ යටතේ ඇති සියලුම Sub-loans ලබා ගැනීම
+    // (Payment.js හි "window.api.payment.getLoanWithSubLoans" සඳහා)
+    ipcMain.handle('payment:getLoanWithSubLoans', async (event, masterLoanId) => {
         try {
-            // මෙහිදී 'loanPaymentService' ලෙස import කළ නමම භාවිතා කරන්න
-            return await loanPaymentService.getActiveLoans(customerId);
+            return await loanPaymentService.getLoanWithSubLoans(masterLoanId);
         } catch (error) {
-            console.error("IPC Error (getActiveLoans):", error);
-            return { success: false, error: error.message };
+            console.error("IPC Error (getLoanWithSubLoans):", error);
+            return null;
         }
     });
 
-    // 2. ගෙවීම් වාර්තා කිරීම (Process Payment)
+    // 2. තෝරාගත් දිනයට අදාළව පොලිය සහ දඩ ගණනය කිරීම
+    // (Payment.js හි "window.api.payment.getSubLoanBreakdown" සඳහා)
+    ipcMain.handle('payment:getSubLoanBreakdown', async (event, { disbursementId, customDate }) => {
+        try {
+            return await loanPaymentService.getSubLoanBreakdown(disbursementId, customDate);
+        } catch (error) {
+            console.error("IPC Error (getSubLoanBreakdown):", error);
+            return null;
+        }
+    });
+
+    // 3. ගෙවීමක් සිදු කිරීම
     ipcMain.handle('payment:process', async (event, paymentData) => {
         try {
             return await loanPaymentService.processPayment(paymentData);
@@ -25,42 +35,32 @@ export function registerPaymentHandlers() {
         }
     });
 
-    // 3. (අමතර) යම් ණයක ගෙවීම් ඉතිහාසය බැලීමට අවශ්‍ය නම්
-    ipcMain.handle('payment:getHistory', async (event, loanId) => {
-        try {
-            return await loanPaymentService.getPaymentHistory(loanId);
-        } catch (error) {
-            console.error("IPC Error (getHistory):", error);
-            return { success: false, error: error.message };
-        }
-    });
-    // PaymentController.js ඇතුළත
-ipcMain.handle('payment:void', async (event, paymentId) => {
+ipcMain.handle('payment:getHistory', async (event, disbursementId) => {
     try {
-        return await loanPaymentService.voidPayment(paymentId);
+        return await loanPaymentService.getPaymentHistory(disbursementId);
     } catch (error) {
-        return { success: false, error: error.message };
+        console.error("IPC Error (getHistory):", error);
+        return [];
     }
 });
 
-// 5. Settlement එක සිදුකර ණය ගිණුම වසා දැමීම (Process Settlement)
-ipcMain.handle('settlement:process', async (event, settleData) => {
-    try {
-        // service එකේ processSettlement function එකට data යැවීම
-        return await loanPaymentService.processSettlement(settleData);
-    } catch (error) {
-        console.error("IPC Error (processSettlement):", error);
-        return { success: false, error: error.message };
-    }
-});
-// 6. Settlement සඳහා ණය සහ පාරිභෝගික විස්තර සෙවීම
+    // 5. ගෙවීමක් අවලංගු කිරීම (Void Payment)
+    ipcMain.handle('payment:void', async (event, paymentId) => {
+        try {
+            return await loanPaymentService.voidPayment(paymentId);
+        } catch (error) {
+            console.error("IPC Error (voidPayment):", error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    // 6. පියවීම් (Settlement) සඳහා සෙවීම
     ipcMain.handle('settlement:searchLoan', async (event, searchText) => {
         try {
-            // Service එකේ තියෙන searchSettlement function එකට call කිරීම
             return await loanPaymentService.searchSettlement(searchText);
         } catch (error) {
-            console.error("IPC Error (searchLoanForSettlement):", error);
-            return { success: false, error: error.message };
+            console.error("IPC Error (searchLoan):", error);
+            return [];
         }
     });
 }

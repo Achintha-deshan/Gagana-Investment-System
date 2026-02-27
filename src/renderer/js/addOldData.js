@@ -1,146 +1,137 @@
-// Migration Section එකට අදාළ දත්ත තබා ගැනීමට
-let selectedMigrationLoanId = null;
+/**
+ * Gagana Investment - Old Loan Migration Renderer
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
-    const txtMigrateSearch = document.getElementById('txtMigrateSearch');
-    const btnMigrateSearch = document.getElementById('btnMigrateSearch');
-    const migrateLoansList = document.getElementById('migrateLoansList');
-    const migrationFormArea = document.getElementById('migrationFormArea');
-    const btnSubmitMigration = document.getElementById('btnSubmitMigration');
+$(document).ready(() => {
+    // ආරම්භක සැකසුම්
+    toggleTypeSpecificDetails($("#oldLoanType").val());
 
-    // 1. ණය සෙවීමේ Logic එක (Vehicle, Land, etc. සියල්ලම සෙවේ)
-    if (btnMigrateSearch) {
-        btnMigrateSearch.addEventListener('click', async () => {
-            const query = txtMigrateSearch.value.trim();
-            if (!query) return;
+    $("#oldLoanType").on('change', function() {
+        toggleTypeSpecificDetails($(this).val());
+    });
 
-            btnMigrateSearch.disabled = true;
-            btnMigrateSearch.innerHTML = '<span class="spinner-border spinner-border-sm"></span> සෙවුම් කරමින්...';
+    // --- පාරිභෝගිකයා සෙවීම ---
+    $("#btnFindCustomer").on('click', async () => {
+        await performCustomerSearch();
+    });
 
-            try {
-                // Migration Service එකේ getActiveLoansForMigration කැඳවීම
-                const res = await window.api.migration.searchLoans(query);
-                
-                if (res.success && res.loans.length > 0) {
-                    renderMigrateLoanCards(res.loans);
-                    migrationFormArea.classList.add('d-none'); 
-                } else {
-                    migrateLoansList.innerHTML = '<div class="col-12 text-center py-4 text-muted">සක්‍රීය ණය කිසිවක් හමු නොවීය.</div>';
-                    notify.toast("පාරිභෝගිකයා හෝ ණය හමු නොවීය.", "info");
-                }
-            } catch (err) {
-                console.error("Migration Search Error:", err);
-                notify.toast("සෙවීමේදී දෝෂයක් සිදු විය.", "error");
-            } finally {
-                btnMigrateSearch.disabled = false;
-                btnMigrateSearch.innerHTML = '<i class="bi bi-search"></i> සොයන්න';
-            }
-        });
-    }
+    $("#oldCustomerSearch").on('keypress', async (e) => {
+        if (e.which === 13) {
+            e.preventDefault();
+            await performCustomerSearch();
+        }
+    });
 
-    // 2. දත්ත පද්ධතියට එක් කිරීමේ (Process) Logic එක
-    if (btnSubmitMigration) {
-        btnSubmitMigration.addEventListener('click', async () => {
-            
-            // අගයන් ලබා ගැනීම
-            const pDate = document.getElementById('mLastPaidDate').value;
-            const pAmount = document.getElementById('mPaidAmount').value;
-            const iPaid = document.getElementById('mInterestPaid').value;
-            const cBalance = document.getElementById('mCurrentLoanBalance').value;
+    // --- දත්ත සුරැකීම (Submit) ---
+    $("#oldLoanEntryForm").on('submit', async (e) => {
+        e.preventDefault();
 
-            // --- වැදගත්ම කොටස: Validation ---
-            // දිනය, ගෙවූ මුදල, පොලිය සහ ඉතිරි මූලධනය අනිවාර්යයි
-            if (!pDate || pAmount === "" || iPaid === "" || cBalance === "") {
-                notify.toast("දිනය, ගෙවූ මුදල, පොලී මුදල සහ ඉතිරි මූලධනය ඇතුළත් කිරීම අනිවාර්යයි.", "warning");
-                return;
-            }
+        const customerID = $("#selectedCustomerID").val();
+        if (!customerID) {
+            return await notify.alert("කරුණාකර පළමුව ගනුදෙනුකරුවෙකු තෝරාගන්න.", "අවධානයයි", "warning");
+        }
 
-            const migrationData = {
-                LoanID: selectedMigrationLoanId,
-                PaymentDate: pDate,
-                PaidAmount: parseFloat(pAmount) || 0,
-                InterestPaid: parseFloat(iPaid) || 0,
-                MonthsPaid: parseInt(document.getElementById('mMonthsPaid').value) || 1,
-                PenaltyPaid: parseFloat(document.getElementById('mPenaltyPaid').value) || 0,
-                CapitalPaid: parseFloat(document.getElementById('mCapitalPaid').value) || 0,
-                ArrearsRemaining: parseFloat(document.getElementById('mArrearsRemaining').value) || 0,
-                CurrentLoanBalance: parseFloat(cBalance) || 0
-            };
+        const loanID = $("#oldLoanID").val().trim();
+        const remainingPrincipal = parseFloat($("#subRemainingPrincipal").val() || 0);
+        const status = (remainingPrincipal <= 0) ? 'CLOSED' : 'ACTIVE';
 
-            const confirm = await notify.confirm(
-                "මෙම පරණ දත්ත පද්ධතියට එක් කිරීමට ඔබට විශ්වාසද? මෙයින් පසු මීළඟ වාරික දිනය ස්වයංක්‍රීයව සැකසේ.",
-                "දත්ත තහවුරු කිරීම"
+        // Backend එකට යවන දත්ත පැකේජය (Payload)
+        const payload = {
+            loanID: loanID,
+            customerID: customerID,
+            loanType: $("#oldLoanType").val(),
+            status: status,
+            subLoan: {
+                subLoanNumber: 1, 
+                totalAmount: parseFloat($("#subTotalAmount").val() || 0),
+                remainingPrincipal: remainingPrincipal,
+                interestRate: parseFloat($("#subInterestRate").val() || 0),
+                disbursedDate: $("#subDisbursedDate").val(),
+                lastPaymentDate: $("#subLastPaymentDate").val(),
+                nextDueDate: $("#subNextDueDate").val() // Manual ලබාදෙන දිනය
+            },
+            typeDetails: getFormattedTypeDetails($("#oldLoanType").val())
+        };
+
+        try {
+            const confirmAction = await notify.confirm(
+                `මෙම ${payload.loanType} ණය දත්ත ඇතුළත් කිරීම ස්ථිරද?`,
+                "තහවුරු කිරීම"
             );
 
-            if (confirm) {
-                try {
-                    btnSubmitMigration.disabled = true;
-                    btnSubmitMigration.innerHTML = '<span class="spinner-border spinner-border-sm"></span> සුරකිමින්...';
+            if (!confirmAction) return;
 
-                    const result = await window.api.migration.process(migrationData);
-                    
-                    if (result.success) {
-                        notify.toast("දත්ත සාර්ථකව පද්ධතියට එක් කරන ලදී!", "success");
-                        resetMigrationUI();
-                    } else {
-                        notify.toast("දෝෂයකි: " + result.error, "error");
-                    }
-                } catch (err) {
-                    console.error("Migration Error:", err);
-                    notify.toast("සේව් කිරීමේදී දෝෂයක් සිදු විය.", "error");
-                } finally {
-                    btnSubmitMigration.disabled = false;
-                    btnSubmitMigration.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> දත්ත පද්ධතියට ඇතුළත් කරන්න';
-                }
+            const result = await window.api.migration.insertOldLoan(payload);
+
+            if (result.success) {
+                await notify.alert("පැරණි දත්ත සාර්ථකව ඇතුළත් කරන ලදී.", "සාර්ථකයි", "success");
+                resetMigrationForm();
+            } else {
+                await notify.alert("දෝෂයකි: " + result.error, "Error", "error");
             }
-        });
-    }
+        } catch (error) {
+            await notify.alert("පද්ධති දෝෂයකි: " + error.message, "Error", "error");
+        }
+    });
 });
 
-// 3. ණය ලිස්ට් එක Cards විදිහට පෙන්වීම
-function renderMigrateLoanCards(loans) {
-    const migrateLoansList = document.getElementById('migrateLoansList');
-    migrateLoansList.innerHTML = loans.map(loan => `
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-start border-4 border-warning shadow-sm hover-shadow" 
-                 style="cursor:pointer;" onclick="selectLoanForMigration('${loan.LoanID}', '${loan.CustomerName}')">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="badge bg-warning text-dark">${loan.LoanType}</span>
-                        <span class="fw-bold text-muted">#${loan.LoanID}</span>
-                    </div>
-                    <h5 class="card-title mb-1">${loan.CustomerName}</h5>
-                    <p class="text-muted small mb-0"><i class="bi bi-card-text"></i> ${loan.NIC || 'N/A'}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="text-primary fw-bold">Rs. ${parseFloat(loan.LoanAmount).toLocaleString()}</span>
-                        <button class="btn btn-sm btn-outline-warning">තෝරන්න</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// 4. කාඩ් එකක් ක්ලික් කළ විට Form එක පෙන්වීම
-function selectLoanForMigration(loanId, customerName) {
-    selectedMigrationLoanId = loanId;
-    document.getElementById('targetLoanIdDisplay').innerText = `${customerName} (${loanId})`;
-    document.getElementById('migrationFormArea').classList.remove('d-none');
+// --- සහායක Function එකක්: Customer Search ---
+async function performCustomerSearch() {
+    const query = $("#oldCustomerSearch").val().trim();
+    const feedback = $("#searchFeedback");
+    const display = $("#customerDetailsDisplay");
     
-    // Form එක පෙනෙන තැනට Scroll කරන්න
-    document.getElementById('migrationFormArea').scrollIntoView({ behavior: 'smooth' });
+    if (query.length < 1) return;
+
+    try {
+        feedback.html('<span class="text-muted small">සොයමින්...</span>');
+        const customers = await window.api.customer.search(query);
+
+        if (customers && customers.length > 0) {
+            const selected = customers[0];
+            $("#selectedCustomerID").val(selected.CustomerID);
+            $("#selectedMemberName").text(`${selected.CustomerID} - ${selected.CustomerName}`);
+            display.removeClass('d-none');
+            feedback.html('<span class="text-success small">ගනුදෙනුකරු හමු විය.</span>');
+        } else {
+            display.addClass('d-none');
+            feedback.html('<span class="text-danger small">හමු නොවීය.</span>');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-// 5. UI එක Reset කිරීම
-function resetMigrationUI() {
-    document.getElementById('migrateLoansList').innerHTML = '';
-    document.getElementById('migrationFormArea').classList.add('d-none');
-    document.getElementById('txtMigrateSearch').value = '';
-    // Form එකේ input fields reset කිරීම
-    const fields = ['mLastPaidDate', 'mMonthsPaid', 'mPaidAmount', 'mPenaltyPaid', 'mInterestPaid', 'mCapitalPaid', 'mArrearsRemaining', 'mCurrentLoanBalance'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.value = (id === 'mMonthsPaid') ? "1" : "";
-    });
-    selectedMigrationLoanId = null;
+function toggleTypeSpecificDetails(type) {
+    $(".loan-detail-row").addClass('d-none');
+    $(`#details_${type}`).removeClass('d-none');
+}
+
+function getFormattedTypeDetails(type) {
+    const details = {};
+    if (type === 'VEHICLE') {
+        details.OwnerName = $("input[name='v_owner']").val();
+        details.VehicleNumber = $("input[name='v_number']").val();
+        details.VehicleType = $("input[name='v_type']").val();
+        details.CurrentValue = $("input[name='v_value']").val() || 0;
+        details.Liyapadinchikalayuthudinaya = $("input[name='v_reg_due']").val() || null;
+    } else if (type === 'LAND') {
+        details.LandNumber = $("input[name='l_number']").val();
+        details.Location = $("input[name='l_location']").val();
+        details.Size = $("input[name='l_size']").val();
+        details.CurrentValue = $("input[name='l_value']").val() || 0;
+    } else if (type === 'PROMISSORY') {
+        details.PromissoryNumber = $("input[name='p_number']").val();
+    } else if (type === 'CHECK') {
+        details.CheckNumber = $("input[name='c_number']").val();
+        details.OwnerName = $("input[name='c_owner']").val();
+        details.BankAccountDetails = $("input[name='c_bank']").val();
+    }
+    return details;
+}
+
+function resetMigrationForm() {
+    $("#oldLoanEntryForm")[0].reset();
+    $("#selectedCustomerID").val('');
+    $("#customerDetailsDisplay").addClass('d-none');
 }

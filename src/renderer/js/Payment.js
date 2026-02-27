@@ -1,227 +1,478 @@
-let selectedLoanForPayment = null;
-async function loadPaymentHistory(loanId) {
+$(document).ready(function () {
+    let selectedSubLoanId = null;
+    let currentMasterLoanId = null;
+
+    // 1. අද දිනය default ලෙස ඇතුළත් කිරීම
+    const today = new Date().toISOString().split('T')[0];
+    $('#txtPaymentManualDate').val(today);
+
+    // --- HELPER FUNCTIONS ---
+
+    // වාරික අනුපිළිවෙලට පමණක් තේරීමට ඉඩ ලබා දීම
+$(document).on('change', '.chk-item[data-type="interest"]', function() {
+    const allInterestChecks = $('.chk-item[data-type="interest"]');
+    const currentIndex = allInterestChecks.index(this);
+
+    if (this.checked) {
+        // මේ මාසය තේරූ විට, මීට පෙර ඇති සියලුම මාස auto-check කරන්න
+        for (let i = 0; i < currentIndex; i++) {
+            $(allInterestChecks[i]).prop('checked', true);
+        }
+    } else {
+        // මේ මාසය අත්හළ විට, මීට පසු ඇති සියලුම මාස auto-uncheck කරන්න
+        for (let i = currentIndex + 1; i < allInterestChecks.length; i++) {
+            $(allInterestChecks[i]).prop('checked', false);
+        }
+    }
+    calculateTotal();
+});
+
+    function getLoanSpecificInfo(loan) {
+        let content = "";
+        const noDataText = "---";
+        switch (loan.LoanType) {
+            case 'VEHICLE':
+                content = `<div class="detail-box p-2 bg-light rounded-3 mb-2 border">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Vehicle No | වාහන අංකය</small>
+                            <span class="fw-bold text-dark"><i class="bi bi-truck me-2 text-primary"></i>${loan.VehicleNumber || noDataText}</span>
+                          </div>`;
+                break;
+            case 'LAND':
+                content = `<div class="detail-box p-2 bg-light rounded-3 mb-2 border">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Location | ස්ථානය</small>
+                            <span class="fw-bold text-dark"><i class="bi bi-geo-alt me-2 text-success"></i>${loan.LandNumber || loan.Location || noDataText}</span>
+                          </div>`;
+                break;
+            case 'PROMISSORY':
+                content = `<div class="detail-box p-2 bg-light rounded-3 mb-2 border">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Note No | පොරොන්දු පත්‍ර අංකය</small>
+                            <span class="fw-bold text-dark"><i class="bi bi-file-earmark-text me-2 text-warning"></i>${loan.PRMNo || noDataText}</span>
+                          </div>`;
+                break;
+            case 'CHECK':
+                content = `<div class="detail-box p-2 bg-light rounded-3 mb-2 border">
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Cheque No | චෙක්පත් අංකය</small>
+                            <span class="fw-bold text-dark"><i class="bi bi-card-checklist me-2 text-info"></i>${loan.CheckNumber || noDataText}</span>
+                          </div>`;
+                break;
+            default:
+                content = `<div class="detail-box p-2 bg-light rounded-3 mb-2"><span class="text-muted">No details available</span></div>`;
+        }
+        return content;
+    }
+
+    function renderMasterLoanCard(loan) {
+        let badgeClass = "bg-primary-subtle text-primary";
+        let borderSideColor = "#6366f1";
+        if(loan.LoanType === 'VEHICLE') { borderSideColor = "#0d6efd"; }
+        if(loan.LoanType === 'LAND') { badgeClass = 'bg-success-subtle text-success'; borderSideColor = "#198754"; }
+        if(loan.LoanType === 'PROMISSORY') { badgeClass = 'bg-warning-subtle text-warning'; borderSideColor = "#ffc107"; }
+        if(loan.LoanType === 'CHECK') { badgeClass = 'bg-info-subtle text-info'; borderSideColor = "#0dcaf0"; }
+
+        return `<div class="col-md-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm master-loan-select-card animate__animated animate__fadeIn" 
+                     style="cursor: pointer; border-left: 5px solid ${borderSideColor} !important; border-radius: 12px;"
+                     data-id="${loan.LoanID}">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted d-block" style="font-size: 10px;">LOAN ID | ණය අංකය</small>
+                                <span class="fw-bold text-dark" style="font-size: 1.1rem;">${loan.LoanID}</span>
+                            </div>
+                            <span class="badge ${badgeClass} px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">${loan.LoanType}</span>
+                        </div>
+                        ${getLoanSpecificInfo(loan)}
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <div>
+                                <small class="text-muted d-block" style="font-size: 10px;">PRM NO</small>
+                                <span class="fw-bold small">${loan.PRMNo || '---'}</span>
+                            </div>
+                            <div class="text-primary fw-bold" style="font-size: 0.8rem;">Select <i class="bi bi-arrow-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // 2. SEARCH LOANS
+    $('#btnSearchPaymentByLoanId').on('click', async function () {
+        const searchText = $('#txtSearchPaymentLoanId').val().trim();
+        if (!searchText) { notify.toast('Please enter ID/Name/NIC.', 'warning'); return; }
+
+        try {
+            const btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+            const results = await window.api.payment.searchSettlement(searchText);
+            btn.prop('disabled', false).html('<i class="bi bi-search"></i>');
+
+            if (results && results.length > 0) {
+                resetUI();
+                $('#noLoansMessage').addClass('d-none');
+                const customer = results[0];
+                $('#paymentCustomerName').text(customer.CustomerName);
+                $('#paymentCustomerNic').text(customer.NIC);
+                $('#paymentCustomerPhone').text(customer.CustomerPhone || '---');
+                $('#customerPaymentInfoSection').removeClass('d-none');
+                const masterContainer = $('#masterLoansContainer').empty();
+                $('#masterLoansListArea').removeClass('d-none');
+                const seenLoans = new Set();
+                results.forEach(loan => {
+                    if (!seenLoans.has(loan.LoanID)) {
+                        seenLoans.add(loan.LoanID);
+                        masterContainer.append(renderMasterLoanCard(loan));
+                    }
+                });
+            } else {
+                notify.alert('No active loans found.', 'Search Failed', 'error');
+                resetUI();
+            }
+        } catch (error) {
+            $('#btnSearchPaymentByLoanId').prop('disabled', false).html('<i class="bi bi-search"></i>');
+            notify.alert('Error fetching data.', 'Error', 'error');
+        }
+    });
+
+    // 3. SELECT MASTER LOAN
+    $(document).on('click', '.master-loan-select-card', async function () {
+        $('.master-loan-select-card').removeClass('shadow-lg border-primary').css('background', 'white');
+        $(this).addClass('shadow-lg').css('background', '#f0f4ff');
+        currentMasterLoanId = $(this).data('id');
+        $('#paymentMasterLoanId').text(currentMasterLoanId);
+        await loadSubLoans(currentMasterLoanId);
+        $('#subLoansListSection').removeClass('d-none');
+        $('#paymentProcessingArea, #paymentHistorySection').addClass('d-none');
+    });
+
+    // 4. LOAD SUB LOANS
+    async function loadSubLoans(masterLoanId) {
+        const container = $('#activeSubLoansContainer').empty();
+        try {
+            const response = await window.api.payment.getLoanWithSubLoans(masterLoanId);
+            if (response && response.subLoans) {
+                response.subLoans.forEach(sub => {
+                    const arrearsVal = parseFloat(sub.CurrentArrears) || 0;
+                    const isClosed = sub.DisbursementStatus === 'CLOSED';
+                    const card = `<div class="col-md-6 mb-2">
+                            <div class="list-group-item ${isClosed ? '' : 'list-group-item-action sub-loan-card'} p-3 border rounded-4 shadow-sm" 
+                                 style="cursor: ${isClosed ? 'default' : 'pointer'}; border-right: 5px solid ${isClosed ? '#6c757d' : '#3b82f6'} !important; opacity: ${isClosed ? '0.7' : '1'};" 
+                                 data-id="${sub.DisbursementID}" data-arrears="${arrearsVal}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold ${isClosed ? 'text-muted' : 'text-primary'}">SUB LOAN: ${sub.SubLoanNumber}</span>
+                                    <span class="badge ${isClosed ? 'bg-secondary' : 'bg-success-subtle text-success'} rounded-pill">${sub.DisbursementStatus}</span>
+                                </div>
+                                <div class="row mt-3 g-2">
+                                    <div class="col-6">
+                                        <div class="small text-muted" style="font-size: 10px;">PRINCIPAL</div>
+                                        <div class="fw-bold">Rs. ${parseFloat(sub.RemainingPrincipal).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <div class="small text-muted" style="font-size: 10px;">ARREARS</div>
+                                        <div class="fw-bold ${arrearsVal > 0 ? 'text-danger' : 'text-success'}">Rs. ${arrearsVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.append(card);
+                });
+            }
+        } catch (error) { notify.toast('Error loading sub loans.', 'error'); }
+    }
+
+    // 5. SELECT SUB LOAN
+    $(document).on('click', '.sub-loan-card', function () {
+        $('.sub-loan-card').removeClass('border-primary bg-light shadow active');
+        $(this).addClass('border-primary bg-light shadow');
+        selectedSubLoanId = $(this).data('id');
+        if(!selectedSubLoanId) return;
+
+        // Ensure arrearsVal is captured correctly from data attribute
+        const currentArrears = parseFloat($(this).data('arrears')) || 0;
+        fetchBreakdown(currentArrears);
+        
+        loadPaymentHistory(selectedSubLoanId);
+        $('#paymentProcessingArea, #paymentHistorySection').removeClass('d-none');
+        $('html, body').animate({ scrollTop: $("#paymentProcessingArea").offset().top - 100 }, 500);
+    });
+
+    // 6. FETCH BREAKDOWN
+    async function fetchBreakdown(arrearsVal) {
+        if (!selectedSubLoanId) return;
+        const customDate = $('#txtPaymentManualDate').val();
+        $('#paymentChecklistBody').html('<tr><td colspan="3" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Calculating...</td></tr>');
+        
+        try {
+            const data = await window.api.payment.getSubLoanBreakdown(selectedSubLoanId, customDate);
+            if (data) {
+                // සතයක් හෝ අඩු නොවීමට parseFloat භාවිතා කර arrearsVal එකතු කිරීම
+                data.arrearsAmount = parseFloat(arrearsVal) || 0;
+                renderChecklist(data);
+            }
+        } catch (error) { 
+            console.error("Full Error Details:", error); // මෙය එකතු කරන්න
+            notify.toast('Calculation error.', 'error'); 
+            $('#paymentChecklistBody').empty();
+        }
+    }
+
+ // 7. RENDER CHECKLIST (Corrected Version)
+function renderChecklist(data) {
+    const tbody = $('#paymentChecklistBody').empty();
+    let rows = "";
+let formattedDate = '---';
+    if (data.dbNextDueDate) {
+        try {
+            const dateVal = data.dbNextDueDate;
+            // String නම් කෙලින්ම split, Date object නම් toISOString() කරලා split
+            const rawStr = typeof dateVal === 'string' ? dateVal : dateVal.toISOString();
+            formattedDate = rawStr.split('T')[0]; // "2024-01-31" විතරක් ගනී
+        } catch (e) {
+            formattedDate = 'Invalid Date';
+        }
+    }
+
+    // Next Due Date පේළිය
+    rows += `<tr class="table-dark">
+                <td class="text-center"><i class="bi bi-calendar-event"></i></td>
+                <td><span class="fw-bold text-white">Next Due Date | නියමිත දිනය</span></td>
+                <td class="text-end fw-bold text-white">${formattedDate}</td>
+              </tr>`;
+
+    // 2. Past Arrears පේළිය
+    if (data.arrearsAmount > 0) {
+        rows += `<tr class="table-danger border-start border-danger border-5">
+            <td class="text-center"><input type="checkbox" class="form-check-input chk-item" data-type="arrears" data-amount="${parseFloat(data.arrearsAmount).toFixed(2)}" checked></td>
+            <td><span class="fw-bold">Past Arrears | පසුගිය හිඟය</span></td>
+            <td class="text-end fw-bold text-danger">Rs. ${data.arrearsAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+        </tr>`;
+    }
+
+    // 3. Fixed Penalty පේළිය
+    if (data.pastMonthsPenalty > 0) {
+        rows += `<tr class="table-warning border-start border-warning border-5">
+            <td class="text-center"><input type="checkbox" class="form-check-input chk-item" data-type="penalty" data-amount="${parseFloat(data.pastMonthsPenalty).toFixed(2)}" checked></td>
+            <td><span class="fw-bold">Fixed Penalty | ස්ථාවර දඩය</span> <small class="text-muted">(${data.fullMonths} m)</small></td>
+            <td class="text-end fw-bold text-warning">Rs. ${data.pastMonthsPenalty.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+        </tr>`;
+    }
+
+    // 4. Late Fee පේළිය
+    if (data.currentMonthLateFee > 0) {
+        rows += `<tr class="table-warning border-start border-warning border-5">
+            <td class="text-center"><input type="checkbox" class="form-check-input chk-item" data-type="latefee" data-amount="${parseFloat(data.currentMonthLateFee).toFixed(2)}" checked></td>
+            <td><span class="fw-bold">Late Fee | ප්‍රමාද ගාස්තුව</span> <small class="text-muted">(${data.lateDays} days)</small></td>
+            <td class="text-end fw-bold text-warning">Rs. ${data.currentMonthLateFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+        </tr>`;
+    }
+
+    // 5. Interest Installments (වාරික)
+    if (data.installments && Array.isArray(data.installments)) {
+        data.installments.forEach(item => {
+            rows += `<tr class="table-info border-start border-info border-5">
+                <td class="text-center"><input type="checkbox" class="form-check-input chk-item" data-type="interest" data-amount="${parseFloat(item.amount).toFixed(2)}" checked></td>
+                <td><span class="fw-bold">Interest Payment</span> <small class="text-muted">(${item.dateName})</small></td>
+                <td class="text-end fw-bold text-primary">Rs. ${parseFloat(item.amount).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+            </tr>`;
+        });
+    }
+
+    tbody.append(rows);
+    calculateTotal();
+}
+
+   // DATE CHANGE AUTO UPDATE
+$('#txtPaymentManualDate').on('change', function() {
+    if(selectedSubLoanId) {
+        // sub-loan-card එකේ data-arrears ලෙස ගබඩා කර ඇති අගය ලබා ගැනීම
+        const currentArrears = parseFloat($(`.sub-loan-card[data-id="${selectedSubLoanId}"]`).data('arrears')) || 0;
+        
+        // අලුත් දිනය සමඟ Breakdown එක නැවත Fetch කිරීම
+        fetchBreakdown(currentArrears);
+    }
+});
+
+    // 8. TOTAL CALCULATION (Fixed for Extra Payments)
+    $(document).on('change', '.chk-item', calculateTotal);
+    
+    $('#txtPaymentAmount').on('input', function() {
+        const val = parseFloat($(this).val()) || 0;
+        $('#lblSelectedTotal').text(`Rs. ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    });
+
+   function calculateTotal() {
+    let totalRequired = 0;
+    $('.chk-item:checked').each(function () { 
+        totalRequired += (parseFloat($(this).data('amount')) || 0); 
+    });
+    
+    totalRequired = Number(Math.round(totalRequired+'e2')+'e-2');
+    $('#lblSelectedTotal').text(`Rs. ${totalRequired.toLocaleString(undefined, { minimumFractionDigits: 2 })}`);
+    
+    // සැමවිටම තෝරාගත් වාරිකවල මුළු එකතුව input box එකට දමන්න
+    // එවිට user ට අමතර මුදලක් (Extra Principal) එකතු කිරීමට අවශ්‍ය නම් පමණක් එය වෙනස් කළ හැක
+    $('#txtPaymentAmount').val(totalRequired.toFixed(2));
+}
+  // 9. PAYMENT HISTORY LOAD
+async function loadPaymentHistory(subLoanId) {
+    const historyTableBody = $('#paymentHistoryTableBody');
+    historyTableBody.html('<tr><td colspan="9" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>');
+    
     try {
-        const history = await window.api.payment.getHistory(loanId);
-        const tbody = $('#paymentHistoryTableBody');
-        tbody.empty();
+        // preload.js හි ඇති නිවැරදි නම: getPaymentHistory
+        const history = await window.api.payment.getPaymentHistory(subLoanId);
+        historyTableBody.empty();
 
         if (history && history.length > 0) {
-            $('#paymentHistorySection').removeClass('d-none');
-            history.forEach(pay => {
-                const voidClass = pay.IsVoided ? 'table-secondary opacity-50' : '';
-                
-                // දත්ත නිවැරදිව Parse කරගැනීම (ඔයාගේ Schema එකේ නම් වලට අනුව)
-                const paidAmt = parseFloat(pay.PaidAmount || 0);
-                const arrearsPaid = parseFloat(pay.ArrearsAmount || 0); // Schema එකේ තියෙන නම
-                const penaltyPaid = parseFloat(pay.PenaltyPaid || 0);
-                const interestPaid = parseFloat(pay.InterestPaid || 0);
-                const capitalPaid = parseFloat(pay.CapitalPaid || 0);
-
-                tbody.append(`
-                    <tr class="${voidClass}">
-                        <td>#${pay.PaymentID}</td>
-                        <td>${formatCustomDateTime(pay.PaymentDate)}</td>
-                        <td class="fw-bold text-primary">රු. ${paidAmt.toLocaleString()}</td>
-                        <td class="text-warning fw-bold">රු. ${arrearsPaid.toLocaleString()}</td>
-                        <td><small>දඩ: ${penaltyPaid} | පොලී: ${interestPaid}</small></td>
-                        <td class="text-success fw-bold">රු. ${capitalPaid.toLocaleString()}</td>
-                        <td class="text-center">
-                            ${!pay.IsVoided ? `
-                                <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="voidPayment(${pay.PaymentID})">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Void
+            history.forEach(row => {
+                const isVoided = row.IsVoided === 1;
+                const tr = `<tr class="${isVoided ? 'table-danger opacity-75' : ''}">
+                    <td>${new Date(row.PaymentDate).toLocaleDateString()}</td>
+                    <td class="fw-bold text-success">Rs. ${parseFloat(row.TotalPaid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td><span class="badge bg-info text-dark">${row.MonthsCovered || 0}</span></td>
+                    <td>${parseFloat(row.InterestPaid || 0).toLocaleString()}</td>
+                    <td>${parseFloat((row.PenaltyPaid || 0) + (row.LateFeePaid || 0)).toLocaleString()}</td>
+                    <td class="fw-bold text-primary">${parseFloat(row.PrincipalPaid || 0).toLocaleString()}</td>
+                    <td class="text-danger">${parseFloat(row.BalanceArrears || 0).toLocaleString()}</td>
+                    <td class="fw-bold">${parseFloat(row.BalancePrincipal || 0).toLocaleString()}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.printReceipt('${row.PaymentID}')">
+                                <i class="bi bi-printer"></i>
+                            </button>
+                            ${!isVoided ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="voidPayment('${row.PaymentID}', '${subLoanId}')">
+                                    <i class="bi bi-trash"></i>
                                 </button>
-                            ` : '<span class="badge bg-secondary">අවලංගුයි</span>'}
-                        </td>
-                    </tr>
-                `);
+                            ` : '<span class="badge bg-danger">VOIDED</span>'}
+                        </div>
+                    </td>
+                </tr>`;
+                historyTableBody.append(tr);
             });
         } else {
-            $('#paymentHistorySection').addClass('d-none');
+            historyTableBody.html('<tr><td colspan="9" class="text-center py-4 text-muted">No history found.</td></tr>');
         }
-    } catch (err) {
-        console.error("History Loading Error:", err);
+    } catch (error) {
+        historyTableBody.html('<tr><td colspan="9" class="text-center text-danger">Error loading history.</td></tr>');
     }
 }
 
 
-async function voidPayment(paymentId) {
-    const confirmVoid = await notify.confirm("මෙම ගෙවීම අවලංගු කිරීමට ස්ථිරද? ණය ශේෂය සහ දිනයන් නැවත පරණ තත්වයට පත්වනු ඇත.");
-    if (!confirmVoid) return;
+
+$('#btnProcessPayment').on('click', async function () {
+    const actualPaid = parseFloat($('#txtPaymentAmount').val()); 
+    if (isNaN(actualPaid) || actualPaid <= 0) { 
+        notify.toast('කරුණාකර වලංගු මුදලක් ඇතුළත් කරන්න.', 'warning'); 
+        return; 
+    }
+
+    const confirmed = await notify.confirm(
+        `රු. ${actualPaid.toLocaleString(undefined, {minimumFractionDigits: 2})} ක මුදලක් ගෙවීමට ඔබට අවශ්‍යද?`, 
+        'ගෙවීම තහවුරු කරන්න'
+    );
+    if (!confirmed) return;
+
+    try {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>මතක තබා ගනිමින්...');
+
+        const paymentData = {
+            DisbursementID: selectedSubLoanId,
+            LoanID: currentMasterLoanId,
+            TotalPaid: actualPaid,
+            InterestRequired: getCheckedAmount('interest'),
+            ArrearsRequired: getCheckedAmount('arrears'),
+            PenaltyRequired: getCheckedAmount('penalty'),
+            LateFeeRequired: getCheckedAmount('latefee'),
+            MonthsCovered: $(`.chk-item[data-type="interest"]:checked`).length,
+            PaymentDate: $('#txtPaymentManualDate').val(),
+            CollectedBy: localStorage.getItem('userId') || "U001"
+        };
+
+        const result = await window.api.payment.process(paymentData);
+        
+        if (result.success) {
+            notify.toast('ගෙවීම සාර්ථකයි! ✅', 'success');
+            btn.prop('disabled', false).html('Confirm Payment');
+            
+            // ✅ UI එක පමණක් refresh — page reload නෑ
+            const refreshSubLoanId = selectedSubLoanId;
+            
+            // Sub loans නැවත load (updated arrears සමඟ)
+            await loadSubLoans(currentMasterLoanId);
+            
+            // ටිකක් wait කරලා same card auto-select
+            setTimeout(async () => {
+                const card = $(`.sub-loan-card[data-id="${refreshSubLoanId}"]`);
+                if (card.length) {
+                    $('.sub-loan-card').removeClass('border-primary bg-light shadow');
+                    card.addClass('border-primary bg-light shadow');
+                    selectedSubLoanId = refreshSubLoanId;
+                    const newArrears = parseFloat(card.data('arrears')) || 0;
+                    await fetchBreakdown(newArrears);
+                    await loadPaymentHistory(refreshSubLoanId);
+                }
+            }, 300);
+
+        } else {
+            btn.prop('disabled', false).html('Confirm Payment');
+            notify.alert('දෝෂයකි: ' + result.error, 'Error', 'error');
+        }
+    } catch (err) {
+        $(this).prop('disabled', false).html('Confirm Payment');
+        notify.toast('පද්ධති දෝෂයකි.', 'error');
+    }
+});
+    function getCheckedAmount(type) {
+        let amt = 0;
+        $(`.chk-item[data-type="${type}"]:checked`).each(function () { 
+            amt += parseFloat($(this).data('amount')); 
+        });
+        return Number(Math.round(amt+'e2')+'e-2');
+    }
+
+    function resetUI() {
+        $('#customerPaymentInfoSection, #masterLoansListArea, #subLoansListSection, #paymentProcessingArea, #paymentHistorySection').addClass('d-none');
+        $('#noLoansMessage').removeClass('d-none');
+        selectedSubLoanId = null;
+        currentMasterLoanId = null;
+        $('#txtPaymentAmount').val('');
+    }
+
+    $('#btnClearPayment').on('click', resetUI);
+});
+
+window.printReceipt = function(paymentId) {
+    notify.toast('Printing... ID: ' + paymentId, 'info');
+};
+
+// 10. VOID PAYMENT (Updated Version)
+async function voidPayment(paymentId, subLoanId) {
+    const confirmed = await notify.confirm("මෙම ගෙවීම අවලංගු කිරීමට ඔබට සහතිකද?", "Confirm Void");
+    if (!confirmed) return;
 
     try {
         const result = await window.api.payment.voidPayment(paymentId);
         if (result.success) {
-            notify.toast("ගෙවීම සාර්ථකව අවලංගු කරන ලදී.", "success");
-            const currentCustId = $('#paymentCustomerId').text();
-            if (currentCustId) {
-                loadCustomerActiveLoans(currentCustId);
-                if (selectedLoanForPayment) loadPaymentHistory(selectedLoanForPayment.LoanID);
+            notify.toast('සාර්ථකව අවලංගු කරන ලදී', 'success');
+            
+            // --- අලුතින් එක් කළ කොටස: Arrears Update කිරීම ---
+            const response = await window.api.payment.getLoanWithSubLoans(currentMasterLoanId);
+            const updatedSubLoan = response.subLoans.find(s => s.DisbursementID == subLoanId);
+
+            if (updatedSubLoan) {
+                const newArrears = parseFloat(updatedSubLoan.CurrentArrears) || 0;
+                // Card එකේ data attribute එක update කරනවා
+                $(`.sub-loan-card[data-id="${subLoanId}"]`).data('arrears', newArrears);
+                // අලුත් Arrears අගය සමඟ Breakdown එක update කරනවා
+                fetchBreakdown(newArrears);
             }
-            $('#paymentDetailsSection').addClass('d-none'); 
+            // --------------------------------------------
+
+            loadPaymentHistory(subLoanId); // වගුව Refresh කිරීම
         } else {
-            notify.toast("දෝෂයකි: " + result.error, "error");
+            notify.alert('අවලංගු කළ නොහැක: ' + (result.error || 'මෙය අවසාන ගෙවීම නොවනවා විය හැක.'), 'Error', 'error');
         }
     } catch (err) {
-        notify.toast("අවලංගු කිරීම අසාර්ථකයි.", "error");
+        notify.toast('System error.', 'error');
     }
 }
-
-
-async function loadCustomerActiveLoans(customerId) {
-    try {
-        const loans = await window.api.payment.getActiveLoans(customerId);
-        const container = $('#activeLoansList');
-        container.empty();
-        if (!loans || loans.length === 0) {
-            $('#noLoansMessage').removeClass('d-none');
-            $('#loansListSection, #paymentDetailsSection').addClass('d-none');
-            return;
-        }
-        $('#noLoansMessage').addClass('d-none');
-        $('#loansListSection').removeClass('d-none');
-        loans.forEach(loan => {
-            const loanCard = `<div class="card mb-2 loan-item-card border-2" style="cursor:pointer;" id="loan-${loan.LoanID}">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div><span class="badge bg-primary mb-1">${loan.LoanID}</span><h6 class="mb-0 fw-bold">${loan.LoanType} LOAN</h6><small class="text-muted">අංකය: ${loan.VehicleNumber || 'General'}</small></div>
-                        <div class="text-end"><div class="fw-bold text-success">ණය: රු. ${parseFloat(loan.LoanAmount).toLocaleString()}</div><small class="text-danger fw-bold">ගෙවිය යුතු: ${formatCustomDateTime(loan.NextDueDate)}</small></div>
-                    </div>
-                </div>
-            </div>`;
-            const $el = $(loanCard).data('loan', loan);
-            container.append($el);
-        });
-    } catch (err) { console.error(err); }
-}
-
-function calculateAndDisplayPayment(loan) {
-    if (!loan) return;
-    const manualDateVal = $('#txtPaymentManualDate').val();
-    const calculationDate = manualDateVal ? new Date(manualDateVal) : new Date();
-    calculationDate.setHours(0, 0, 0, 0);
-
-    let currentDueDate = new Date(loan.NextDueDate); 
-    currentDueDate.setHours(0, 0, 0, 0);
-
-    const loanAmount = parseFloat(loan.LoanAmount) || 0;
-    const currentArrears = parseFloat(loan.ArrearsAmount) || 0;
-    const interestRate = parseFloat(loan.InterestRate) || 0;
-    const penaltyRate = parseFloat(loan.PenaltyRateOnInterest) || 0;
-    
-    const monthlyInterest = loanAmount * (interestRate / 100);
-    const dailyPenaltyRate = (monthlyInterest * (penaltyRate / 100)) / 30;
-
-    let totalInterest = 0, totalPenalty = 0, monthsPaidCount = 0, totalDaysOverdue = 0;
-    let tempDate = new Date(currentDueDate);
-
-    // අද දිනට අදාළ පොලිය සහ දඩය ගණනය කිරීම
-    if (calculationDate >= currentDueDate) {
-        // සම්පූර්ණ දින ප්‍රමාදය ගණනය කිරීම
-        totalDaysOverdue = Math.floor((calculationDate - currentDueDate) / (1000 * 60 * 60 * 24));
-
-        while (tempDate <= calculationDate) {
-            monthsPaidCount++;
-            totalInterest += monthlyInterest;
-            
-            const diffInDays = Math.floor((calculationDate - tempDate) / (1000 * 60 * 60 * 24));
-            if (diffInDays > 2) {
-                totalPenalty += dailyPenaltyRate * diffInDays;
-            }
-            tempDate.setMonth(tempDate.getMonth() + 1);
-        }
-    }
-
-    // UI එකට දත්ත පෙන්වීම (සහ වරහන් ඇතුළේ විස්තර)
-    $('#summaryArrears').text(`රු. ${currentArrears.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
-    
-    // දඩය පෙන්වන තැනට ප්‍රමාද දින ගණන එකතු කළා
-    $('#summaryPenalty').text(`රු. ${totalPenalty.toLocaleString(undefined, {minimumFractionDigits: 2})} (${totalDaysOverdue} Days)`);
-    
-    // පොලිය පෙන්වන තැනට මාස ගණන එකතු කළා
-    $('#summaryInterest').text(`රු. ${totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2})} (${monthsPaidCount} Months)`);
-    
-    const totalPayable = currentArrears + totalInterest + totalPenalty;
-    $('#summaryTotal').text(`රු. ${totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
-    $('#txtPaymentAmount').val(totalPayable.toFixed(2));
-
-    // Backend එකට යැවීමට object එක update කිරීම
-    selectedLoanForPayment.totalInterestDue = totalInterest;
-    selectedLoanForPayment.totalPenaltyDue = totalPenalty;
-    selectedLoanForPayment.calculatedMonths = monthsPaidCount;
-}
-
-function resetPaymentUI() {
-    $('#customerPaymentInfoSection, #loansListSection, #paymentDetailsSection, #paymentHistorySection').addClass('d-none');
-    $('#noLoansMessage').addClass('d-none');
-}
-
-function formatCustomDateTime(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
-$(document).ready(function () {
-    $('#txtPaymentManualDate').val(new Date().toISOString().slice(0, 10));
-
-    $('#txtPaymentManualDate').on('change', function() {
-        if (selectedLoanForPayment) calculateAndDisplayPayment(selectedLoanForPayment);
-    });
-
-    $('#btnSearchPaymentCustomer').click(async function () {
-        const query = $('#txtSearchPaymentCustomer').val().trim();
-        if (!query) return notify.toast("කරුණාකර පාරිභෝගික ID එක ඇතුළත් කරන්න.", "warning");
-        try {
-            const results = await window.api.customer.search(query);
-            if (results && results.length > 0) {
-                const customer = results[0];
-                $('#paymentCustomerName').text(customer.CustomerName);
-                $('#paymentCustomerId').text(customer.CustomerID);
-                $('#paymentCustomerNic').text(customer.NIC || '---');
-                $('#paymentCustomerPhone').text(customer.CustomerPhone || '---');
-                $('#customerPaymentInfoSection').removeClass('d-none');
-                loadCustomerActiveLoans(customer.CustomerID);
-            } else {
-                notify.toast("පාරිභෝගිකයා සොයාගත නොහැක.", "error");
-                resetPaymentUI();
-            }
-        } catch (error) { console.error(error); }
-    });
-
-    $(document).on('click', '.loan-item-card', function () {
-        $('.loan-item-card').removeClass('active-loan-selection border-primary shadow-sm bg-light');
-        $(this).addClass('active-loan-selection border-primary shadow-sm bg-light');
-        selectedLoanForPayment = $(this).data('loan');
-        $('#paymentDetailsSection').removeClass('d-none');
-        calculateAndDisplayPayment(selectedLoanForPayment);
-        loadPaymentHistory(selectedLoanForPayment.LoanID);
-    });
-
-    $('#btnProcessPayment').click(async function () {
-        if (!selectedLoanForPayment) return notify.toast("කරුණාකර ණයක් තෝරා සිටින්න.", "warning");
-        const paidAmount = parseFloat($('#txtPaymentAmount').val());
-        const selectedDate = $('#txtPaymentManualDate').val();
-        if (isNaN(paidAmount) || paidAmount <= 0) return notify.toast("වලංගු මුදලක් ඇතුළත් කරන්න.", "warning");
-
-        const confirmPay = await notify.confirm(`රු. ${paidAmount.toLocaleString()} ක ගෙවීම ස්ථිරද?`);
-        if (!confirmPay) return;
-
-        try {
-            const result = await window.api.payment.process({
-                LoanID: selectedLoanForPayment.LoanID,
-                PaidAmount: paidAmount,
-                InterestAmount: selectedLoanForPayment.totalInterestDue || 0,
-                PenaltyAmount: selectedLoanForPayment.totalPenaltyDue || 0,
-                PaymentDate: selectedDate,
-                MonthsPaid: selectedLoanForPayment.calculatedMonths || 1
-            });
-            if (result.success) {
-                notify.toast(`ගෙවීම සාර්ථකයි!`, "success");
-                const currentCustId = $('#paymentCustomerId').text();
-                selectedLoanForPayment = null;
-                $('#paymentDetailsSection').addClass('d-none');
-                if (currentCustId) loadCustomerActiveLoans(currentCustId);
-            } else { notify.toast("දෝෂයකි: " + result.error, "error"); }
-        } catch (error) { console.error(error); }
-    });
-});

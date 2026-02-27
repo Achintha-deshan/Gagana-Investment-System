@@ -1,98 +1,117 @@
 import db from '../config/db.js';
 
-class MigrationService {
+class LoanService {
     /**
-     * පාරිභෝගිකයාගේ සක්‍රීය ණය පරීක්ෂා කිරීම
-     * මෙහිදී Vehicle, Land, Check, Promissory යන ඕනෑම වර්ගයකට අදාළ ණය සෙවිය හැක
+     * පරණ දත්ත පද්ධතියට ඇතුළත් කිරීම (Migration)
+     * UI එකෙන් එවන සියලුම දත්ත එලෙසම සුරැකීමට සකසා ඇත.
      */
-    async getActiveLoansForMigration(query) {
+    async insertOldLoan(data) {
+        const connection = await db.getConnection();
         try {
-            const sql = `
-                SELECT l.*, c.CustomerName, c.NIC 
-                FROM loans l
-                JOIN customers c ON l.CustomerID = c.CustomerID
-                WHERE (l.CustomerID LIKE ? OR c.NIC LIKE ? OR c.CustomerName LIKE ?) 
-                AND l.Status = 'ACTIVE'
-            `;
-            const searchTerm = `%${query}%`;
-            const [rows] = await db.execute(sql, [searchTerm, searchTerm, searchTerm]);
-            return rows;
-        } catch (error) {
-            console.error("Migration Search Error:", error);
-            throw error;
-        }
-    }
+            await connection.beginTransaction();
 
-    /**
-     * පරණ දත්ත පද්ධතියට එක් කිරීමේ ප්‍රධාන Logic එක
-     */
-    async processMigration(data) {
-        const {
-            LoanID,
-            PaidAmount,
-            PenaltyPaid,
-            InterestPaid,
-            CapitalPaid,
-            ArrearsRemaining, // පරණ පොතේ දැනට පවතින පොලී/දඩ හිඟය
-            MonthsPaid,
-            PaymentDate, // පරණ පොතේ අන්තිමට ගෙවූ දිනය
-            CurrentLoanBalance // මෙම ගෙවීමෙන් පසු ඉතිරි මුළු ණය මුදල (Remaining Capital)
-        } = data;
+            const { 
+                loanID, 
+                customerID, 
+                loanType, 
+                status, 
+                subLoan, 
+                typeDetails 
+            } = data;
 
-        const conn = await db.getConnection();
+            // 1. Loans Table එකට මූලික දත්ත ඇතුළත් කිරීම
+            await connection.execute(
+                `INSERT INTO loans (LoanID, CustomerID, LoanType, Status) VALUES (?, ?, ?, ?)`,
+                [loanID, customerID, loanType, status]
+            );
 
-        try {
-            await conn.beginTransaction();
+            // 2. Loan Type එක අනුව අදාළ Details Table එකට දත්ත ඇතුළත් කිරීම
+            if (loanType === 'VEHICLE') {
+                await connection.execute(
+                    `INSERT INTO vehicle_details 
+                    (LoanID, OwnerName, VehicleNumber, VehicleType, CurrentValue, Liyapadinchikalayuthudinaya) 
+                    VALUES (?, ?, ?, ?, ?, ?)`,
+                    [
+                        loanID, 
+                        typeDetails.OwnerName, 
+                        typeDetails.VehicleNumber, 
+                        typeDetails.VehicleType, 
+                        typeDetails.CurrentValue || 0,
+                        typeDetails.Liyapadinchikalayuthudinaya || null
+                    ]
+                );
+            } else if (loanType === 'LAND') {
+                await connection.execute(
+                    `INSERT INTO land_details (LoanID, LandNumber, Location, Size, CurrentValue) 
+                    VALUES (?, ?, ?, ?, ?)`,
+                    [
+                        loanID, 
+                        typeDetails.LandNumber, 
+                        typeDetails.Location, 
+                        typeDetails.Size, 
+                        typeDetails.CurrentValue || 0
+                    ]
+                );
+            } else if (loanType === 'PROMISSORY') {
+                await connection.execute(
+                    `INSERT INTO promissory_details (LoanID, PromissoryNumber) VALUES (?, ?)`,
+                    [loanID, typeDetails.PromissoryNumber]
+                );
+            } else if (loanType === 'CHECK') {
+                await connection.execute(
+                    `INSERT INTO check_details (LoanID, CheckNumber, OwnerName, BankAccountDetails) 
+                    VALUES (?, ?, ?, ?)`,
+                    [
+                        loanID, 
+                        typeDetails.CheckNumber, 
+                        typeDetails.OwnerName, 
+                        typeDetails.BankAccountDetails
+                    ]
+                );
+            }
 
-            // 1. Payment History එකට පරණ ගෙවීමේ රෙකෝඩ් එක ඇතුළත් කිරීම
-            // උඹේ schema එකේ ArrearsAmount කොලම් එක මේකට හරියටම ගැලපෙනවා
-            const historySql = `
-                INSERT INTO payment_history 
-                (LoanID, PaidAmount, PenaltyPaid, InterestPaid, CapitalPaid, ArrearsAmount, MonthsPaid, PaymentDate, IsVoided) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
-            `;
-            await conn.execute(historySql, [
-                LoanID, 
-                PaidAmount || 0, 
-                PenaltyPaid || 0, 
-                InterestPaid || 0, 
-                CapitalPaid || 0, 
-                ArrearsRemaining || 0, 
-                MonthsPaid || 1, 
-                PaymentDate
-            ]);
-
-            // 2. Loans Table එක Update කිරීම
-            // වැදගත්: Schema එකේ ArrearsAmount තිබිය යුතුය. 
-            // LoanAmount එකට අපි දාන්නේ දැනට ඉතිරි මූලධනයයි.
-            const updateLoanSql = `
-                UPDATE loans 
-                SET LoanAmount = ?, 
-                    ArrearsAmount = ?, 
-                    NextDueDate = DATE_ADD(?, INTERVAL 1 MONTH),
-                    LastInterestDate = ?
-                WHERE LoanID = ?
-            `;
+            // 3. Sub-Loan (loan_disbursements) ඇතුළත් කිරීම
+            // මෙහිදී UI එකෙන් එවන NextDueDate එක කෙලින්ම සේව් කරනු ලබයි.
+            // LastInterestDate එක ලෙස 'අවසන් වරට පොලී ගෙවූ දිනය' (LastPaymentDate) සේව් කරයි.
             
-            await conn.execute(updateLoanSql, [
-                CurrentLoanBalance, 
-                ArrearsRemaining, 
-                PaymentDate, // NextDueDate සෑදීමට පදනම් වන දිනය
-                PaymentDate, // අවසන් වරට පොලිය ගණනය කළ දිනය
-                LoanID
-            ]);
+            await connection.execute(
+                `INSERT INTO loan_disbursements (
+                    LoanID, 
+                    SubLoanNumber, 
+                    TotalAmount, 
+                    RemainingPrincipal, 
+                    InterestRate, 
+                    DisbursedDate, 
+                    LastPaymentDate, 
+                    NextDueDate, 
+                    LastInterestDate,
+                    DisbursementStatus
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    loanID,
+                    subLoan.subLoanNumber || 1, 
+                    subLoan.totalAmount,
+                    subLoan.remainingPrincipal,
+                    subLoan.interestRate,
+                    subLoan.disbursedDate,      // UI එකෙන් එන දිනය
+                    subLoan.lastPaymentDate,    // UI එකෙන් එන දිනය
+                    subLoan.nextDueDate,        // UI එකෙන් Manual දෙන දිනය
+                    subLoan.lastPaymentDate,    // පද්ධතිය පොලී හදන්න පටන් ගන්න ඕනෙ මේ දිනයේ සිටයි
+                    status                      // ACTIVE or CLOSED
+                ]
+            );
 
-            await conn.commit();
-            return { success: true, message: "Migration completed successfully" };
+            await connection.commit();
+            return { success: true, loanID: loanID };
 
         } catch (error) {
-            await conn.rollback();
-            console.error("Migration Process Error:", error);
+            if (connection) await connection.rollback();
+            console.error("Migration Service Error:", error);
             return { success: false, error: error.message };
         } finally {
-            conn.release();
+            if (connection) connection.release();
         }
     }
 }
 
-export default new MigrationService();
+export default new LoanService();

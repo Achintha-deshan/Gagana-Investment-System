@@ -1,67 +1,71 @@
 console.log("Backup Renderer Script Loaded");
 
 document.addEventListener('DOMContentLoaded', () => {
-    const btnRunBackup = document.getElementById('btnRunBackup');
-    const selYear = document.getElementById('selBackupYear');
-    const selMonth = document.getElementById('selBackupMonth');
-    const statusArea = document.getElementById('backupStatusArea');
+    const btnRunBackup   = document.getElementById('btnRunBackup');
+    const selYear        = document.getElementById('selBackupYear');
+    const selMonth       = document.getElementById('selBackupMonth');
+    const statusArea     = document.getElementById('backupStatusArea');
 
-    // --- පියවර A: වසරවල් 2020 - 2040 ටික Generate කිරීම ---
+    // ── Year Dropdown populate ──────────────────────────────────────────
     if (selYear) {
-        const startYear = 2020;
-        const endYear = 2040;
         const currentYear = new Date().getFullYear();
-
-        let optionsHtml = '';
-        for (let year = startYear; year <= endYear; year++) {
-            const isSelected = (year === currentYear) ? 'selected' : '';
-            optionsHtml += `<option value="${year}" ${isSelected}>${year}</option>`;
+        let html = '';
+        for (let y = 2020; y <= 2040; y++) {
+            html += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
         }
-        selYear.innerHTML = optionsHtml;
+        selYear.innerHTML = html;
     }
 
-    // --- පියවර B: Backup එක Run කිරීමේ Logic එක ---
+    // ── Month Dropdown: current month pre-select ────────────────────────
+    if (selMonth) {
+        const currentMonth = new Date().getMonth() + 1; // 1-12
+        selMonth.value = String(currentMonth).padStart(2, '0');
+    }
+
+    // ── Backup Button ───────────────────────────────────────────────────
     if (btnRunBackup) {
         btnRunBackup.addEventListener('click', async () => {
-            const year = selYear.value;
-            const month = selMonth.value;
+
+            // ✅ FIX: always parseInt - dropdown "01" → 1
+            const year  = parseInt(selYear.value);
+            const month = parseInt(selMonth.value);
+
+            const monthNames = ["","ජනවාරි","පෙබරවාරි","මාර්තු","අප්‍රේල්","මැයි",
+                                "ජූනි","ජූලි","අගෝස්තු","සැප්තැම්බර්","ඔක්තෝබර්",
+                                "නොවැම්බර්","දෙසැම්බර්"];
 
             const isConfirmed = await notify.confirm(
-                `${year} - ${month} මාසය සඳහා පද්ධතියේ සම්පූර්ණ බැකප් එකක් (Full Backup) ලබා ගැනීමට අවශ්‍යද?`,
-                "බැකප් තහවුරු කිරීම"
+                `${year} ${monthNames[month]} මාසය සඳහා සම්පූර්ණ PDF වාර්තාවක් ලබා ගැනීමට අවශ්‍යද?`,
+                "📄 PDF Backup තහවුරු කිරීම"
             );
-
             if (!isConfirmed) return;
 
+            // UI: loading state
             btnRunBackup.disabled = true;
             btnRunBackup.innerHTML = `
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                බැකප් වෙමින් පවතී...
+                PDF සකස් කරමින්...
             `;
             if (statusArea) statusArea.classList.remove('d-none');
 
             try {
-                // IPC Handler එක හරහා Backend එකට දැනුම් දීම
                 const result = await window.api.system.runBackup(year, month);
 
                 if (result.success) {
                     await notify.confirm(
-                        `බැකප් එක සාර්ථකව අවසන් විය!\nස්ථානය: ${result.path}`,
+                        `✅ PDF Backup සාර්ථකව සකස් විය!\n\n📁 ස්ථානය:\n${result.path}`,
                         "සාර්ථකයි",
                         { showCancelButton: false, confirmText: 'හරි', confirmColor: '#28a745' }
                     );
                 } else {
-                    notify.toast("බැකප් කිරීම අසාර්ථක විය: " + result.error, "error");
+                    notify.toast("PDF Backup අසාර්ථක: " + (result.error || 'නොදන්නා දෝෂයක්'), "error");
                 }
             } catch (err) {
-                console.error("Renderer Backup Error:", err);
-                notify.toast("පද්ධති දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සාහ කරන්න.", "error");
+                console.error("Backup Error:", err);
+                notify.toast("පද්ධති දෝෂයක් සිදු විය: " + err.message, "error");
             } finally {
                 btnRunBackup.disabled = false;
-                btnRunBackup.innerHTML = `
-                    <i class="bi bi-shield-lock-fill me-2"></i> 
-                    බැකප් එක ලබාගන්න (Start Backup)
-                `;
+                btnRunBackup.innerHTML = `<i class="bi bi-shield-lock-fill me-2"></i> බැකප් එක ලබාගන්න (Start Backup)`;
                 if (statusArea) statusArea.classList.add('d-none');
             }
         });

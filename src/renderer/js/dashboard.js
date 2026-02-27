@@ -1,94 +1,89 @@
-/**
- * Dashboard Controller - ප්‍රධාන දත්ත සහ ප්‍රස්ථාර පාලනය
- */
+'use strict';
 
-let revenueChart = null;
-let portfolioChart = null;
+var revenueChartInstance = null;
+var portfolioChartInstance = null;
 
 $(document).ready(() => {
-    // Dashboard එක මුලින්ම load වන විට දත්ත ගෙන එන්න
-    loadDashboardStats();
+    setTimeout(() => {
+        loadDashboardData();
+    }, 150);
 
-    // Refresh බොත්තම සඳහා event එක
     $("#btnRefreshDashboard").on("click", function() {
-        $(this).find('i').addClass('fa-spin'); // කරකැවෙන animation එකක්
-        loadDashboardStats();
+        const $icon = $(this).find('i');
+        $icon.addClass('fa-spin'); 
+        loadDashboardData().finally(() => {
+            setTimeout(() => $icon.removeClass('fa-spin'), 600);
+        });
     });
 });
 
-/**
- * Backend එකෙන් දත්ත ගෙනවිත් UI එක Update කිරීම
- */
-async function loadDashboardStats() {
+async function loadDashboardData() {
     try {
-        // 1. IPC හරහා දත්ත ලබා ගැනීම
-        const stats = await window.api.dashboard.getDashboardStats();
-        
-        if (!stats) return;
-
-        // 2. ප්‍රධාන සංඛ්‍යාලේඛන (Stats Cards) Update කිරීම
-        $("#statTotalCapital").text(`රු. ${formatNumber(stats.capitalOut)}`);
-        $("#statReceivedInterest").text(`රු. ${formatNumber(stats.interestReceived)}`);
-        $("#statTargetInterest").text(`රු. ${formatNumber(stats.interestTarget)}`);
-        $("#statBlacklisted").text(stats.blacklistedCount);
-        $("#statTotalCustCount").text(`Total Customers: ${stats.totalCustomers}`);
-
-        // Collection Rate එක ගණනය කිරීම (Received / Target * 100)
-        const rate = stats.interestTarget > 0 
-            ? ((stats.interestReceived / stats.interestTarget) * 100).toFixed(1) 
-            : 0;
-        $("#statCollectionRate").text(`${rate}% Collected`);
-
-        // 3. මෑතකාලීන ණය වගුව (Table) පිරවීම
         const tableBody = $("#recentLoansTableBody");
-        tableBody.empty();
-
-        if (stats.recentLoans && stats.recentLoans.length > 0) {
-            stats.recentLoans.forEach(loan => {
-                tableBody.append(`
-                    <tr>
-                        <td class="fw-bold text-primary">#${loan.LoanID}</td>
-                        <td>${loan.CustomerName}</td>
-                        <td><span class="badge bg-light text-dark border">${loan.LoanType}</span></td>
-                        <td class="fw-bold">රු. ${formatNumber(loan.LoanAmount)}</td>
-                        <td>${loan.InterestRate}%</td>
-                        <td class="text-muted small">${new Date(loan.LoanDate).toLocaleDateString()}</td>
-                    </tr>
-                `);
-            });
-        } else {
-            tableBody.append('<tr><td colspan="6" class="text-center py-4">දත්ත කිසිවක් හමු නොවීය.</td></tr>');
+        if (tableBody.length) {
+            tableBody.html('<tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>දත්ත ලබා ගනිමින් පවතී...</td></tr>');
         }
 
-        // 4. ප්‍රස්ථාර (Charts) ඇඳීම
-        updateRevenueChart(stats.interestTarget, stats.interestReceived);
-        updatePortfolioChart(stats.portfolio);
+        const stats = await window.api.dashboard.getDashboardStats();
+        if (!stats) return;
 
-        // Refresh icon එක නැවත සාමාන්‍ය තත්වයට පත් කිරීම
-        $("#btnRefreshDashboard i").removeClass('fa-spin');
+        // 1. Update Cards
+        updateStatElement("#statTotalCapital", safeFormatCurrency(stats.capitalOut));
+        updateStatElement("#statReceivedInterest", safeFormatCurrency(stats.interestReceived));
+        updateStatElement("#statTargetInterest", safeFormatCurrency(stats.interestTarget));
+        updateStatElement("#statBlacklisted", stats.blacklistedCount || 0);
+        updateStatElement("#statTotalCustCount", `Total Customers: ${stats.totalCustomers || 0}`);
+
+        // 2. Collection Rate Badge
+        const rate = (stats.interestTarget > 0) 
+            ? ((stats.interestReceived / stats.interestTarget) * 100).toFixed(1) 
+            : 0;
+        updateStatElement("#statCollectionRate", `${rate}% Collected`);
+
+        // 3. Update Recent Loans Table
+        if (tableBody.length) {
+            tableBody.empty();
+            if (stats.recentLoans && stats.recentLoans.length > 0) {
+                stats.recentLoans.forEach(loan => {
+                    tableBody.append(`
+                        <tr>
+                            <td class="fw-bold text-primary">#${loan.LoanID}</td>
+                            <td>${loan.CustomerName}</td>
+                            <td><span class="badge bg-light text-dark border">${loan.LoanType}</span></td>
+                            <td class="fw-bold">${safeFormatCurrency(loan.LoanAmount)}</td>
+                            <td class="text-center">${loan.InterestRate}%</td>
+                            <td class="text-muted small">${new Date(loan.LoanDate).toLocaleDateString()}</td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tableBody.append('<tr><td colspan="6" class="text-center py-4 text-muted">දත්ත හමු නොවීය.</td></tr>');
+            }
+        }
+
+        // 4. Render Charts
+        renderRevenueChart(stats.interestTarget, stats.interestReceived);
+        renderPortfolioDonutChart(stats.portfolio);
 
     } catch (error) {
         console.error("Dashboard Load Error:", error);
-        notify.toast("Dashboard එක යාවත්කාලීන කිරීමේ දෝෂයකි", "error");
     }
 }
 
-/**
- * ලැබුණු සහ අපේක්ෂිත පොලිය සසඳන Bar Chart එක
- */
-function updateRevenueChart(target, received) {
-    const ctx = document.getElementById('superRevenueChart').getContext('2d');
-    
-    if (revenueChart) revenueChart.destroy(); // පරණ Chart එක අයින් කරන්න
+function renderRevenueChart(target, received) {
+    const canvas = document.getElementById('superRevenueChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (revenueChartInstance) revenueChartInstance.destroy(); 
 
-    revenueChart = new Chart(ctx, {
+    revenueChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Target Interest', 'Received Interest'],
+            labels: ['Target', 'Received'],
             datasets: [{
-                label: 'Amount (රු.)',
+                label: 'මුදල (රු.)',
                 data: [target, received],
-                backgroundColor: ['#f6c23e', '#1cc88a'], // Warning (Yellow) and Success (Green)
+                backgroundColor: ['#f6c23e', '#1cc88a'],
                 borderRadius: 8,
                 barThickness: 50
             }]
@@ -102,39 +97,40 @@ function updateRevenueChart(target, received) {
     });
 }
 
-/**
- * ණය වර්ගීකරණය පෙන්වන Donut Chart එක
- */
-function updatePortfolioChart(portfolio) {
-    const ctx = document.getElementById('portfolioDonutChart').getContext('2d');
-    
-    if (portfolioChart) portfolioChart.destroy();
+function renderPortfolioDonutChart(portfolioData) {
+    const canvas = document.getElementById('portfolioDonutChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (portfolioChartInstance) portfolioChartInstance.destroy();
 
-    const labels = portfolio.map(item => item.LoanType);
-    const data = portfolio.map(item => item.totalAmount);
+    const labels = portfolioData ? portfolioData.map(item => item.LoanType) : [];
+    const dataValues = portfolioData ? portfolioData.map(item => item.totalAmount) : [];
 
-    portfolioChart = new Chart(ctx, {
+    portfolioChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
-                data: data,
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
-                hoverOffset: 4
+                data: dataValues,
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'],
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12 } }
-            }
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 }
 
-/**
- * මුදල් අගයන් ලස්සනට පෙන්වීමට (උදා: 1,500.00)
- */
-function formatNumber(num) {
-    return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function updateStatElement(selector, value) {
+    const $el = $(selector);
+    if ($el.length) $el.text(value);
+}
+
+function safeFormatCurrency(num) {
+    const val = parseFloat(num) || 0;
+    return 'රු. ' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

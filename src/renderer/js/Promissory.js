@@ -1,340 +1,470 @@
-// =======================
-// Promissory Loan Renderer JS
-// =======================
+// ============================================================
+// PromissoryLoan.js — Optimized with 30-Day Auto-Date Logic
+// FIX: Global search handler + DOM fallback (same pattern as Land/Check)
+// HTML IDs: document 11 exact match | IPC: document 12 preload exact match
+// ============================================================
 
-$(document).ready(async function () {
-    await initPromissoryLoanPage();
-});
+$(document).ready(function () {
 
-async function initPromissoryLoanPage() {
-    try {
-        await setNextPromissoryLoanId();
-        await loadPromissoryLoans();
-        setupPromissoryLoanEventListeners();
+    // ── State ─────────────────────────────────────────────────
+    let prmSelectedMasterID = null;
+    let prmActiveSubData    = null;
+    let prmCountSubLoans    = 0;
 
-        $('#btnAddPromissory').prop('disabled', true);
-        console.log("✅ Promissory Loan page initialized");
-    } catch (error) {
-        console.error(error);
-    }
-}
+    // ── Boot ──────────────────────────────────────────────────
+    _setupPrmEventListeners();
+    _resetPrmDateInputs();
+    console.log("✅ PromissoryLoan.js loaded with 30-day logic");
 
-// ------------------------
-// 1. මීළඟ Promissory Loan ID එක ලබා ගැනීම
-// ------------------------
-async function setNextPromissoryLoanId() {
-    try {
-        const nextId = await window.api.promissoryLoan.getNextId();
-        $('#txtPromissoryLoanId').val(nextId);
-        $('#txtDisplayPromissoryLoanId').val(nextId);
-    } catch (error) {
-        console.error("Failed to generate Promissory Loan ID:", error);
-    }
-}
+    // ==========================================================
+    // CUSTOMER ID — Global + DOM fallback
+    // ==========================================================
+    function _getCid() {
+        if (window._currentLoanCustomerId) return window._currentLoanCustomerId;
 
-// ------------------------
-// 2. Promissory ණය වගුව පූරණය කිරීම
-// ------------------------
-async function loadPromissoryLoans() {
-    try {
-        const loans = await window.api.promissoryLoan.getAll();
-        const tbody = $('#tblPromissoryLoans');
-        tbody.empty();
-
-        if (!loans || loans.length === 0) {
-            tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted">Promissory ණය තොරතුරු නොමැත</td></tr>');
-            return;
+        const el  = document.getElementById('loanManagementCustomerId');
+        const raw = el ? (el.innerText || el.textContent || '') : '';
+        const v   = raw.trim();
+        if (v && v.length > 1 && v !== '---' && v !== '—') {
+            window._currentLoanCustomerId = v;
+            return v;
         }
+        return null;
+    }
 
-        loans.forEach(loan => {
-            const beneficiaries = loan.BeneficiaryNames || '-';
-            tbody.append(`
-                <tr data-id="${loan.LoanID}">
-                    <td>${loan.LoanID}</td>
-                    <td>${loan.PromissoryNumber}</td>
-                    <td>${parseFloat(loan.LoanAmount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td>${new Date(loan.LoanDate).toLocaleDateString()}</td>
-                    <td>${loan.InterestRate}%</td>
-                    <td>${beneficiaries}</td>
-                    <td><button class="btn btn-sm btn-outline-info">View SMS</button></td>
-                </tr>
-            `);
+    // ==========================================================
+    // HELPERS (DATE LOGIC)
+    // ==========================================================
+
+    function _prmDateFmt(raw) {
+        if (!raw) return '';
+        try {
+            const d = new Date(raw);
+            return isNaN(d) ? String(raw).split('T')[0] : d.toISOString().split('T')[0];
+        } catch { return ''; }
+    }
+
+    function _getPrmToday() {
+        const p = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Colombo',
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date()).split('/');
+        return `${p[2]}-${p[1]}-${p[0]}`;
+    }
+
+   function _prmGetNextMonthSameDay(d) {
+        if (!d) return '';
+        const dt = new Date(d);
+        const currentDay = dt.getDate();
+        
+        // මාසය 1කින් ඉදිරියට ගෙන යන්න
+        dt.setMonth(dt.getMonth() + 1);
+
+        // පෙබරවාරි වැනි මාසවලදී දින ගණන ඉක්මවා ගියහොත් (උදා: ජනවාරි 31 -> පෙබරවාරි 28)
+        if (dt.getDate() < currentDay) {
+            dt.setDate(0); // එම මාසයේ අවසාන දිනයට සකසයි
+        }
+        
+        return dt.toISOString().split('T')[0];
+    }
+
+   function _resetPrmDateInputs() {
+        const today = _getPrmToday();
+        $('#txtPromissoryLoanDate').val(today);
+        // ✅ දින 30 වෙනුවට මාසික චක්‍රය භාවිතා කරයි
+        $('#txtPromissoryNextDue').val(_prmGetNextMonthSameDay(today));
+    }
+
+    // ==========================================================
+    // EVENT LISTENERS
+    // ==========================================================
+
+    function _setupPrmEventListeners() {
+
+        // ── Search — Promissory tab active විට පමණි ──
+        $(document).off('click.prmSearch', '#btnSearchLornManagementCustomer')
+            .on('click.prmSearch', '#btnSearchLornManagementCustomer', async function () {
+                const active = $('button[data-bs-toggle="tab"].active').data('bs-target');
+                if (active !== '#tabPromissory') return;
+                await _prmSearchAndLoad();
+            });
+
+        $(document).off('keypress.prmSearch', '#txtSearchLornManagementCustomer')
+            .on('keypress.prmSearch', '#txtSearchLornManagementCustomer', async function (e) {
+                if (e.which !== 13) return;
+                const active = $('button[data-bs-toggle="tab"].active').data('bs-target');
+                if (active !== '#tabPromissory') return;
+                await _prmSearchAndLoad();
+            });
+
+        // ── Tab Switch → cards auto-load ──
+        $(document).on('shown.bs.tab', 'button[data-bs-target="#tabPromissory"]', async function () {
+            const cid = _getCid();
+            if (cid) await _loadPromissoryCards(cid);
         });
-    } catch (err) {
-        console.error("Failed to load promissory loans:", err);
-    }
-}
 
-// ------------------------
-// 3. Event Listeners සැකසීම
-// ------------------------
-function setupPromissoryLoanEventListeners() {
-
-    // 🔍 3.0 පාරිභෝගිකයා සෙවීම (Blacklist Check සමඟ)
-    $('#txtSearchCustomer').on('input', async function () {
-        const query = $(this).val().trim();
-        if (query.length >= 2) {
-            const results = await window.api.customer.search(query);
-            if (results && results.length > 0) {
-                const customer = results[0];
-
-                // 🛑 පාරිභෝගිකයා Blacklisted දැයි පරීක්ෂා කිරීම
-                if (customer.IsBlacklisted === 1) {
-                    await notify.confirm(
-                        `මෙම පාරිභෝගිකයා (${customer.CustomerName}) අසාදු ලේඛනගත Blacklisted කර ඇත. මොහුට නව ණය ලබා දීම පද්ධතිය මගින් අවහිර කර ඇත.`,
-                        'පාරිභෝගිකයා අවහිර කර ඇත',
-                        {
-                            confirmText: 'හරි (OK)',
-                            showCancelButton: false,
-                            confirmColor: '#ef4444'
-                        }
-                    );
-                    $(this).val('');
-                    clearCustomerDisplay();
-                    return;
-                }
-                
-                // ✅ විස්තර UI එකට දැමීම
-                $('#displayCustomerName').text(customer.CustomerName || '---');
-                $('#displayCustomerId').text(customer.CustomerID || '---').data('id', customer.CustomerID);
-                $('#displayCustomerNic').text(customer.NIC || '---');
-                $('#displayCustomerPhone').text(customer.CustomerPhone || '---');
-                $('.info-display').fadeIn();
-            } else {
-                clearCustomerDisplay();
+        // ── Date auto-fill (දින 30 Logic එක ක්‍රියාත්මක වීම) ──
+      $('#txtPromissoryLoanDate').on('change', function () {
+            const newDate = $(this).val();
+            if (newDate) {
+                // ✅ මෙතැනදීත් මාසික චක්‍රය භාවිතා කරයි
+                $('#txtPromissoryNextDue').val(_prmGetNextMonthSameDay(newDate));
             }
-        } else {
-            clearCustomerDisplay();
+        });
+
+        // ── CRUD Buttons ──
+        $('#btnAddPromissory').off('click').on('click',     _handlePrmSaveAction);
+        $('#btnUpdatePromissory').off('click').on('click', _handlePrmUpdateAction);
+        $('#btnDeletePromissory').off('click').on('click', _handlePrmDeleteAction);
+        $('#btnClearPromissory').off('click').on('click',  _clearPrmFormUI);
+        $('#btnAddPromissoryBeneficiary').off('click').on('click', _addPrmBeneficiaryRow);
+
+        // ── Table Row Click ──
+        $(document).on('click', '#tblPromissoryLoans tr[data-disbid]', function () {
+            const sub = $(this).data('subjson');
+            if (!sub) return;
+
+            prmActiveSubData = sub;
+            $('#txtPromissoryLoanAmount').val(sub.TotalAmount);
+            $('#txtPromissoryGivenAmount').val(sub.GivenAmount);
+            $('#txtPromissoryInterestRate').val(sub.InterestRate);
+            $('#txtPromissoryLoanDate').val(_prmDateFmt(sub.DisbursedDate));
+            $('#txtPromissoryNextDue').val(_prmDateFmt(sub.NextDueDate));
+
+            $('#tblPromissoryLoans tr').removeClass('table-primary active-edit-row');
+            $(this).addClass('table-primary active-edit-row');
+            // Save button එක disable කර Update එකට අවධානය යොමු කරවන්න
+    $('#btnAddPromissory').prop('disabled', true).addClass('opacity-50');
+    $('#btnUpdatePromissory').addClass('btn-primary shadow-sm');
+
+            $('#btnDeletePromissory')
+                .html('<i class="bi bi-trash me-1"></i>Delete Sub Loan')
+                .removeClass('btn-danger').addClass('btn-outline-danger');
+        });
+    }
+
+    // ==========================================================
+    // CUSTOMER SEARCH (Promissory Tab Active)
+    // ==========================================================
+
+    async function _prmSearchAndLoad() {
+        const query = $('#txtSearchLornManagementCustomer').val().trim();
+        if (!query) return notify.toast('Customer ID, නම හෝ NIC ඇතුළත් කරන්න.', 'info');
+
+        try {
+            const results = await window.api.customer.search(query);
+            if (!results || results.length === 0) {
+                return notify.toast('පාරිභෝගිකයෙකු සොයාගත නොහැකිය.', 'warning');
+            }
+            const cust = results[0];
+
+            if (cust.IsBlacklisted == 1 || cust.IsBlacklisted === true) {
+                await notify.confirm(
+                    '⚠️ Blacklist: ' + (cust.BlacklistReason || 'නොදනී'),
+                    'Blocked!',
+                    { confirmText: 'හරි', showCancelButton: false, confirmColor: '#d33' }
+                );
+                return;
+            }
+
+            window._currentLoanCustomerId = cust.CustomerID;
+
+            $('#loanManagementCustomerName').text(cust.CustomerName   || '—');
+            $('#loanManagementCustomerId').text(cust.CustomerID       || '—');
+            $('#loanManagementCustomerNic').text(cust.NIC               || '—');
+            $('#loanManagementCustomerPhone').text(cust.CustomerPhone  || '—');
+            $('#customerLornmanagementtInfoSection').removeClass('d-none');
+
+            await _loadPromissoryCards(cust.CustomerID);
+
+        } catch (err) {
+            console.error('❌ _prmSearchAndLoad:', err);
+            notify.toast('සෙවීමේ දෝෂයකි: ' + err.message, 'error');
         }
-        checkPromissoryAddButtonState();
-    });
+    }
 
-    // ➕ 3.1 ඇපකරුවන් එකතු කිරීම
-    $('#btnAddPromissoryBeneficiary').click(async function (e) {
-        e.preventDefault();
-        const name = $('#txtPromissoryBeneficiaryName').val().trim();
-        const phone = $('#txtPromissoryBeneficiaryPhone').val().trim();
-        const address = $('#txtPromissoryBeneficiaryAddress').val().trim();
+    // ==========================================================
+    // LOAD PROMISSORY ACCOUNT CARDS
+    // ==========================================================
 
-        if (!name || !phone) {
-            return notify.toast("ඇපකරුගේ නම සහ දුරකථනය ඇතුළත් කරන්න.", "warning");
-        }
+    window._loadPromissoryCards = async function (customerId) {
+        if (customerId) window._currentLoanCustomerId = customerId;
+        const cid = _getCid();
+        if (!cid) return;
 
-        const isActive = await window.api.promissoryLoan.checkBeneficiaryActive(name, phone);
-        if (isActive) {
-            return notify.toast("මෙම ඇපකරු දැනටමත් සක්‍රීය ණයක සිටී!", "error");
-        }
+        const $scroller = $('#promissoryAccScroller').empty();
+        prmSelectedMasterID = null;
+        prmActiveSubData    = null;
 
-        const index = $('#promissoryBeneficiaryList .beneficiary-item').length;
-        $('#promissoryBeneficiaryList').append(`
-            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2 bg-white mb-1 rounded" data-index="${index}">
-                <span><strong>${name}</strong> - ${phone}</span>
-                <button type="button" class="btn btn-sm btn-danger btnDeletePromissoryBeneficiary">මකන්න</button>
-                <input type="hidden" class="ben-name" value="${name}">
-                <input type="hidden" class="ben-phone" value="${phone}">
-                <input type="hidden" class="ben-address" value="${address}">
+        $scroller.append(`
+            <div class="account-card" id="btnNewPrmAcc" style="cursor:pointer; border-style:dashed; border-color:#27ae60; background:#f0fff4;">
+                <div class="acc-id" style="color:#27ae60;"><i class="bi bi-plus-circle me-1"></i>NEW</div>
+                <div class="acc-status" style="color:#27ae60;">+ Create New</div>
             </div>
         `);
 
-        $('#txtPromissoryBeneficiaryName, #txtPromissoryBeneficiaryPhone, #txtPromissoryBeneficiaryAddress').val('');
-        checkPromissoryAddButtonState();
-    });
+        try {
+            const allLoans = await window.api.promissoryLoan.getAll();
+            const loans    = allLoans.filter(l => l.CustomerID === cid);
 
-    // 🗑️ 3.2 ඇපකරු මකා දැමීම
-    $(document).on('click', '.btnDeletePromissoryBeneficiary', function () {
-        $(this).closest('.beneficiary-item').remove();
-        checkPromissoryAddButtonState();
-    });
+            loans.forEach(loan => {
+                $scroller.append(`
+                    <div class="account-card" data-prmid="${loan.LoanID}" style="cursor:pointer;">
+                        <div class="acc-id">${loan.LoanID}</div>
+                        <div class="acc-number text-truncate">${loan.PromissoryNumber || '—'}</div>
+                        <div class="acc-status mt-1">
+                            <span class="badge ${loan.Status==='ACTIVE'?'bg-success':'bg-secondary'} me-1">${loan.Status}</span>
+                            <span class="badge bg-light text-dark border">Sub: ${loan.SubLoanCount||0}/5</span>
+                        </div>
+                    </div>
+                `);
+            });
 
-    // 💾 3.3 ණය ඇතුළත් කිරීම (Save)
-  // Renderer එකේ Save කරන කොටස (පොඩි වෙනසක් කළා)
-$('#btnAddPromissory').click(async function () {
-    const customerId = $('#displayCustomerId').data('id');
-    const beneficiaries = [];
-    
-    $('#promissoryBeneficiaryList .beneficiary-item').each(function () {
-        beneficiaries.push({
-            Name: $(this).find('.ben-name').val(),
-            Phone: $(this).find('.ben-phone').val(),
-            Address: $(this).find('.ben-address').val()
-        });
-    });
+            $('#btnNewPrmAcc').on('click', _prepareNewPrmEntry);
+            $scroller.find('.account-card[data-prmid]').on('click', function () {
+                _loadSpecificPrmDetails($(this).data('prmid'));
+            });
 
-    const data = {
-        CustomerID: customerId,
-        PromissoryNumber: $('#txtPromissoryNumber').val().trim(),
-        LoanAmount: parseFloat($('#txtPromissoryLoanAmount').val()) || 0,
-        GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()) || 0,
-        LoanDate: $('#txtPromissoryLoanDate').val(),
-        // මෙන්න මේ අගය අනිවාර්යයෙන් Backend එකට යන්න ඕනේ
-        InterestRate: parseFloat($('#txtPromissoryInterestRate').val()) || 5.0, 
-        SmsDate: $('#txtPromissorySmsDate').val(),
-        SmsMessage: $('#txtPromissorySmsMessage').val(),
-        Beneficiaries: beneficiaries
+            if (loans.length > 0) await _loadSpecificPrmDetails(loans[0].LoanID);
+            else await _prepareNewPrmEntry();
+
+        } catch (err) { console.error('❌ _loadPromissoryCards:', err); }
     };
 
-    if (!data.PromissoryNumber || data.LoanAmount <= 0 || beneficiaries.length === 0) {
-        return notify.toast("අත්‍යවශ්‍ය දත්ත ඇතුළත් කරන්න.", "warning");
+    // ==========================================================
+    // PREPARE NEW / LOAD EXISTING
+    // ==========================================================
+
+    async function _prepareNewPrmEntry() {
+        prmSelectedMasterID = null;
+        prmActiveSubData    = null;
+        prmCountSubLoans    = 0;
+
+        $('#promissoryAccScroller .account-card').removeClass('active');
+        $('#btnNewPrmAcc').addClass('active');
+
+        try {
+            const nextId = await window.api.promissoryLoan.getNextId();
+            $('#txtDisplayPromissoryLoanId, #txtPromissoryLoanId').val(nextId);
+        } catch (e) { console.error(e); }
+
+        _clearPrmUIFields();
+        _resetPrmDateInputs();
+        _setPrmSubTableEmpty('නව ගිණුමේ Sub Loan ඇතුළත් කරන්න');
+
+        $('#btnAddPromissory').prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save Loan');
+        $('#btnDeletePromissory').html('<i class="bi bi-trash me-1"></i>Delete').removeClass('btn-outline-danger').addClass('btn-danger');
     }
 
-    const result = await window.api.promissoryLoan.add(data);
-    if (result.success) {
-        notify.toast("සාර්ථකයි!", "success");
-        clearPromissoryForm();
-        await loadPromissoryLoans();
-    } else {
-        notify.toast("Error: " + result.error, "error");
-    }
-});
-    // 📋 3.4 Table Row Click
-    $('#tblPromissoryLoans').on('click', 'tr', async function () {
-        const loanId = $(this).data('id');
-        if (!loanId) return;
+    async function _loadSpecificPrmDetails(loanId) {
+        prmSelectedMasterID = loanId;
+        prmActiveSubData    = null;
 
-        $('#tblPromissoryLoans tr').removeClass('table-primary');
-        $(this).addClass('table-primary');
+        $('#promissoryAccScroller .account-card').removeClass('active');
+        $(`#promissoryAccScroller .account-card[data-prmid="${loanId}"]`).addClass('active');
 
         try {
             const loan = await window.api.promissoryLoan.getById(loanId);
-            if (loan) {
-                $('#txtPromissoryLoanId').val(loan.LoanID);
-                $('#txtDisplayPromissoryLoanId').val(loan.LoanID);
-                $('#txtPromissoryNumber').val(loan.PromissoryNumber);
-                $('#txtPromissoryLoanAmount').val(loan.LoanAmount);
-                $('#txtPromissoryGivenAmount').val(loan.GivenAmount);
-                $('#txtPromissoryInterestRate').val(loan.InterestRate);
-                $('#txtPromissoryLoanDate').val(formatDateForInput(loan.LoanDate));
-                $('#txtPromissorySmsDate').val(formatDateForInput(loan.SmsDate));
-                $('#txtPromissorySmsMessage').val(loan.SmsMessage);
+            if (!loan) return;
 
-                $('#displayCustomerName').text(loan.CustomerName);
-                $('#displayCustomerId').text(loan.CustomerID).data('id', loan.CustomerID);
-                $('#displayCustomerNic').text(loan.NIC);
-                $('#displayCustomerPhone').text(loan.CustomerPhone);
-                $('.info-display').fadeIn();
+            prmCountSubLoans = (loan.SubLoans || []).length;
+            $('#txtDisplayPromissoryLoanId, #txtPromissoryLoanId').val(loan.LoanID);
+            $('#txtPromissoryNumber').val(loan.PromissoryNumber || '');
 
-                $('#promissoryBeneficiaryList').empty();
-                if (loan.Beneficiaries) {
-                    loan.Beneficiaries.forEach(ben => {
-                        $('#promissoryBeneficiaryList').append(`
-                            <div class="beneficiary-item d-flex justify-content-between align-items-center border-bottom p-2 bg-white mb-1 rounded">
-                                <span><strong>${ben.Name}</strong> - ${ben.Phone}</span>
-                                <button type="button" class="btn btn-sm btn-danger btnDeletePromissoryBeneficiary">මකන්න</button>
-                                <input type="hidden" class="ben-name" value="${ben.Name}">
-                                <input type="hidden" class="ben-phone" value="${ben.Phone}">
-                                <input type="hidden" class="ben-address" value="${ben.Address}">
-                            </div>
-                        `);
-                    });
-                }
-                $('#btnAddPromissory').prop('disabled', true);
-                $('#btnUpdatePromissory, #btnDeletePromissory').prop('disabled', false);
-            }
-        } catch (error) {
-            notify.toast("දත්ත ලබා ගැනීමේදී දෝෂයක් සිදුවිය.", "error");
-        }
-    });
+            _renderPrmSubTable(loan.SubLoans || []);
+            _renderPrmBeneficiaryList(loan.Beneficiaries || []);
+            _resetPrmDateInputs();
 
-    // 🔄 3.5 Update Logic
-    $('#btnUpdatePromissory').click(async function () {
-        const beneficiaries = [];
-        $('#promissoryBeneficiaryList .beneficiary-item').each(function () {
-            beneficiaries.push({
-                Name: $(this).find('.ben-name').val(),
-                Phone: $(this).find('.ben-phone').val(),
-                Address: $(this).find('.ben-address').val()
-            });
-        });
+            $('#txtPromissoryLoanAmount, #txtPromissoryGivenAmount').val('');
+            $('#txtPromissoryInterestRate').val('5');
 
-        const data = {
-            LoanID: $('#txtPromissoryLoanId').val(),
-            CustomerID: $('#displayCustomerId').data('id'),
+            $('#btnAddPromissory').prop('disabled', prmCountSubLoans >= 5)
+                .html(prmCountSubLoans < 5 ? '<i class="bi bi-plus-circle me-1"></i>Add Sub Loan' : '<i class="bi bi-slash-circle me-1"></i>Max (5/5)');
+
+            $('#btnDeletePromissory').html('<i class="bi bi-trash me-1"></i>Delete Account').removeClass('btn-outline-danger').addClass('btn-danger');
+
+        } catch (err) { console.error(err); }
+    }
+
+    // ==========================================================
+    // SAVE / UPDATE / DELETE
+    // ==========================================================
+
+    async function _handlePrmSaveAction() {
+        const cid = _getCid();
+        if (!cid) return notify.toast('කරුණාකර Customer Search කරන්න.', 'warning');
+
+        const payload = {
+            CustomerID: cid,
             PromissoryNumber: $('#txtPromissoryNumber').val().trim(),
-            LoanAmount: parseFloat($('#txtPromissoryLoanAmount').val()) || 0,
-            GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()) || 0,
+            LoanAmount: parseFloat($('#txtPromissoryLoanAmount').val()),
+            GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()) || parseFloat($('#txtPromissoryLoanAmount').val()),
+            InterestRate: parseFloat($('#txtPromissoryInterestRate').val()),
             LoanDate: $('#txtPromissoryLoanDate').val(),
-            InterestRate: parseFloat($('#txtPromissoryInterestRate').val()) || 5,
-            SmsDate: $('#txtPromissorySmsDate').val(),
-            SmsMessage: $('#txtPromissorySmsMessage').val(),
-            Beneficiaries: beneficiaries
+            NextDueDate: $('#txtPromissoryNextDue').val(),
+            Beneficiaries: _getPrmBeneficiaryData()
         };
 
-        const result = await window.api.promissoryLoan.update(data);
-        if (result.success) {
-            notify.toast("ණය විස්තර සාර්ථකව යාවත්කාලීන කරන ලදි.", "success");
-            clearPromissoryForm();
-            await loadPromissoryLoans();
-        } else {
-            notify.toast("යාවත්කාලීන කිරීමේදී දෝෂයක්: " + result.error, "error");
-        }
-    });
-
-    // 🗑️ 3.6 Delete Logic
-    $('#btnDeletePromissory').click(async function () {
-        const loanId = $('#txtPromissoryLoanId').val();
-        if (!loanId) return;
-
-        const isConfirmed = await notify.confirm(
-            `ඔබ ස්ථිරවම ${loanId} ණය ගිණුම මකා දමනවාද?`,
-            'ප්‍රොමිසරි ණය මකා දැමීම',
-            { confirmText: 'ඔව්, මකන්න', confirmColor: '#ef4444' }
-        );
-
-        if (isConfirmed) {
-            const result = await window.api.promissoryLoan.delete(loanId);
-            if (result.success) {
-                notify.toast("සාර්ථකව මකා දමන ලදි.", "success");
-                clearPromissoryForm();
-                await loadPromissoryLoans();
+if (!payload.PromissoryNumber || !payload.LoanAmount || !payload.NextDueDate) {
+    return notify.toast('අත්‍යවශ්‍ය දත්ත (දිනය ඇතුළුව) ඇතුළත් කරන්න.', 'warning');
+}
+        try {
+            let res;
+            if (prmSelectedMasterID) {
+                payload.LoanID = prmSelectedMasterID;
+                res = await window.api.promissoryLoan.addSubLoan(payload);
+            } else {
+                payload.LoanID = $('#txtPromissoryLoanId').val();
+                res = await window.api.promissoryLoan.add(payload);
             }
+
+            if (res.success) {
+                notify.toast('✅ සාර්ථකයි!', 'success');
+                await _loadPromissoryCards(cid);
+                if (prmSelectedMasterID || res.loanId) await _loadSpecificPrmDetails(prmSelectedMasterID || res.loanId);
+            } else {
+                notify.toast('❌ ' + res.error, 'error');
+            }
+        } catch (err) { console.error(err); }
+    }
+
+  async function _handlePrmUpdateAction() {
+    if (!prmSelectedMasterID) return notify.toast('ගිණුමක් තෝරන්න.', 'warning');
+
+    const payload = {
+        LoanID: prmSelectedMasterID,
+        PromissoryNumber: $('#txtPromissoryNumber').val().trim(),
+        Beneficiaries: _getPrmBeneficiaryData()
+    };
+
+    // ✅ තෝරාගෙන ඇති Sub Loan එකේ දත්තත් ඇතුළත් කිරීම
+    if (prmActiveSubData && prmActiveSubData.DisbursementID) {
+        payload.SubLoan = {
+            DisbursementID: prmActiveSubData.DisbursementID,
+            TotalAmount: parseFloat($('#txtPromissoryLoanAmount').val()),
+            GivenAmount: parseFloat($('#txtPromissoryGivenAmount').val()),
+            InterestRate: parseFloat($('#txtPromissoryInterestRate').val()),
+            DisbursedDate: $('#txtPromissoryLoanDate').val(),
+            NextDueDate: $('#txtPromissoryNextDue').val()
+        };
+    }
+
+    try {
+        const r = await window.api.promissoryLoan.update(payload);
+        if (r.success) {
+            notify.toast('✅ සාර්ථකව යාවත්කාලීන කළා!', 'success');
+            await _loadSpecificPrmDetails(prmSelectedMasterID);
+        } else {
+            notify.toast('❌ ' + r.error, 'error');
         }
-    });
-
-    $('#btnClearPromissory').click(function () {
-        clearPromissoryForm();
-    });
-
-    $('#txtPromissoryNumber, #txtPromissoryLoanAmount').on('input', checkPromissoryAddButtonState);
+    } catch (err) { console.error(err); }
 }
+async function _handlePrmDeleteAction() {
+    if (!prmSelectedMasterID) return notify.toast('ගිණුමක් තෝරන්න.', 'warning');
+    
+    if (prmActiveSubData && prmActiveSubData.DisbursementID) {
+        // Sub Loan Delete
+        const ok = await notify.confirm(`Sub Loan #${prmActiveSubData.SubLoanNumber} මකන්නද?`, 'Delete Sub Loan');
+        if (!ok) return;
 
-// ------------------------
-// 4. Helper Functions
-// ------------------------
+        const r = await window.api.promissoryLoan.deleteSubLoan(prmSelectedMasterID, prmActiveSubData.DisbursementID);
+        if (r.success) {
+            notify.toast('✅ Sub Loan මකා දැමුණා.', 'success');
+            await _loadSpecificPrmDetails(prmSelectedMasterID);
+        } else {
+            // ✅ ගෙවීම් තිබේ නම් මෙතැනින් Error එක පෙන්වයි
+            notify.toast('❌ ' + r.error, 'error');
+        }
+    } else {
+        // සම්පූර්ණ ගිණුමම මකා දැමීම (Manual Cascade logic එක ක්‍රියාත්මක වේ)
+        const ok = await notify.confirm(`සම්පූර්ණ ගිණුම සහ එහි ඇති සියලු ගෙවීම් වාර්තා මකන්නද?`, 'Delete Full Account');
+        if (!ok) return;
 
-function checkPromissoryAddButtonState() {
-    const customerId = $('#displayCustomerId').data('id');
-    const prmNo = $('#txtPromissoryNumber').val().trim();
-    const amount = parseFloat($('#txtPromissoryLoanAmount').val());
-    const benCount = $('#promissoryBeneficiaryList .beneficiary-item').length;
-
-    const canAdd = (customerId && prmNo && amount > 0 && benCount > 0);
-    $('#btnAddPromissory').prop('disabled', !canAdd);
+        const r = await window.api.promissoryLoan.delete(prmSelectedMasterID);
+        if (r.success) {
+            notify.toast('✅ ගිණුම සම්පූර්ණයෙන්ම මකා දැමුණා.', 'success');
+            _clearPrmFormUI();
+            const cid = _getCid();
+            if (cid) await _loadPromissoryCards(cid);
+        }
+    }
 }
+    // ==========================================================
+    // BENEFICIARY & TABLE RENDERING
+    // ==========================================================
 
-function clearPromissoryForm() {
-    $('#txtPromissoryNumber, #txtPromissoryLoanAmount, #txtPromissoryGivenAmount, #txtPromissoryLoanDate, #txtPromissorySmsDate, #txtPromissorySmsMessage').val('');
-    $('#promissoryBeneficiaryList').empty();
-    $('#txtPromissoryInterestRate').val('5');
-    $('#tblPromissoryLoans tr').removeClass('table-primary');
-    setNextPromissoryLoanId();
-    clearCustomerDisplay();
-    $('#btnAddPromissory').prop('disabled', true);
-    $('#btnUpdatePromissory, #btnDeletePromissory').prop('disabled', true);
-        $('#txtSearchCustomer').val('');
+    function _addPrmBeneficiaryRow() {
+        const n = $('#txtPromissoryBeneficiaryName').val().trim();
+        const p = $('#txtPromissoryBeneficiaryPhone').val().trim();
+        const a = $('#txtPromissoryBeneficiaryAddress').val().trim();
+        if (!n || !p) return notify.toast('නම සහ දුරකථනය ඇතුළත් කරන්න.', 'warning');
+        _renderSinglePrmBenRow(n, p, a);
+        $('#txtPromissoryBeneficiaryName, #txtPromissoryBeneficiaryPhone, #txtPromissoryBeneficiaryAddress').val('');
+    }
 
-}
+    function _renderSinglePrmBenRow(n, p, a) {
+        $('#promissoryBeneficiaryList').append(`
+            <div class="beneficiary-item d-flex justify-content-between align-items-center border p-2 mb-1 bg-white rounded">
+                <span class="small"><strong>${n}</strong> — ${p} ${a ? `<br><small class="text-muted">${a}</small>` : ''}</span>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="$(this).closest('.beneficiary-item').remove()"><i class="bi bi-trash"></i></button>
+                <input type="hidden" class="prm-ben-data" data-name="${n}" data-phone="${p}" data-address="${a || ''}">
+            </div>
+        `);
+    }
 
-function clearCustomerDisplay() {
-    $('#displayCustomerName, #displayCustomerId, #displayCustomerNic, #displayCustomerPhone').text('---');
-        $('#txtSearchCustomer').val('');
+    function _renderPrmBeneficiaryList(list) {
+        $('#promissoryBeneficiaryList').empty();
+        (list || []).forEach(b => _renderSinglePrmBenRow(b.Name, b.Phone, b.Address || ''));
+    }
 
-    $('#displayCustomerId').removeData('id');
-    $('.info-display').fadeOut();
-    checkPromissoryAddButtonState();
-}
+    function _getPrmBeneficiaryData() {
+        const bens = [];
+        $('#promissoryBeneficiaryList .prm-ben-data').each(function () {
+            bens.push({ Name: $(this).data('name'), Phone: $(this).data('phone'), Address: $(this).data('address') });
+        });
+        return bens;
+    }
 
-function formatDateForInput(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-}
+    function _renderPrmSubTable(subs) {
+        const $t = $('#tblPromissoryLoans').empty();
+        if (!subs || !subs.length) return _setPrmSubTableEmpty('Sub Loans නොමැත');
+        subs.forEach(s => {
+            const $row = $(`
+                <tr style="cursor:pointer" data-disbid="${s.DisbursementID}">
+                    <td>${s.SubLoanNumber}</td>
+                    <td class="fw-bold">රු. ${parseFloat(s.TotalAmount||0).toLocaleString('si-LK')}</td>
+                    <td>රු. ${parseFloat(s.GivenAmount||0).toLocaleString('si-LK')}</td>
+                    <td>${s.InterestRate}%</td>
+                    <td>${_prmDateFmt(s.DisbursedDate)}</td>
+                    <td>${_prmDateFmt(s.NextDueDate)}</td>
+                    <td><span class="badge ${s.DisbursementStatus==='ACTIVE'?'bg-success':'bg-secondary'}">${s.DisbursementStatus}</span></td>
+                </tr>
+            `);
+            $row.data('subjson', s);
+            $t.append($row);
+        });
+    }
+
+    function _setPrmSubTableEmpty(msg) {
+        $('#tblPromissoryLoans').html(`<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>${msg}</td></tr>`);
+    }
+
+    function _clearPrmUIFields() {
+        $('#txtPromissoryNumber, #txtPromissoryLoanAmount, #txtPromissoryGivenAmount').val('');
+        $('#txtPromissoryInterestRate').val('5');
+        $('#promissoryBeneficiaryList').empty();
+        $('#btnAddPromissory').prop('disabled', false).removeClass('opacity-50');
+    $('#btnUpdatePromissory').removeClass('btn-primary shadow-sm');
+    }
+
+    function _clearPrmFormUI() {
+        _clearPrmUIFields();
+        _resetPrmDateInputs();
+        prmSelectedMasterID = null;
+        prmActiveSubData = null;
+        _setPrmSubTableEmpty('ගිණුමක් තෝරන්න');
+        $('#promissoryAccScroller .account-card').removeClass('active');
+        $('#btnAddPromissory').prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save Loan');
+    }
+
+});

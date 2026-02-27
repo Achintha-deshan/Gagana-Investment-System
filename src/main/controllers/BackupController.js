@@ -1,20 +1,34 @@
 import { ipcMain } from 'electron';
 import BackupService from '../services/BackupService.js';
 
-/**
- * බැකප් එකට අදාළ IPC Handlers මෙහි ලියාපදිංචි කෙරේ.
- */
 export function registerBackupHandlers() {
-    
-    // 🔹 Frontend එකේ window.api.system.runBackup කැඳවූ විට මෙය ක්‍රියාත්මක වේ.
-    ipcMain.handle('system:run-backup', async (event, { year, month }) => {
+
+    // PDF Monthly Report Backup
+    ipcMain.handle('system:run-backup', async (_event, params) => {
         try {
-            // Service එක හරහා බැකප් එක සිදු කිරීම
-            const result = await BackupService.runMonthlyBackup(year, month);
+            // Preload: ipcRenderer.invoke('system:run-backup', { year, month })
+            // ∴ params = { year, month }
+            const y = parseInt(params?.year);
+            const m = parseInt(params?.month);
+
+            if (isNaN(y) || isNaN(m) || m < 1 || m > 12) {
+                return { success: false, error: `Invalid year/month: ${params?.year}/${params?.month}` };
+            }
+
+            console.log(`📄 Starting PDF Backup: ${y}/${String(m).padStart(2,'0')}`);
+            const result = await BackupService.runMonthlyBackup(y, m);
+            
+            if (result.success) {
+                console.log(`✅ PDF saved: ${result.path}`);
+            } else {
+                console.error(`❌ PDF failed: ${result.error}`);
+            }
+
             return result;
-        } catch (error) {
-            console.error("IPC Backup Handler Error:", error);
-            return { success: false, error: error.message };
+
+        } catch (err) {
+            console.error('BackupController Error:', err);
+            return { success: false, error: err.message };
         }
     });
 }

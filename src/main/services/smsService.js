@@ -6,7 +6,6 @@ const SENDER_ID = "GAGANA-INVS";
 
 class SMSService {
     
-    // 1. තනි SMS එකක් යැවීම
     async sendSMS(recipient, message) {
         try {
             let formattedRecipient = recipient.replace(/\D/g, '');
@@ -42,20 +41,25 @@ class SMSService {
         }
     }
 
-    // 2. දිනපතා SMS පරීක්ෂාව සහ යැවීම (Gender එකතු කරන ලදී)
     async checkAndSendDailyReminders() {
         try {
             const sql = `
                 SELECT 
+                    ld.DisbursementID,
                     l.LoanID, 
+                    l.LoanType,
+                    ld.SubLoanNumber,
                     c.CustomerPhone, 
                     c.CustomerName, 
                     c.Gender, 
-                    l.NextDueDate 
-                FROM loans l 
+                    ld.NextDueDate,
+                    ld.TotalAmount
+                FROM loan_disbursements ld
+                JOIN loans l ON ld.LoanID = l.LoanID
                 JOIN customers c ON l.CustomerID = c.CustomerID 
-                WHERE l.NextDueDate = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-                AND (l.SmsDate IS NULL OR DATE(l.SmsDate) != CURDATE())
+                WHERE ld.NextDueDate = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                AND (ld.LastSmsDate IS NULL OR DATE(ld.LastSmsDate) != CURDATE())
+                AND ld.DisbursementStatus = 'ACTIVE'
                 AND l.Status = 'ACTIVE'`;
 
             const [rows] = await db.execute(sql);
@@ -69,22 +73,26 @@ class SMSService {
             for (let row of rows) {
                 const dateObj = new Date(row.NextDueDate);
                 const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
-                
-                // නමේ මුල් කෑල්ල ගැනීම
                 const firstName = row.CustomerName ? row.CustomerName.split(' ')[0] : 'පාරිභෝගිකයා';
                 
-                // Gender එක අනුව ගෞරව නාමය තේරීම
-                let title = "";
-                if (row.Gender === 'Male') {
-                    title = "මහතා"; // Mr.
-                } else if (row.Gender === 'Female') {
-                    title = "මහත්මිය"; // Mrs./Miss
+                // ස්ත්‍රී/පුරුෂ භාවය අනුව ගෞරව නාමය
+                let title = (row.Gender === 'Male') ? "මහතා" : (row.Gender === 'Female') ? "මහත්මිය" : "";
+
+                // ණය වර්ගය සිංහලට හැරවීම
+                let lTypeSinhala = "";
+                switch(row.LoanType) {
+                    case 'VEHICLE': lTypeSinhala = "වාහන"; break;
+                    case 'LAND': lTypeSinhala = "ඉඩම්"; break;
+                    case 'PROMISSORY': lTypeSinhala = "ගිවිසුම්"; break;
+                    case 'CHECK': lTypeSinhala = "චෙක්පත්"; break;
+                    default: lTypeSinhala = "ණය";
                 }
 
-                // මැසේජ් එක සැකසීම
-                const message = `සිහි කැඳවීමයි! ${firstName} ${title}, ඔබගේ වාරිකය ${formattedDate} දිනට ගෙවිය යුතුයි. Gagana Investment`;
+                const fullLoanRef = `${row.LoanID}-${row.SubLoanNumber}`;
 
-                // SMS එක යැවීම
+                // නව පණිවිඩය: ණය වර්ගය (Loan Type) ඇතුළත් කර ඇත
+                const message = `සිහි කැඳවීමයි! ${firstName} ${title}, ඔබ ලබාගත් ${lTypeSinhala} (${fullLoanRef}) ණයෙහි වාරිකය ${formattedDate} දිනට ගෙවිය යුතුයි. Gagana Investment`;
+
                 const res = await this.sendSMS(row.CustomerPhone, message);
 
                 if (!res.success) {
@@ -95,10 +103,9 @@ class SMSService {
                     };
                 }
 
-                // සාර්ථක නම් පමණක් Database update කිරීම
                 await db.execute(
-                    "UPDATE loans SET SmsDate = NOW(), SmsMessage = ? WHERE LoanID = ?", 
-                    [message, row.LoanID]
+                    "UPDATE loan_disbursements SET LastSmsDate = NOW() WHERE DisbursementID = ?", 
+                    [row.DisbursementID]
                 );
                 sentCount++;
             }
@@ -106,37 +113,38 @@ class SMSService {
             return { success: true, sentCount: sentCount };
 
         } catch (error) {
-            console.error("Critical Backend Error:", error);
+            console.error("Critical SMS Error:", error);
             return { success: false, message: error.message };
         }
     }
 
-    // 3. යැවූ සහ යැවිය යුතු සියලු දෙනාගේ වාර්තාව
     async getLogsByDate(targetDate) {
         try {
             const dateToQuery = targetDate || new Date().toISOString().split('T')[0];
 
             const sql = `
                 SELECT 
+                    ld.DisbursementID,
                     l.LoanID as customerId, 
                     c.CustomerName as customerName, 
                     c.CustomerPhone as phone, 
-                    l.NextDueDate as dueDate, 
-                    DATE_FORMAT(l.SmsDate, '%h:%i %p') as sentTime,
+                    ld.NextDueDate as dueDate, 
+                    DATE_FORMAT(ld.LastSmsDate, '%h:%i %p') as sentTime,
                     CASE 
-                        WHEN DATE(l.SmsDate) = ? THEN 1 
+                        WHEN DATE(ld.LastSmsDate) = ? THEN 1 
                         ELSE 0 
                     END as isSent
-                FROM loans l
+                FROM loan_disbursements ld
+                JOIN loans l ON ld.LoanID = l.LoanID
                 JOIN customers c ON l.CustomerID = c.CustomerID
-                WHERE l.NextDueDate = DATE_ADD(?, INTERVAL 1 DAY)
-                AND l.Status = 'ACTIVE'
-                ORDER BY isSent DESC, l.SmsDate DESC`;
+                WHERE ld.NextDueDate = DATE_ADD(?, INTERVAL 1 DAY)
+                AND ld.DisbursementStatus = 'ACTIVE'
+                ORDER BY isSent DESC, ld.LastSmsDate DESC`;
 
             const [rows] = await db.execute(sql, [dateToQuery, dateToQuery]);
             return rows;
         } catch (error) {
-            console.error("SQL Error:", error);
+            console.error("SMS Log SQL Error:", error);
             throw error;
         }
     }

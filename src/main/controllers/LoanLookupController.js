@@ -1,24 +1,22 @@
 import { ipcMain } from "electron";
 import LoanLookupService from "../services/LoanLookupService.js";
 
-/**
- * Loan Lookup සම්බන්ධ IPC Handlers ලියාපදිංචි කිරීම
- */
 export function registerLoanLookupHandlers() {
     
-    // ණය අංකය (LoanID) අනුව සම්පූර්ණ විශ්ලේෂණය ලබා ගැනීම
-    ipcMain.handle('lookup:get-details', async (event, loanId) => {
+    // 1. සෙවුම් පියවර - නම, NIC හෝ ID එකෙන් Master Loans සොයයි
+    ipcMain.handle('lookup:search-master', async (event, query) => {
         try {
-            return await LoanLookupService.getDetailedBreakdown(loanId);
+            return await LoanLookupService.searchMasterLoans(query);
         } catch (error) {
             return { success: false, error: error.message };
         }
     });
 
-    // පාරිභෝගිකයාගේ සියලුම ණය ලැයිස්තුව ලබා ගැනීම
-    ipcMain.handle('lookup:get-customer-loans', async (event, customerId) => {
+    // 2. විශ්ලේෂණ පියවර - තෝරාගත් Master Loan එකක සම්පූර්ණ විස්තර ලබා ගනී
+    ipcMain.handle('lookup:get-full-analysis', async (event, loanId) => {
         try {
-            return await LoanLookupService.getCustomerLoans(customerId);
+            // මෙහිදී අපි කලින් ලියූ getFullLoanAnalysis function එක කැඳවයි
+            return await LoanLookupService.getFullLoanAnalysis(loanId);
         } catch (error) {
             return { success: false, error: error.message };
         }
