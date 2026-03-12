@@ -63,4 +63,14 @@ ipcMain.handle('payment:getHistory', async (event, disbursementId) => {
             return [];
         }
     });
+
+    // 7. Master Loan එකක සම්පූර්ණ හිඟ මුදල (Total Due) ලබා ගැනීම
+    ipcMain.handle('payment:getTotalOutstandingForMaster', async (event, masterLoanId) => {
+        try {
+            return await loanPaymentService.getTotalOutstandingForMaster(masterLoanId);
+        } catch (error) {
+            console.error("IPC Error (getTotalOutstandingForMaster):", error);
+            return { success: false, totalOutstanding: 0 };
+        }
+    });
 }

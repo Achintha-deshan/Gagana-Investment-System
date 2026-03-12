@@ -81,15 +81,38 @@ vehicleLoan: {
 },
 payment: {
     getLoanWithSubLoans: (masterLoanId) => ipcRenderer.invoke('payment:getLoanWithSubLoans', masterLoanId),
+    
+    // ✅ නිවැරදි කර ඇත: Object එකක් ලෙස arguments යැවීම
     getSubLoanBreakdown: (disbursementId, customDate) => 
         ipcRenderer.invoke('payment:getSubLoanBreakdown', { disbursementId, customDate }),
+    
+    getTotalOutstandingForMaster: (masterLoanId) => 
+        ipcRenderer.invoke('payment:getTotalOutstandingForMaster', masterLoanId),
+        
     getPaymentHistory: (disbursementId) => ipcRenderer.invoke('payment:getHistory', disbursementId),
     process: (paymentData) => ipcRenderer.invoke('payment:process', paymentData),
     voidPayment: (paymentId) => ipcRenderer.invoke('payment:void', paymentId), 
+    
+    // ✅ මෙහි handler එක 'settlement:searchLoan' ද නැත්නම් 'settlement:search' දැයි registerPaymentHandlers තුළ නැවත බලන්න
     searchSettlement: (searchText) => ipcRenderer.invoke('settlement:searchLoan', searchText),
-        getActiveLoans: (customerId) => ipcRenderer.invoke('payment:getActiveLoans', customerId),
+    
+    getActiveLoans: (customerId) => ipcRenderer.invoke('payment:getActiveLoans', customerId),
     processSettlement: (settleData) => ipcRenderer.invoke('settlement:process', settleData)
 },
+// payment: {
+
+//     getLoanWithSubLoans: (masterLoanId) => ipcRenderer.invoke('payment:getLoanWithSubLoans', masterLoanId),
+//     getSubLoanBreakdown: (disbursementId, customDate) => 
+//         ipcRenderer.invoke('payment:getSubLoanBreakdown', { disbursementId, customDate }),
+//     getTotalOutstandingForMaster: (masterLoanId) => 
+//         ipcRenderer.invoke('payment:getTotalOutstandingForMaster', masterLoanId),
+//     getPaymentHistory: (disbursementId) => ipcRenderer.invoke('payment:getHistory', disbursementId),
+//     process: (paymentData) => ipcRenderer.invoke('payment:process', paymentData),
+//     voidPayment: (paymentId) => ipcRenderer.invoke('payment:void', paymentId), 
+//     searchSettlement: (searchText) => ipcRenderer.invoke('settlement:searchLoan', searchText),
+//         getActiveLoans: (customerId) => ipcRenderer.invoke('payment:getActiveLoans', customerId),
+//     processSettlement: (settleData) => ipcRenderer.invoke('settlement:process', settleData)
+// },
    loanLookup: {
     // සෙවුම් පියවර (නම, NIC හෝ ID අනුව Master Loans සෙවීමට)
     searchMaster: (query) => ipcRenderer.invoke('lookup:search-master', query),
@@ -126,6 +149,7 @@ settlement: {
     
     // අවලංගු කිරීමට
     voidPayment: (paymentId) => ipcRenderer.invoke('settlement:void', paymentId), 
-}
+},
+onUpdateMessage: (callback) => ipcRenderer.on('update-message', (event, ...args) => callback(event, ...args))
 
 });

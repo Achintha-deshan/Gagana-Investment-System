@@ -2,6 +2,8 @@ import { app, BrowserWindow } from 'electron';
 import 'dotenv/config';
 import { createMainWindow } from './window.js';
 import db from './config/db.js';
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 
 // Controllers
 import { registerUserHandlers } from './controllers/UserController.js';
@@ -29,8 +31,6 @@ process.on('uncaughtException', (error) => {
 let isDbConnected = false;
 let mainWindow;
 
-// ✅ STEP 1: Handlers FIRST - window create කිරීමට කලිනින්!
-// Renderer load වෙද්දී handlers ready ව තිබිය යුතුයි.
 function registerAllHandlers() {
     console.log("📡 Registering all IPC handlers...");
     registerUserHandlers();
@@ -87,6 +87,31 @@ async function startApp() {
         mainWindow = createMainWindow();
 
         console.log("🚀 Application ready!");
+     // 1. Checking for updates
+autoUpdater.on('checking-for-update', () => {
+    mainWindow.webContents.send('update-message', 'Checking for updates...');
+});
+
+// 2. New update found
+autoUpdater.on('update-available', (info) => {
+    mainWindow.webContents.send('update-message', `New version ${info.version} found. Downloading...`);
+});
+
+// 3. Update downloaded and ready to install
+autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update-message', 'Download complete. Restarting app to update...');
+    setTimeout(() => {
+        autoUpdater.quitAndInstall();
+    }, 3000); 
+});
+
+// 4. No updates found
+autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('update-message', 'App is up to date.');
+});
+
+// Start checking
+autoUpdater.checkForUpdatesAndNotify();
 
     } catch (error) {
         console.error("❌ App Startup Error:", error);

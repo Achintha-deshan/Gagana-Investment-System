@@ -61,38 +61,45 @@ $(document).on('change', '.chk-item[data-type="interest"]', function() {
         return content;
     }
 
-    function renderMasterLoanCard(loan) {
-        let badgeClass = "bg-primary-subtle text-primary";
-        let borderSideColor = "#6366f1";
-        if(loan.LoanType === 'VEHICLE') { borderSideColor = "#0d6efd"; }
-        if(loan.LoanType === 'LAND') { badgeClass = 'bg-success-subtle text-success'; borderSideColor = "#198754"; }
-        if(loan.LoanType === 'PROMISSORY') { badgeClass = 'bg-warning-subtle text-warning'; borderSideColor = "#ffc107"; }
-        if(loan.LoanType === 'CHECK') { badgeClass = 'bg-info-subtle text-info'; borderSideColor = "#0dcaf0"; }
+// totalDue අගය පෙන්වීම සඳහා renderMasterLoanCard වෙනස් කිරීම
+function renderMasterLoanCard(loan, totalDue = 0) {
+    let badgeClass = "bg-primary-subtle text-primary";
+    let borderSideColor = "#6366f1";
+    if(loan.LoanType === 'VEHICLE') { borderSideColor = "#0d6efd"; }
+    if(loan.LoanType === 'LAND') { badgeClass = 'bg-success-subtle text-success'; borderSideColor = "#198754"; }
+    if(loan.LoanType === 'PROMISSORY') { badgeClass = 'bg-warning-subtle text-warning'; borderSideColor = "#ffc107"; }
+    if(loan.LoanType === 'CHECK') { badgeClass = 'bg-info-subtle text-info'; borderSideColor = "#0dcaf0"; }
 
-        return `<div class="col-md-4 mb-3">
-                <div class="card h-100 border-0 shadow-sm master-loan-select-card animate__animated animate__fadeIn" 
-                     style="cursor: pointer; border-left: 5px solid ${borderSideColor} !important; border-radius: 12px;"
-                     data-id="${loan.LoanID}">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <small class="text-muted d-block" style="font-size: 10px;">LOAN ID | ණය අංකය</small>
-                                <span class="fw-bold text-dark" style="font-size: 1.1rem;">${loan.LoanID}</span>
-                            </div>
-                            <span class="badge ${badgeClass} px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">${loan.LoanType}</span>
+    return `<div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm master-loan-select-card animate__animated animate__fadeIn" 
+                 style="cursor: pointer; border-left: 5px solid ${borderSideColor} !important; border-radius: 12px;"
+                 data-id="${loan.LoanID}">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <small class="text-muted d-block" style="font-size: 10px;">LOAN ID | ණය අංකය</small>
+                            <span class="fw-bold text-dark" style="font-size: 1.1rem;">${loan.LoanID}</span>
                         </div>
-                        ${getLoanSpecificInfo(loan)}
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                            <div>
-                                <small class="text-muted d-block" style="font-size: 10px;">PRM NO</small>
-                                <span class="fw-bold small">${loan.PRMNo || '---'}</span>
-                            </div>
-                            <div class="text-primary fw-bold" style="font-size: 0.8rem;">Select <i class="bi bi-arrow-right"></i></div>
+                        <span class="badge ${badgeClass} px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">${loan.LoanType}</span>
+                    </div>
+                    ${getLoanSpecificInfo(loan)}
+                    
+                    <div class="mt-2 p-2 rounded-3 bg-danger-subtle border border-danger border-opacity-25">
+                         <small class="text-danger d-block fw-bold" style="font-size: 10px;">TOTAL OUTSTANDING | මුළු හිඟය</small>
+                         <span class="text-danger fw-bold" style="font-size: 1rem;">Rs. ${totalDue.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <div>
+                            <small class="text-muted d-block" style="font-size: 10px;">PRM NO</small>
+                            <span class="fw-bold small">${loan.PRMNo || '---'}</span>
                         </div>
+                        <div class="text-primary fw-bold" style="font-size: 0.8rem;">Select <i class="bi bi-arrow-right"></i></div>
                     </div>
                 </div>
-            </div>`;
-    }
+            </div>
+        </div>`;
+}
 
     // 2. SEARCH LOANS
     $('#btnSearchPaymentByLoanId').on('click', async function () {
@@ -116,12 +123,25 @@ $(document).on('change', '.chk-item[data-type="interest"]', function() {
                 const masterContainer = $('#masterLoansContainer').empty();
                 $('#masterLoansListArea').removeClass('d-none');
                 const seenLoans = new Set();
-                results.forEach(loan => {
-                    if (!seenLoans.has(loan.LoanID)) {
-                        seenLoans.add(loan.LoanID);
-                        masterContainer.append(renderMasterLoanCard(loan));
-                    }
-                });
+
+                for (const loan of results) {
+                if (!seenLoans.has(loan.LoanID)) {
+                    seenLoans.add(loan.LoanID);
+
+                    // API Call එක හරහා අදාළ Master Loan එකේ Total එක ගන්නවා
+                    const res = await window.api.payment.getTotalOutstandingForMaster(loan.LoanID);
+                    const totalDue = res.success ? res.totalOutstanding : 0;
+
+                    // දැන් totalDue අගයත් සමඟ කාඩ් එක ඇඩ් කරනවා
+                    masterContainer.append(renderMasterLoanCard(loan, totalDue));
+                }
+            }
+                // results.forEach(loan => {
+                //     if (!seenLoans.has(loan.LoanID)) {
+                //         seenLoans.add(loan.LoanID);
+                //         masterContainer.append(renderMasterLoanCard(loan));
+                //     }
+                // });
             } else {
                 notify.alert('No active loans found.', 'Search Failed', 'error');
                 resetUI();
@@ -195,25 +215,28 @@ $(document).on('change', '.chk-item[data-type="interest"]', function() {
     });
 
     // 6. FETCH BREAKDOWN
-    async function fetchBreakdown(arrearsVal) {
-        if (!selectedSubLoanId) return;
-        const customDate = $('#txtPaymentManualDate').val();
-        $('#paymentChecklistBody').html('<tr><td colspan="3" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Calculating...</td></tr>');
-        
-        try {
-            const data = await window.api.payment.getSubLoanBreakdown(selectedSubLoanId, customDate);
-            if (data) {
-                // සතයක් හෝ අඩු නොවීමට parseFloat භාවිතා කර arrearsVal එකතු කිරීම
-                data.arrearsAmount = parseFloat(arrearsVal) || 0;
-                renderChecklist(data);
-            }
-        } catch (error) { 
-            console.error("Full Error Details:", error); // මෙය එකතු කරන්න
-            notify.toast('Calculation error.', 'error'); 
-            $('#paymentChecklistBody').empty();
+   async function fetchBreakdown(arrearsVal) {
+    if (!selectedSubLoanId) return;
+    
+    // arrearsVal අංකයක් බව තහවුරු කර ගැනීම
+    const currentArrears = parseFloat(arrearsVal) || 0;
+    const customDate = $('#txtPaymentManualDate').val();
+    
+    $('#paymentChecklistBody').html('<tr><td colspan="3" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Calculating...</td></tr>');
+    
+    try {
+        const data = await window.api.payment.getSubLoanBreakdown(selectedSubLoanId, customDate);
+        if (data) {
+            // මෙහිදී data object එකට arrearsAmount ඇතුළත් කිරීම
+            data.arrearsAmount = currentArrears;
+            renderChecklist(data);
         }
+    } catch (error) { 
+        console.error("Breakdown Error:", error);
+        notify.toast('ගණනය කිරීමේ දෝෂයකි.', 'error'); 
+        $('#paymentChecklistBody').empty();
     }
-
+}
  // 7. RENDER CHECKLIST (Corrected Version)
 function renderChecklist(data) {
     const tbody = $('#paymentChecklistBody').empty();
@@ -451,28 +474,43 @@ async function voidPayment(paymentId, subLoanId) {
     if (!confirmed) return;
 
     try {
+        // API call එකට පෙර notify එකක් පෙන්වීම අවශ්‍ය නම් පමණක්
         const result = await window.api.payment.voidPayment(paymentId);
-        if (result.success) {
-            notify.toast('සාර්ථකව අවලංගු කරන ලදී', 'success');
-            
-            // --- අලුතින් එක් කළ කොටස: Arrears Update කිරීම ---
+        
+        if (result && result.success) {
+            notify.toast('ගෙවීම සාර්ථකව අවලංගු කරන ලදී. ✅', 'success');
+
+            // 1. Master loan එක යටතේ ඇති sub loans නැවත load කරන්න (Arrears update කර ගැනීමට)
             const response = await window.api.payment.getLoanWithSubLoans(currentMasterLoanId);
-            const updatedSubLoan = response.subLoans.find(s => s.DisbursementID == subLoanId);
+            
+            if (response && response.subLoans) {
+                const updatedSubLoan = response.subLoans.find(s => s.DisbursementID == subLoanId);
+                if (updatedSubLoan) {
+                    const newArrears = parseFloat(updatedSubLoan.CurrentArrears) || 0;
+                    
+                    // Card එකේ data attribute එක සහ UI එක update කිරීම
+                    const card = $(`.sub-loan-card[data-id="${subLoanId}"]`);
+                    card.data('arrears', newArrears);
+                    
+                    // Arrears ගණන පෙන්වන UI label එක තිබේ නම් එයද update කරන්න
+                    card.find('.text-danger').text(`Rs. ${newArrears.toLocaleString(undefined, {minimumFractionDigits: 2})}`);
 
-            if (updatedSubLoan) {
-                const newArrears = parseFloat(updatedSubLoan.CurrentArrears) || 0;
-                // Card එකේ data attribute එක update කරනවා
-                $(`.sub-loan-card[data-id="${subLoanId}"]`).data('arrears', newArrears);
-                // අලුත් Arrears අගය සමඟ Breakdown එක update කරනවා
-                fetchBreakdown(newArrears);
+                    // 2. අලුත් Arrears අගය සමඟ Checklist එක update කිරීම
+                    await fetchBreakdown(newArrears);
+                }
             }
-            // --------------------------------------------
 
-            loadPaymentHistory(subLoanId); // වගුව Refresh කිරීම
+            // 3. වගුව (History Table) Refresh කිරීම
+            await loadPaymentHistory(subLoanId); 
+            
         } else {
-            notify.alert('අවලංගු කළ නොහැක: ' + (result.error || 'මෙය අවසාන ගෙවීම නොවනවා විය හැක.'), 'Error', 'error');
+            // මෙහිදී result.error පවතී නම් පමණක් alert එක පෙන්වයි
+            const errorMsg = result && result.error ? result.error : 'මෙම ගෙවීම අවලංගු කළ නොහැක. (මෙය අවසාන ගෙවීම නොවනවා විය හැක)';
+            notify.alert(errorMsg, 'Void Failed', 'error');
         }
     } catch (err) {
-        notify.toast('System error.', 'error');
+        console.error("Void Error:", err);
+        // ඇත්තටම code crash එකක් වුණොත් පමණක් මෙය පෙන්වයි
+        notify.toast('පද්ධති දෝෂයකි. කරුණාකර නැවත උත්සාහ කරන්න.', 'error');
     }
 }

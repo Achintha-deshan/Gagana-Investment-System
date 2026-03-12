@@ -71,7 +71,9 @@ class PaymentService {
         const principal = parseFloat(sub.RemainingPrincipal) || 0;
         const monthlyInterestRate = (parseFloat(sub.InterestRate) || 0) / 100;
         const monthlyInterest = principal * monthlyInterestRate;
-        const penaltyUnit = monthlyInterest * 0.05;
+        const penaltyUnit = monthlyInterest * monthlyInterestRate;
+        console.log("Current Interest Rate:", sub.InterestRate);
+        console.log("Calculated Penalty Unit:", penaltyUnit);
 
         // ✅ FIX: Timezone-safe date helper
         function toSafeDateStr(val) {
@@ -124,7 +126,7 @@ class PaymentService {
 
         let lateDaysInCurrentMonth = safeOverdueDays % 30;
         let currentMonthLateFee = 0;
-        if (lateDaysInCurrentMonth > 2) {
+        if (lateDaysInCurrentMonth > 0) {
             currentMonthLateFee = (penaltyUnit / 30) * lateDaysInCurrentMonth;
         }
 
@@ -135,7 +137,7 @@ class PaymentService {
 
         return {
             disbursementId: sub.DisbursementID,
-            dbNextDueDate: nextDueDateStr, // ✅ Clean "YYYY-MM-DD" string — UI ට නිවැරදිව යනවා
+            dbNextDueDate: nextDueDateStr, 
             principal: principal,
             installments: installments,
             pastMonthsPenalty: Number(totalPastPenalty.toFixed(2)),
@@ -151,18 +153,15 @@ class PaymentService {
     }
 }
 
-    /**
-     * 3. ගෙවීම් සැකසීම (Waterfall Priority Logic)
-     */
+   
     async processPayment(paymentData) {
         const DisbursementID = paymentData.DisbursementID || null;
         const LoanID = paymentData.LoanID || null;
         const TotalPaid = parseFloat(paymentData.TotalPaid) || 0;
-        // මේ විදියට වෙනස් කරන්න
-const InterestPaid = parseFloat(paymentData.InterestRequired) || 0; // පරණ එක: paymentData.InterestPaid
-const LateFeePaid = parseFloat(paymentData.LateFeeRequired) || 0;   // පරණ එක: paymentData.LateFeePaid
-const PenaltyPaid = parseFloat(paymentData.PenaltyRequired) || 0;   // පරණ එක: paymentData.PenaltyPaid
-const ArrearsPaid = parseFloat(paymentData.ArrearsRequired) || 0;   // පරණ එක: paymentData.ArrearsPaid
+const InterestPaid = parseFloat(paymentData.InterestRequired) || 0; 
+const LateFeePaid = parseFloat(paymentData.LateFeeRequired) || 0;   
+const PenaltyPaid = parseFloat(paymentData.PenaltyRequired) || 0;   
+const ArrearsPaid = parseFloat(paymentData.ArrearsRequired) || 0;  
         const MonthsCovered = parseInt(paymentData.MonthsCovered) || 0;
         const PaymentDate = paymentData.PaymentDate || new Date().toISOString().split('T')[0];
         const CollectedBy = paymentData.CollectedBy || "SYSTEM";
@@ -442,6 +441,54 @@ async voidPayment(paymentId) {
             throw error;
         }
     }
+    /**
+ * 🎯 Master Loan ID එකක් ලබා දුන් විට ඒ යටතේ ඇති සියලුම 
+ * Active Sub Loans වල අද දිනට මුළු හිඟය ගණනය කරයි.
+ */
+async getTotalOutstandingForMaster(masterLoanId) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+        // 1. එම Master Loan එකට අදාළ සියලුම Active Sub Loans ලබා ගැනීම
+        const [subLoans] = await db.execute(
+            `SELECT * FROM loan_disbursements 
+             WHERE LoanID = ? AND DisbursementStatus = 'ACTIVE'`, 
+            [masterLoanId]
+        );
+
+        let grandTotalDue = 0;
+
+        // 2. සෑම Sub Loan එකකටම අදාළ Breakdown එක ගණනය කිරීම
+        for (const sub of subLoans) {
+            // අපි කලින් හදපු getSubLoanBreakdown logic එකම මෙහිදී භාවිතා කරයි
+            const breakdown = await this.getSubLoanBreakdown(sub.DisbursementID, today);
+            
+            if (breakdown) {
+                // වාරිකවල එකතුව
+                const installmentsSum = breakdown.installments.reduce((sum, inst) => sum + inst.amount, 0);
+                
+                // හිඟය + පොලිය + දඩ + ප්‍රමාද ගාස්තු
+                const subTotal = 
+                    breakdown.arrearsAmount + 
+                    installmentsSum + 
+                    breakdown.pastMonthsPenalty + 
+                    breakdown.currentMonthLateFee;
+
+                grandTotalDue += subTotal;
+            }
+        }
+
+        return { 
+            success: true, 
+            masterLoanId: masterLoanId, 
+            totalOutstanding: Number(grandTotalDue.toFixed(2)) 
+        };
+
+    } catch (error) {
+        console.error("Error in getTotalOutstandingForMaster:", error);
+        return { success: false, error: error.message };
+    }
+}
 }
 
 export default new PaymentService();
